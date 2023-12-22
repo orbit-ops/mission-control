@@ -519,8 +519,8 @@ func (h *OgentHandler) UpdateMission(ctx context.Context, req *UpdateMissionReq,
 	if v, ok := req.MinApprovers.Get(); ok {
 		b.SetMinApprovers(v)
 	}
-	if v, ok := req.PossibleApprovers.Get(); ok {
-		b.SetPossibleApprovers(v)
+	if req.PossibleApprovers != nil {
+		b.SetPossibleApprovers(req.PossibleApprovers)
 	}
 	// Add all edges.
 	if req.Requests != nil {

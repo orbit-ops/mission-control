@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/orbit-ops/launchpad-core/utils"
 	"github.com/spf13/viper"
@@ -46,6 +47,10 @@ func LoadConfig() (*Config, error) {
 	viper.AddConfigPath("/etc/launchpad/")  // path to look for the config file in
 	viper.AddConfigPath("$HOME/.launchpad") // call multiple times to add many search paths
 	viper.AddConfigPath(".")                // optionally look for config in the working directory
+	// viper.AddConfigPath(os.Getenv("LAUNCHPAD_CONFIG")) // optionally look for config in the working directory
+	if val, ok := os.LookupEnv("LAUNCHPAD_CONFIG"); ok {
+		viper.SetConfigFile(val)
+	}
 	viper.SetEnvPrefix("launchpad")
 	viper.AutomaticEnv()
 	viper.SetDefault("provider.type", ProviderKubernetes)

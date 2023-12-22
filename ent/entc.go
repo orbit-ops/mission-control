@@ -5,11 +5,11 @@ package main
 import (
 	"log"
 
-	"ariga.io/ogent"
 	"entgo.io/contrib/entoas"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
 	"github.com/ogen-go/ogen"
+	"github.com/tiagoposse/ogent"
 
 	ogauth "github.com/tiagoposse/ogent-auth/extension"
 )
@@ -48,7 +48,7 @@ func main() {
 			gen.FeatureUpsert,
 			gen.FeatureIntercept,
 		},
-	}, entc.Extensions(ogent, oas))
+	}, entc.Extensions(ogent, authzExt, oas))
 	if err != nil {
 		log.Fatalf("running ent codegen: %v", err)
 	}

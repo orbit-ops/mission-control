@@ -1,0 +1,7 @@
+dev: true
+version: 0.1.0
+sessions:
+  key: aaaaaaa
+  duration: 3600
+provider:
+  type: local

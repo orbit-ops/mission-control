@@ -11,6 +11,10 @@ import (
 )
 
 func (s *AccessAccessTokensList) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Action.Validate(); err != nil {
@@ -41,6 +45,10 @@ func (s AccessAccessTokensListAction) Validate() error {
 }
 
 func (s *AuditList) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Action.Validate(); err != nil {
@@ -77,6 +85,10 @@ func (s AuditListAction) Validate() error {
 }
 
 func (s *AuditRead) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if err := s.Action.Validate(); err != nil {
@@ -113,6 +125,10 @@ func (s AuditReadAction) Validate() error {
 }
 
 func (s *CreateMissionReq) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.PossibleApprovers == nil {
@@ -291,6 +307,10 @@ func (s ListRocketOKApplicationJSON) Validate() error {
 }
 
 func (s *MissionCreate) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.PossibleApprovers == nil {
@@ -310,6 +330,10 @@ func (s *MissionCreate) Validate() error {
 }
 
 func (s *MissionList) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.PossibleApprovers == nil {
@@ -329,6 +353,10 @@ func (s *MissionList) Validate() error {
 }
 
 func (s *MissionRead) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.PossibleApprovers == nil {
@@ -348,6 +376,10 @@ func (s *MissionRead) Validate() error {
 }
 
 func (s *MissionUpdate) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.PossibleApprovers == nil {
@@ -367,6 +399,10 @@ func (s *MissionUpdate) Validate() error {
 }
 
 func (s *RequestMissionRead) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.PossibleApprovers == nil {
@@ -386,6 +422,10 @@ func (s *RequestMissionRead) Validate() error {
 }
 
 func (s *RocketMissionsList) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
 	var failures []validate.FieldError
 	if err := func() error {
 		if s.PossibleApprovers == nil {

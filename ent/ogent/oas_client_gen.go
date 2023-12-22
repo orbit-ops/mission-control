@@ -518,15 +518,6 @@ func (c *Client) sendCreateMission(ctx context.Context, request *CreateMissionRe
 		semconv.HTTPMethodKey.String("POST"),
 		semconv.HTTPRouteKey.String("/missions"),
 	}
-	// Validate request before sending.
-	if err := func() error {
-		if err := request.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return res, errors.Wrap(err, "validate")
-	}
 
 	// Run stopwatch.
 	startTime := time.Now()

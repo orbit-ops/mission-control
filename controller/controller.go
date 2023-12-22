@@ -23,16 +23,7 @@ type AccessController struct {
 	provider providers.Provider
 }
 
-func NewAccessController(prov providers.Provider) (*AccessController, error) {
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	if err != nil {
-		return nil, fmt.Errorf("failed opening connection to sqlite: %w", err)
-	}
-
-	if err := client.Schema.Create(context.Background()); err != nil {
-		return nil, fmt.Errorf("running migrations: %w", err)
-	}
-
+func NewAccessController(prov providers.Provider, client *ent.Client) (*AccessController, error) {
 	return &AccessController{
 		client:   client,
 		provider: prov,
