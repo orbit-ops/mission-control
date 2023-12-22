@@ -3,14 +3,15 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/request"
 )
 
 // Request is the model entity for the Request schema.
@@ -22,8 +23,8 @@ type Request struct {
 	Reason string `json:"reason,omitempty"`
 	// Requester holds the value of the "requester" field.
 	Requester string `json:"requester,omitempty"`
-	// MissionID holds the value of the "mission_id" field.
-	MissionID string `json:"mission_id,omitempty"`
+	// RocketConfig holds the value of the "rocket_config" field.
+	RocketConfig map[string]string `json:"rocket_config,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RequestQuery when eager-loading is set.
 	Edges            RequestEdges `json:"edges"`
@@ -58,7 +59,9 @@ func (*Request) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case request.FieldReason, request.FieldRequester, request.FieldMissionID:
+		case request.FieldRocketConfig:
+			values[i] = new([]byte)
+		case request.FieldReason, request.FieldRequester:
 			values[i] = new(sql.NullString)
 		case request.FieldID:
 			values[i] = new(uuid.UUID)
@@ -97,11 +100,13 @@ func (r *Request) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Requester = value.String
 			}
-		case request.FieldMissionID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field mission_id", values[i])
-			} else if value.Valid {
-				r.MissionID = value.String
+		case request.FieldRocketConfig:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field rocket_config", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &r.RocketConfig); err != nil {
+					return fmt.Errorf("unmarshal field rocket_config: %w", err)
+				}
 			}
 		case request.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -157,8 +162,8 @@ func (r *Request) String() string {
 	builder.WriteString("requester=")
 	builder.WriteString(r.Requester)
 	builder.WriteString(", ")
-	builder.WriteString("mission_id=")
-	builder.WriteString(r.MissionID)
+	builder.WriteString("rocket_config=")
+	builder.WriteString(fmt.Sprintf("%v", r.RocketConfig))
 	builder.WriteByte(')')
 	return builder.String()
 }

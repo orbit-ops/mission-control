@@ -11,9 +11,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func encodeCreateAccessResponse(response CreateAccessRes, w http.ResponseWriter, span trace.Span) error {
+func encodeCreateApiKeyResponse(response CreateApiKeyRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *AccessCreate:
+	case *ApiKeyCreate:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
@@ -23,6 +23,7 @@ func encodeCreateAccessResponse(response CreateAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -35,6 +36,7 @@ func encodeCreateAccessResponse(response CreateAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -47,6 +49,7 @@ func encodeCreateAccessResponse(response CreateAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -59,6 +62,7 @@ func encodeCreateAccessResponse(response CreateAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -78,6 +82,7 @@ func encodeCreateApprovalResponse(response CreateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -90,6 +95,7 @@ func encodeCreateApprovalResponse(response CreateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -102,6 +108,7 @@ func encodeCreateApprovalResponse(response CreateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -114,61 +121,7 @@ func encodeCreateApprovalResponse(response CreateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
-		return nil
 
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeCreateAuditResponse(response CreateAuditRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *AuditCreate:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R400:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R409:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(409)
-		span.SetStatus(codes.Error, http.StatusText(409))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R500:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
 		return nil
 
 	default:
@@ -188,6 +141,7 @@ func encodeCreateMissionResponse(response CreateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -200,6 +154,7 @@ func encodeCreateMissionResponse(response CreateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -212,6 +167,7 @@ func encodeCreateMissionResponse(response CreateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -224,6 +180,7 @@ func encodeCreateMissionResponse(response CreateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -243,6 +200,7 @@ func encodeCreateRequestResponse(response CreateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -255,6 +213,7 @@ func encodeCreateRequestResponse(response CreateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -267,6 +226,7 @@ func encodeCreateRequestResponse(response CreateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -279,6 +239,7 @@ func encodeCreateRequestResponse(response CreateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -298,6 +259,7 @@ func encodeCreateRocketResponse(response CreateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -310,6 +272,7 @@ func encodeCreateRocketResponse(response CreateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -322,6 +285,7 @@ func encodeCreateRocketResponse(response CreateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -334,6 +298,7 @@ func encodeCreateRocketResponse(response CreateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -341,9 +306,9 @@ func encodeCreateRocketResponse(response CreateRocketRes, w http.ResponseWriter,
 	}
 }
 
-func encodeDeleteAccessResponse(response DeleteAccessRes, w http.ResponseWriter, span trace.Span) error {
+func encodeDeleteApiKeyResponse(response DeleteApiKeyRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *DeleteAccessNoContent:
+	case *DeleteApiKeyNoContent:
 		w.WriteHeader(204)
 		span.SetStatus(codes.Ok, http.StatusText(204))
 
@@ -359,6 +324,7 @@ func encodeDeleteAccessResponse(response DeleteAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -371,6 +337,7 @@ func encodeDeleteAccessResponse(response DeleteAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -383,6 +350,7 @@ func encodeDeleteAccessResponse(response DeleteAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -395,6 +363,7 @@ func encodeDeleteAccessResponse(response DeleteAccessRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -420,6 +389,7 @@ func encodeDeleteApprovalResponse(response DeleteApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -432,6 +402,7 @@ func encodeDeleteApprovalResponse(response DeleteApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -444,6 +415,7 @@ func encodeDeleteApprovalResponse(response DeleteApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -456,67 +428,7 @@ func encodeDeleteApprovalResponse(response DeleteApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
-		return nil
 
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeDeleteAuditResponse(response DeleteAuditRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *DeleteAuditNoContent:
-		w.WriteHeader(204)
-		span.SetStatus(codes.Ok, http.StatusText(204))
-
-		return nil
-
-	case *R400:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R404:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		span.SetStatus(codes.Error, http.StatusText(404))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R409:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(409)
-		span.SetStatus(codes.Error, http.StatusText(409))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R500:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
 		return nil
 
 	default:
@@ -542,6 +454,7 @@ func encodeDeleteMissionResponse(response DeleteMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -554,6 +467,7 @@ func encodeDeleteMissionResponse(response DeleteMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -566,6 +480,7 @@ func encodeDeleteMissionResponse(response DeleteMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -578,6 +493,7 @@ func encodeDeleteMissionResponse(response DeleteMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -603,6 +519,7 @@ func encodeDeleteRequestResponse(response DeleteRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -615,6 +532,7 @@ func encodeDeleteRequestResponse(response DeleteRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -627,6 +545,7 @@ func encodeDeleteRequestResponse(response DeleteRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -639,6 +558,7 @@ func encodeDeleteRequestResponse(response DeleteRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -664,6 +584,7 @@ func encodeDeleteRocketResponse(response DeleteRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -676,6 +597,7 @@ func encodeDeleteRocketResponse(response DeleteRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -688,6 +610,7 @@ func encodeDeleteRocketResponse(response DeleteRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -700,6 +623,7 @@ func encodeDeleteRocketResponse(response DeleteRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -707,9 +631,9 @@ func encodeDeleteRocketResponse(response DeleteRocketRes, w http.ResponseWriter,
 	}
 }
 
-func encodeListAccessResponse(response ListAccessRes, w http.ResponseWriter, span trace.Span) error {
+func encodeListAccessAccessTokensResponse(response ListAccessAccessTokensRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *ListAccessOKApplicationJSON:
+	case *ListAccessAccessTokensOKApplicationJSON:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
@@ -719,6 +643,7 @@ func encodeListAccessResponse(response ListAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -731,6 +656,7 @@ func encodeListAccessResponse(response ListAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -743,6 +669,7 @@ func encodeListAccessResponse(response ListAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -755,6 +682,7 @@ func encodeListAccessResponse(response ListAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -767,6 +695,79 @@ func encodeListAccessResponse(response ListAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeListApiKeyResponse(response ListApiKeyRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *ListApiKeyOKApplicationJSON:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R400:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R404:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R409:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(409)
+		span.SetStatus(codes.Error, http.StatusText(409))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R500:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
 		return nil
 
 	default:
@@ -786,6 +787,7 @@ func encodeListApprovalResponse(response ListApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -798,6 +800,7 @@ func encodeListApprovalResponse(response ListApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -810,6 +813,7 @@ func encodeListApprovalResponse(response ListApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -822,6 +826,7 @@ func encodeListApprovalResponse(response ListApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -834,6 +839,7 @@ func encodeListApprovalResponse(response ListApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -853,6 +859,7 @@ func encodeListAuditResponse(response ListAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -865,6 +872,7 @@ func encodeListAuditResponse(response ListAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -877,6 +885,7 @@ func encodeListAuditResponse(response ListAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -889,6 +898,7 @@ func encodeListAuditResponse(response ListAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -901,6 +911,7 @@ func encodeListAuditResponse(response ListAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -920,6 +931,7 @@ func encodeListMissionResponse(response ListMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -932,6 +944,7 @@ func encodeListMissionResponse(response ListMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -944,6 +957,7 @@ func encodeListMissionResponse(response ListMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -956,6 +970,7 @@ func encodeListMissionResponse(response ListMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -968,6 +983,7 @@ func encodeListMissionResponse(response ListMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -987,6 +1003,7 @@ func encodeListMissionRequestsResponse(response ListMissionRequestsRes, w http.R
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -999,6 +1016,7 @@ func encodeListMissionRequestsResponse(response ListMissionRequestsRes, w http.R
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1011,6 +1029,7 @@ func encodeListMissionRequestsResponse(response ListMissionRequestsRes, w http.R
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1023,6 +1042,7 @@ func encodeListMissionRequestsResponse(response ListMissionRequestsRes, w http.R
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1035,6 +1055,79 @@ func encodeListMissionRequestsResponse(response ListMissionRequestsRes, w http.R
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
+		return nil
+
+	default:
+		return errors.Errorf("unexpected response type: %T", response)
+	}
+}
+
+func encodeListMissionRocketsResponse(response ListMissionRocketsRes, w http.ResponseWriter, span trace.Span) error {
+	switch response := response.(type) {
+	case *ListMissionRocketsOKApplicationJSON:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		span.SetStatus(codes.Ok, http.StatusText(200))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R400:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(400)
+		span.SetStatus(codes.Error, http.StatusText(400))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R404:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(404)
+		span.SetStatus(codes.Error, http.StatusText(404))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R409:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(409)
+		span.SetStatus(codes.Error, http.StatusText(409))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
+		return nil
+
+	case *R500:
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(500)
+		span.SetStatus(codes.Error, http.StatusText(500))
+
+		e := jx.GetEncoder()
+		response.Encode(e)
+		if _, err := e.WriteTo(w); err != nil {
+			return errors.Wrap(err, "write")
+		}
+
 		return nil
 
 	default:
@@ -1054,6 +1147,7 @@ func encodeListRequestResponse(response ListRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1066,6 +1160,7 @@ func encodeListRequestResponse(response ListRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1078,6 +1173,7 @@ func encodeListRequestResponse(response ListRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1090,6 +1186,7 @@ func encodeListRequestResponse(response ListRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1102,6 +1199,7 @@ func encodeListRequestResponse(response ListRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -1121,6 +1219,7 @@ func encodeListRocketResponse(response ListRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1133,6 +1232,7 @@ func encodeListRocketResponse(response ListRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1145,6 +1245,7 @@ func encodeListRocketResponse(response ListRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1157,6 +1258,7 @@ func encodeListRocketResponse(response ListRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1169,6 +1271,7 @@ func encodeListRocketResponse(response ListRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -1188,6 +1291,7 @@ func encodeListRocketMissionsResponse(response ListRocketMissionsRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1200,6 +1304,7 @@ func encodeListRocketMissionsResponse(response ListRocketMissionsRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1212,6 +1317,7 @@ func encodeListRocketMissionsResponse(response ListRocketMissionsRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1224,6 +1330,7 @@ func encodeListRocketMissionsResponse(response ListRocketMissionsRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1236,6 +1343,7 @@ func encodeListRocketMissionsResponse(response ListRocketMissionsRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -1243,9 +1351,9 @@ func encodeListRocketMissionsResponse(response ListRocketMissionsRes, w http.Res
 	}
 }
 
-func encodeReadAccessResponse(response ReadAccessRes, w http.ResponseWriter, span trace.Span) error {
+func encodeReadApiKeyResponse(response ReadApiKeyRes, w http.ResponseWriter, span trace.Span) error {
 	switch response := response.(type) {
-	case *AccessRead:
+	case *ApiKeyRead:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		span.SetStatus(codes.Ok, http.StatusText(200))
@@ -1255,6 +1363,7 @@ func encodeReadAccessResponse(response ReadAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1267,6 +1376,7 @@ func encodeReadAccessResponse(response ReadAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1279,6 +1389,7 @@ func encodeReadAccessResponse(response ReadAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1291,6 +1402,7 @@ func encodeReadAccessResponse(response ReadAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1303,73 +1415,7 @@ func encodeReadAccessResponse(response ReadAccessRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
-		return nil
 
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeReadAccessApprovalsResponse(response ReadAccessApprovalsRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *AccessApprovalsRead:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R400:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R404:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		span.SetStatus(codes.Error, http.StatusText(404))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R409:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(409)
-		span.SetStatus(codes.Error, http.StatusText(409))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R500:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
 		return nil
 
 	default:
@@ -1389,6 +1435,7 @@ func encodeReadApprovalResponse(response ReadApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1401,6 +1448,7 @@ func encodeReadApprovalResponse(response ReadApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1413,6 +1461,7 @@ func encodeReadApprovalResponse(response ReadApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1425,6 +1474,7 @@ func encodeReadApprovalResponse(response ReadApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1437,73 +1487,7 @@ func encodeReadApprovalResponse(response ReadApprovalRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
-		return nil
 
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeReadApprovalRequestsResponse(response ReadApprovalRequestsRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *ApprovalRequestsRead:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R400:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R404:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		span.SetStatus(codes.Error, http.StatusText(404))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R409:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(409)
-		span.SetStatus(codes.Error, http.StatusText(409))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R500:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
 		return nil
 
 	default:
@@ -1523,6 +1507,7 @@ func encodeReadAuditResponse(response ReadAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1535,6 +1520,7 @@ func encodeReadAuditResponse(response ReadAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1547,6 +1533,7 @@ func encodeReadAuditResponse(response ReadAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1559,6 +1546,7 @@ func encodeReadAuditResponse(response ReadAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1571,6 +1559,7 @@ func encodeReadAuditResponse(response ReadAuditRes, w http.ResponseWriter, span 
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -1590,6 +1579,7 @@ func encodeReadMissionResponse(response ReadMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1602,6 +1592,7 @@ func encodeReadMissionResponse(response ReadMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1614,6 +1605,7 @@ func encodeReadMissionResponse(response ReadMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1626,6 +1618,7 @@ func encodeReadMissionResponse(response ReadMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1638,73 +1631,7 @@ func encodeReadMissionResponse(response ReadMissionRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
-		return nil
 
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeReadMissionRocketResponse(response ReadMissionRocketRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *MissionRocketRead:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R400:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R404:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		span.SetStatus(codes.Error, http.StatusText(404))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R409:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(409)
-		span.SetStatus(codes.Error, http.StatusText(409))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R500:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
 		return nil
 
 	default:
@@ -1724,6 +1651,7 @@ func encodeReadRequestResponse(response ReadRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1736,6 +1664,7 @@ func encodeReadRequestResponse(response ReadRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1748,6 +1677,7 @@ func encodeReadRequestResponse(response ReadRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1760,6 +1690,7 @@ func encodeReadRequestResponse(response ReadRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1772,6 +1703,7 @@ func encodeReadRequestResponse(response ReadRequestRes, w http.ResponseWriter, s
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -1791,6 +1723,7 @@ func encodeReadRequestMissionResponse(response ReadRequestMissionRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1803,6 +1736,7 @@ func encodeReadRequestMissionResponse(response ReadRequestMissionRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1815,6 +1749,7 @@ func encodeReadRequestMissionResponse(response ReadRequestMissionRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1827,6 +1762,7 @@ func encodeReadRequestMissionResponse(response ReadRequestMissionRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1839,6 +1775,7 @@ func encodeReadRequestMissionResponse(response ReadRequestMissionRes, w http.Res
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -1858,6 +1795,7 @@ func encodeReadRocketResponse(response ReadRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -1870,6 +1808,7 @@ func encodeReadRocketResponse(response ReadRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -1882,6 +1821,7 @@ func encodeReadRocketResponse(response ReadRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -1894,6 +1834,7 @@ func encodeReadRocketResponse(response ReadRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -1906,73 +1847,7 @@ func encodeReadRocketResponse(response ReadRocketRes, w http.ResponseWriter, spa
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
-		return nil
 
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeUpdateAccessResponse(response UpdateAccessRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *AccessUpdate:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R400:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R404:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		span.SetStatus(codes.Error, http.StatusText(404))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R409:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(409)
-		span.SetStatus(codes.Error, http.StatusText(409))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R500:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
 		return nil
 
 	default:
@@ -1992,6 +1867,7 @@ func encodeUpdateApprovalResponse(response UpdateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -2004,6 +1880,7 @@ func encodeUpdateApprovalResponse(response UpdateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -2016,6 +1893,7 @@ func encodeUpdateApprovalResponse(response UpdateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -2028,6 +1906,7 @@ func encodeUpdateApprovalResponse(response UpdateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -2040,73 +1919,7 @@ func encodeUpdateApprovalResponse(response UpdateApprovalRes, w http.ResponseWri
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
-		return nil
 
-	default:
-		return errors.Errorf("unexpected response type: %T", response)
-	}
-}
-
-func encodeUpdateAuditResponse(response UpdateAuditRes, w http.ResponseWriter, span trace.Span) error {
-	switch response := response.(type) {
-	case *AuditUpdate:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
-		span.SetStatus(codes.Ok, http.StatusText(200))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R400:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		span.SetStatus(codes.Error, http.StatusText(400))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R404:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		span.SetStatus(codes.Error, http.StatusText(404))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R409:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(409)
-		span.SetStatus(codes.Error, http.StatusText(409))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
-		return nil
-
-	case *R500:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		span.SetStatus(codes.Error, http.StatusText(500))
-
-		e := jx.GetEncoder()
-		response.Encode(e)
-		if _, err := e.WriteTo(w); err != nil {
-			return errors.Wrap(err, "write")
-		}
 		return nil
 
 	default:
@@ -2126,6 +1939,7 @@ func encodeUpdateMissionResponse(response UpdateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -2138,6 +1952,7 @@ func encodeUpdateMissionResponse(response UpdateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -2150,6 +1965,7 @@ func encodeUpdateMissionResponse(response UpdateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -2162,6 +1978,7 @@ func encodeUpdateMissionResponse(response UpdateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -2174,6 +1991,7 @@ func encodeUpdateMissionResponse(response UpdateMissionRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -2193,6 +2011,7 @@ func encodeUpdateRequestResponse(response UpdateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -2205,6 +2024,7 @@ func encodeUpdateRequestResponse(response UpdateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -2217,6 +2037,7 @@ func encodeUpdateRequestResponse(response UpdateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -2229,6 +2050,7 @@ func encodeUpdateRequestResponse(response UpdateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -2241,6 +2063,7 @@ func encodeUpdateRequestResponse(response UpdateRequestRes, w http.ResponseWrite
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:
@@ -2260,6 +2083,7 @@ func encodeUpdateRocketResponse(response UpdateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R400:
@@ -2272,6 +2096,7 @@ func encodeUpdateRocketResponse(response UpdateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R404:
@@ -2284,6 +2109,7 @@ func encodeUpdateRocketResponse(response UpdateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R409:
@@ -2296,6 +2122,7 @@ func encodeUpdateRocketResponse(response UpdateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	case *R500:
@@ -2308,6 +2135,7 @@ func encodeUpdateRocketResponse(response UpdateRocketRes, w http.ResponseWriter,
 		if _, err := e.WriteTo(w); err != nil {
 			return errors.Wrap(err, "write")
 		}
+
 		return nil
 
 	default:

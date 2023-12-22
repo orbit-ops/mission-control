@@ -13,35 +13,47 @@ const (
 	Label = "access"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldAccessTime holds the string denoting the access_time field in the database.
-	FieldAccessTime = "access_time"
+	// FieldStartTime holds the string denoting the start_time field in the database.
+	FieldStartTime = "start_time"
 	// FieldApproved holds the string denoting the approved field in the database.
 	FieldApproved = "approved"
 	// FieldRolledBack holds the string denoting the rolled_back field in the database.
 	FieldRolledBack = "rolled_back"
 	// FieldRollbackTime holds the string denoting the rollback_time field in the database.
 	FieldRollbackTime = "rollback_time"
+	// FieldRollbackReason holds the string denoting the rollback_reason field in the database.
+	FieldRollbackReason = "rollback_reason"
 	// FieldEndTime holds the string denoting the end_time field in the database.
 	FieldEndTime = "end_time"
 	// FieldRequestID holds the string denoting the request_id field in the database.
 	FieldRequestID = "request_id"
 	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
 	EdgeApprovals = "approvals"
+	// EdgeAccessTokens holds the string denoting the accesstokens edge name in mutations.
+	EdgeAccessTokens = "accessTokens"
 	// Table holds the table name of the access in the database.
 	Table = "accesses"
 	// ApprovalsTable is the table that holds the approvals relation/edge.
 	ApprovalsTable = "accesses"
 	// ApprovalsColumn is the table column denoting the approvals relation/edge.
 	ApprovalsColumn = "access_approvals"
+	// AccessTokensTable is the table that holds the accessTokens relation/edge.
+	AccessTokensTable = "action_tokens"
+	// AccessTokensInverseTable is the table name for the ActionTokens entity.
+	// It exists in this package in order to avoid circular dependency with the "actiontokens" package.
+	AccessTokensInverseTable = "action_tokens"
+	// AccessTokensColumn is the table column denoting the accessTokens relation/edge.
+	AccessTokensColumn = "access_id"
 )
 
 // Columns holds all SQL columns for access fields.
 var Columns = []string{
 	FieldID,
-	FieldAccessTime,
+	FieldStartTime,
 	FieldApproved,
 	FieldRolledBack,
 	FieldRollbackTime,
+	FieldRollbackReason,
 	FieldEndTime,
 	FieldRequestID,
 }
@@ -82,9 +94,9 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByAccessTime orders the results by the access_time field.
-func ByAccessTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldAccessTime, opts...).ToFunc()
+// ByStartTime orders the results by the start_time field.
+func ByStartTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStartTime, opts...).ToFunc()
 }
 
 // ByApproved orders the results by the approved field.
@@ -100,6 +112,11 @@ func ByRolledBack(opts ...sql.OrderTermOption) OrderOption {
 // ByRollbackTime orders the results by the rollback_time field.
 func ByRollbackTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRollbackTime, opts...).ToFunc()
+}
+
+// ByRollbackReason orders the results by the rollback_reason field.
+func ByRollbackReason(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRollbackReason, opts...).ToFunc()
 }
 
 // ByEndTime orders the results by the end_time field.
@@ -118,10 +135,31 @@ func ByApprovalsField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newApprovalsStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByAccessTokensCount orders the results by accessTokens count.
+func ByAccessTokensCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAccessTokensStep(), opts...)
+	}
+}
+
+// ByAccessTokens orders the results by accessTokens terms.
+func ByAccessTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccessTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newApprovalsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(Table, FieldID),
 		sqlgraph.Edge(sqlgraph.O2O, false, ApprovalsTable, ApprovalsColumn),
+	)
+}
+func newAccessTokensStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccessTokensInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, AccessTokensTable, AccessTokensColumn),
 	)
 }

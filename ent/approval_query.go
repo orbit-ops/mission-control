@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/approval"
-	"github.com/orbit-ops/mission-control/ent/predicate"
-	"github.com/orbit-ops/mission-control/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/request"
 )
 
 // ApprovalQuery is the builder for querying Approval entities.

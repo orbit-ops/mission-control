@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/contrib/entoas"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -28,6 +29,9 @@ func (Approval) Fields() []ent.Field {
 // Edges of the Approval.
 func (Approval) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("requests", Request.Type).Unique().Required(),
+		edge.To("requests", Request.Type).Unique().Required().
+			Annotations(
+				entoas.ReadOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+			),
 	}
 }

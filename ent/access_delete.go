@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/access"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // AccessDelete is the builder for deleting a Access entity.

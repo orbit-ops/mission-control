@@ -7,13 +7,14 @@ import (
 	"net/http"
 
 	"github.com/go-faster/jx"
-	"github.com/orbit-ops/mission-control/ent"
-	"github.com/orbit-ops/mission-control/ent/access"
-	"github.com/orbit-ops/mission-control/ent/approval"
-	"github.com/orbit-ops/mission-control/ent/audit"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/request"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/apikey"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
+	"github.com/orbit-ops/launchpad-core/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // OgentHandler implements the ogen generated Handler interface and uses Ent as data layer.
@@ -31,22 +32,49 @@ func rawError(err error) jx.Raw {
 	return e.Bytes()
 }
 
-// CreateAccess handles POST /accesses requests.
-func (h *OgentHandler) CreateAccess(ctx context.Context, req *CreateAccessReq) (CreateAccessRes, error) {
-	b := h.client.Access.Create()
+// ListAccessAccessTokens handles GET /accesses/{id}/access-tokens requests.
+func (h *OgentHandler) ListAccessAccessTokens(ctx context.Context, params ListAccessAccessTokensParams) (ListAccessAccessTokensRes, error) {
+	q := h.client.Access.Query().Where(access.IDEQ(params.ID)).QueryAccessTokens()
+	page := 1
+	if v, ok := params.Page.Get(); ok {
+		page = v
+	}
+	itemsPerPage := 30
+	if v, ok := params.ItemsPerPage.Get(); ok {
+		itemsPerPage = v
+	}
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+	es, err := q.All(ctx)
+	if err != nil {
+		switch {
+		case ent.IsNotFound(err):
+			return &R404{
+				Code:   http.StatusNotFound,
+				Status: http.StatusText(http.StatusNotFound),
+				Errors: rawError(err),
+			}, nil
+		case ent.IsNotSingular(err):
+			return &R409{
+				Code:   http.StatusConflict,
+				Status: http.StatusText(http.StatusConflict),
+				Errors: rawError(err),
+			}, nil
+		default:
+			// Let the server handle the error.
+			return nil, err
+		}
+	}
+	r := NewAccessAccessTokensLists(es)
+	return (*ListAccessAccessTokensOKApplicationJSON)(&r), nil
+}
+
+// CreateApiKey handles POST /api-keys requests.
+func (h *OgentHandler) CreateApiKey(ctx context.Context, req *CreateApiKeyReq) (CreateApiKeyRes, error) {
+	b := h.client.ApiKey.Create()
 	// Add all fields.
-	b.SetAccessTime(req.AccessTime)
-	b.SetApproved(req.Approved)
-	b.SetRolledBack(req.RolledBack)
-	if v, ok := req.RollbackTime.Get(); ok {
-		b.SetRollbackTime(v)
-	}
-	b.SetEndTime(req.EndTime)
-	b.SetRequestID(req.RequestID)
+	b.SetName(req.Name)
+	b.SetKey(req.Key)
 	// Add all edges.
-	if v, ok := req.Approvals.Get(); ok {
-		b.SetApprovalsID(v)
-	}
 	// Persist to storage.
 	e, err := b.Save(ctx)
 	if err != nil {
@@ -69,60 +97,18 @@ func (h *OgentHandler) CreateAccess(ctx context.Context, req *CreateAccessReq) (
 		}
 	}
 	// Reload the entity to attach all eager-loaded edges.
-	q := h.client.Access.Query().Where(access.ID(e.ID))
+	q := h.client.ApiKey.Query().Where(apikey.ID(e.ID))
 	e, err = q.Only(ctx)
 	if err != nil {
 		// This should never happen.
 		return nil, err
 	}
-	return NewAccessCreate(e), nil
+	return NewApiKeyCreate(e), nil
 }
 
-// ReadAccess handles GET /accesses/{id} requests.
-func (h *OgentHandler) ReadAccess(ctx context.Context, params ReadAccessParams) (ReadAccessRes, error) {
-	q := h.client.Access.Query().Where(access.IDEQ(params.ID))
-	e, err := q.Only(ctx)
-	if err != nil {
-		switch {
-		case ent.IsNotFound(err):
-			return &R404{
-				Code:   http.StatusNotFound,
-				Status: http.StatusText(http.StatusNotFound),
-				Errors: rawError(err),
-			}, nil
-		case ent.IsNotSingular(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		default:
-			// Let the server handle the error.
-			return nil, err
-		}
-	}
-	return NewAccessRead(e), nil
-}
-
-// UpdateAccess handles PATCH /accesses/{id} requests.
-func (h *OgentHandler) UpdateAccess(ctx context.Context, req *UpdateAccessReq, params UpdateAccessParams) (UpdateAccessRes, error) {
-	b := h.client.Access.UpdateOneID(params.ID)
-	// Add all fields.
-	if v, ok := req.RolledBack.Get(); ok {
-		b.SetRolledBack(v)
-	}
-	if v, ok := req.RollbackTime.Get(); ok {
-		b.SetRollbackTime(v)
-	}
-	if v, ok := req.RequestID.Get(); ok {
-		b.SetRequestID(v)
-	}
-	// Add all edges.
-	if v, ok := req.Approvals.Get(); ok {
-		b.SetApprovalsID(v)
-	}
-	// Persist to storage.
-	e, err := b.Save(ctx)
+// DeleteApiKey handles DELETE /api-keys/{id} requests.
+func (h *OgentHandler) DeleteApiKey(ctx context.Context, params DeleteApiKeyParams) (DeleteApiKeyRes, error) {
+	err := h.client.ApiKey.DeleteOneID(params.ID).Exec(ctx)
 	if err != nil {
 		switch {
 		case ent.IsNotFound(err):
@@ -142,45 +128,13 @@ func (h *OgentHandler) UpdateAccess(ctx context.Context, req *UpdateAccessReq, p
 			return nil, err
 		}
 	}
-	// Reload the entity to attach all eager-loaded edges.
-	q := h.client.Access.Query().Where(access.ID(e.ID))
-	e, err = q.Only(ctx)
-	if err != nil {
-		// This should never happen.
-		return nil, err
-	}
-	return NewAccessUpdate(e), nil
-}
-
-// DeleteAccess handles DELETE /accesses/{id} requests.
-func (h *OgentHandler) DeleteAccess(ctx context.Context, params DeleteAccessParams) (DeleteAccessRes, error) {
-	err := h.client.Access.DeleteOneID(params.ID).Exec(ctx)
-	if err != nil {
-		switch {
-		case ent.IsNotFound(err):
-			return &R404{
-				Code:   http.StatusNotFound,
-				Status: http.StatusText(http.StatusNotFound),
-				Errors: rawError(err),
-			}, nil
-		case ent.IsConstraintError(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		default:
-			// Let the server handle the error.
-			return nil, err
-		}
-	}
-	return new(DeleteAccessNoContent), nil
+	return new(DeleteApiKeyNoContent), nil
 
 }
 
-// ListAccess handles GET /accesses requests.
-func (h *OgentHandler) ListAccess(ctx context.Context, params ListAccessParams) (ListAccessRes, error) {
-	q := h.client.Access.Query()
+// ListApiKey handles GET /api-keys requests.
+func (h *OgentHandler) ListApiKey(ctx context.Context, params ListApiKeyParams) (ListApiKeyRes, error) {
+	q := h.client.ApiKey.Query()
 	page := 1
 	if v, ok := params.Page.Get(); ok {
 		page = v
@@ -211,13 +165,13 @@ func (h *OgentHandler) ListAccess(ctx context.Context, params ListAccessParams) 
 			return nil, err
 		}
 	}
-	r := NewAccessLists(es)
-	return (*ListAccessOKApplicationJSON)(&r), nil
+	r := NewApiKeyLists(es)
+	return (*ListApiKeyOKApplicationJSON)(&r), nil
 }
 
-// ReadAccessApprovals handles GET /accesses/{id}/approvals requests.
-func (h *OgentHandler) ReadAccessApprovals(ctx context.Context, params ReadAccessApprovalsParams) (ReadAccessApprovalsRes, error) {
-	q := h.client.Access.Query().Where(access.IDEQ(params.ID)).QueryApprovals()
+// ReadApiKey handles GET /api-keys/{id} requests.
+func (h *OgentHandler) ReadApiKey(ctx context.Context, params ReadApiKeyParams) (ReadApiKeyRes, error) {
+	q := h.client.ApiKey.Query().Where(apikey.IDEQ(params.ID))
 	e, err := q.Only(ctx)
 	if err != nil {
 		switch {
@@ -238,7 +192,7 @@ func (h *OgentHandler) ReadAccessApprovals(ctx context.Context, params ReadAcces
 			return nil, err
 		}
 	}
-	return NewAccessApprovalsRead(e), nil
+	return NewApiKeyRead(e), nil
 }
 
 // CreateApproval handles POST /approvals requests.
@@ -423,159 +377,6 @@ func (h *OgentHandler) ListApproval(ctx context.Context, params ListApprovalPara
 	return (*ListApprovalOKApplicationJSON)(&r), nil
 }
 
-// ReadApprovalRequests handles GET /approvals/{id}/requests requests.
-func (h *OgentHandler) ReadApprovalRequests(ctx context.Context, params ReadApprovalRequestsParams) (ReadApprovalRequestsRes, error) {
-	q := h.client.Approval.Query().Where(approval.IDEQ(params.ID)).QueryRequests()
-	e, err := q.Only(ctx)
-	if err != nil {
-		switch {
-		case ent.IsNotFound(err):
-			return &R404{
-				Code:   http.StatusNotFound,
-				Status: http.StatusText(http.StatusNotFound),
-				Errors: rawError(err),
-			}, nil
-		case ent.IsNotSingular(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		default:
-			// Let the server handle the error.
-			return nil, err
-		}
-	}
-	return NewApprovalRequestsRead(e), nil
-}
-
-// CreateAudit handles POST /audits requests.
-func (h *OgentHandler) CreateAudit(ctx context.Context, req *CreateAuditReq) (CreateAuditRes, error) {
-	b := h.client.Audit.Create()
-	// Add all fields.
-	b.SetAction(req.Action)
-	b.SetAuthor(req.Author)
-	b.SetTimestamp(req.Timestamp)
-	// Add all edges.
-	// Persist to storage.
-	e, err := b.Save(ctx)
-	if err != nil {
-		switch {
-		case ent.IsNotSingular(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		case ent.IsConstraintError(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		default:
-			// Let the server handle the error.
-			return nil, err
-		}
-	}
-	// Reload the entity to attach all eager-loaded edges.
-	q := h.client.Audit.Query().Where(audit.ID(e.ID))
-	e, err = q.Only(ctx)
-	if err != nil {
-		// This should never happen.
-		return nil, err
-	}
-	return NewAuditCreate(e), nil
-}
-
-// ReadAudit handles GET /audits/{id} requests.
-func (h *OgentHandler) ReadAudit(ctx context.Context, params ReadAuditParams) (ReadAuditRes, error) {
-	q := h.client.Audit.Query().Where(audit.IDEQ(params.ID))
-	e, err := q.Only(ctx)
-	if err != nil {
-		switch {
-		case ent.IsNotFound(err):
-			return &R404{
-				Code:   http.StatusNotFound,
-				Status: http.StatusText(http.StatusNotFound),
-				Errors: rawError(err),
-			}, nil
-		case ent.IsNotSingular(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		default:
-			// Let the server handle the error.
-			return nil, err
-		}
-	}
-	return NewAuditRead(e), nil
-}
-
-// UpdateAudit handles PATCH /audits/{id} requests.
-func (h *OgentHandler) UpdateAudit(ctx context.Context, req *UpdateAuditReq, params UpdateAuditParams) (UpdateAuditRes, error) {
-	b := h.client.Audit.UpdateOneID(params.ID)
-	// Add all fields.
-	// Add all edges.
-	// Persist to storage.
-	e, err := b.Save(ctx)
-	if err != nil {
-		switch {
-		case ent.IsNotFound(err):
-			return &R404{
-				Code:   http.StatusNotFound,
-				Status: http.StatusText(http.StatusNotFound),
-				Errors: rawError(err),
-			}, nil
-		case ent.IsConstraintError(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		default:
-			// Let the server handle the error.
-			return nil, err
-		}
-	}
-	// Reload the entity to attach all eager-loaded edges.
-	q := h.client.Audit.Query().Where(audit.ID(e.ID))
-	e, err = q.Only(ctx)
-	if err != nil {
-		// This should never happen.
-		return nil, err
-	}
-	return NewAuditUpdate(e), nil
-}
-
-// DeleteAudit handles DELETE /audits/{id} requests.
-func (h *OgentHandler) DeleteAudit(ctx context.Context, params DeleteAuditParams) (DeleteAuditRes, error) {
-	err := h.client.Audit.DeleteOneID(params.ID).Exec(ctx)
-	if err != nil {
-		switch {
-		case ent.IsNotFound(err):
-			return &R404{
-				Code:   http.StatusNotFound,
-				Status: http.StatusText(http.StatusNotFound),
-				Errors: rawError(err),
-			}, nil
-		case ent.IsConstraintError(err):
-			return &R409{
-				Code:   http.StatusConflict,
-				Status: http.StatusText(http.StatusConflict),
-				Errors: rawError(err),
-			}, nil
-		default:
-			// Let the server handle the error.
-			return nil, err
-		}
-	}
-	return new(DeleteAuditNoContent), nil
-
-}
-
 // ListAudit handles GET /audits requests.
 func (h *OgentHandler) ListAudit(ctx context.Context, params ListAuditParams) (ListAuditRes, error) {
 	q := h.client.Audit.Query()
@@ -613,6 +414,32 @@ func (h *OgentHandler) ListAudit(ctx context.Context, params ListAuditParams) (L
 	return (*ListAuditOKApplicationJSON)(&r), nil
 }
 
+// ReadAudit handles GET /audits/{id} requests.
+func (h *OgentHandler) ReadAudit(ctx context.Context, params ReadAuditParams) (ReadAuditRes, error) {
+	q := h.client.Audit.Query().Where(audit.IDEQ(params.ID))
+	e, err := q.Only(ctx)
+	if err != nil {
+		switch {
+		case ent.IsNotFound(err):
+			return &R404{
+				Code:   http.StatusNotFound,
+				Status: http.StatusText(http.StatusNotFound),
+				Errors: rawError(err),
+			}, nil
+		case ent.IsNotSingular(err):
+			return &R409{
+				Code:   http.StatusConflict,
+				Status: http.StatusText(http.StatusConflict),
+				Errors: rawError(err),
+			}, nil
+		default:
+			// Let the server handle the error.
+			return nil, err
+		}
+	}
+	return NewAuditRead(e), nil
+}
+
 // CreateMission handles POST /missions requests.
 func (h *OgentHandler) CreateMission(ctx context.Context, req *CreateMissionReq) (CreateMissionRes, error) {
 	b := h.client.Mission.Create()
@@ -620,11 +447,10 @@ func (h *OgentHandler) CreateMission(ctx context.Context, req *CreateMissionReq)
 	if v, ok := req.Description.Get(); ok {
 		b.SetDescription(v)
 	}
-	b.SetImage(req.Image)
 	b.SetMinApprovers(req.MinApprovers)
-	b.SetRocketID(req.RocketID)
+	b.SetPossibleApprovers(req.PossibleApprovers)
 	// Add all edges.
-	b.SetRocketID(req.Rocket)
+	b.AddRocketIDs(req.Rockets...)
 	b.AddRequestIDs(req.Requests...)
 	// Persist to storage.
 	e, err := b.Save(ctx)
@@ -690,11 +516,11 @@ func (h *OgentHandler) UpdateMission(ctx context.Context, req *UpdateMissionReq,
 	if v, ok := req.Description.Get(); ok {
 		b.SetDescription(v)
 	}
-	if v, ok := req.Image.Get(); ok {
-		b.SetImage(v)
-	}
 	if v, ok := req.MinApprovers.Get(); ok {
 		b.SetMinApprovers(v)
+	}
+	if v, ok := req.PossibleApprovers.Get(); ok {
+		b.SetPossibleApprovers(v)
 	}
 	// Add all edges.
 	if req.Requests != nil {
@@ -794,10 +620,19 @@ func (h *OgentHandler) ListMission(ctx context.Context, params ListMissionParams
 	return (*ListMissionOKApplicationJSON)(&r), nil
 }
 
-// ReadMissionRocket handles GET /missions/{id}/rocket requests.
-func (h *OgentHandler) ReadMissionRocket(ctx context.Context, params ReadMissionRocketParams) (ReadMissionRocketRes, error) {
-	q := h.client.Mission.Query().Where(mission.IDEQ(params.ID)).QueryRocket()
-	e, err := q.Only(ctx)
+// ListMissionRockets handles GET /missions/{id}/rockets requests.
+func (h *OgentHandler) ListMissionRockets(ctx context.Context, params ListMissionRocketsParams) (ListMissionRocketsRes, error) {
+	q := h.client.Mission.Query().Where(mission.IDEQ(params.ID)).QueryRockets()
+	page := 1
+	if v, ok := params.Page.Get(); ok {
+		page = v
+	}
+	itemsPerPage := 30
+	if v, ok := params.ItemsPerPage.Get(); ok {
+		itemsPerPage = v
+	}
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+	es, err := q.All(ctx)
 	if err != nil {
 		switch {
 		case ent.IsNotFound(err):
@@ -817,7 +652,8 @@ func (h *OgentHandler) ReadMissionRocket(ctx context.Context, params ReadMission
 			return nil, err
 		}
 	}
-	return NewMissionRocketRead(e), nil
+	r := NewMissionRocketsLists(es)
+	return (*ListMissionRocketsOKApplicationJSON)(&r), nil
 }
 
 // ListMissionRequests handles GET /missions/{id}/requests requests.
@@ -862,7 +698,7 @@ func (h *OgentHandler) CreateRequest(ctx context.Context, req *CreateRequestReq)
 	// Add all fields.
 	b.SetReason(req.Reason)
 	b.SetRequester(req.Requester)
-	b.SetMissionID(req.MissionID)
+	b.SetRocketConfig(req.RocketConfig)
 	// Add all edges.
 	b.SetMissionID(req.Mission)
 	// Persist to storage.
@@ -928,6 +764,9 @@ func (h *OgentHandler) UpdateRequest(ctx context.Context, req *UpdateRequestReq,
 	// Add all fields.
 	if v, ok := req.Reason.Get(); ok {
 		b.SetReason(v)
+	}
+	if v, ok := req.RocketConfig.Get(); ok {
+		b.SetRocketConfig(v)
 	}
 	// Add all edges.
 	// Persist to storage.
@@ -1057,7 +896,12 @@ func (h *OgentHandler) CreateRocket(ctx context.Context, req *CreateRocketReq) (
 	if v, ok := req.Description.Get(); ok {
 		b.SetDescription(v)
 	}
-	b.SetImage(req.Image)
+	if v, ok := req.Image.Get(); ok {
+		b.SetImage(v)
+	}
+	if v, ok := req.Zip.Get(); ok {
+		b.SetZip(v)
+	}
 	b.SetConfig(req.Config)
 	// Add all edges.
 	b.AddMissionIDs(req.Missions...)
@@ -1127,6 +971,9 @@ func (h *OgentHandler) UpdateRocket(ctx context.Context, req *UpdateRocketReq, p
 	}
 	if v, ok := req.Image.Get(); ok {
 		b.SetImage(v)
+	}
+	if v, ok := req.Zip.Get(); ok {
+		b.SetZip(v)
 	}
 	if v, ok := req.Config.Get(); ok {
 		b.SetConfig(v)

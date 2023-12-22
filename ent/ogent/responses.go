@@ -2,171 +2,121 @@
 
 package ogent
 
-import "github.com/orbit-ops/mission-control/ent"
+import "github.com/orbit-ops/launchpad-core/ent"
 
-func NewAccessCreate(e *ent.Access) *AccessCreate {
+func NewAccessAccessTokensList(e *ent.ActionTokens) *AccessAccessTokensList {
 	if e == nil {
 		return nil
 	}
-	var ret AccessCreate
+	var ret AccessAccessTokensList
 	ret.ID = e.ID
-	ret.AccessTime = e.AccessTime
-	ret.Approved = e.Approved
-	ret.RolledBack = e.RolledBack
-	ret.RollbackTime = NewOptDateTime(e.RollbackTime)
-	ret.EndTime = e.EndTime
-	ret.RequestID = e.RequestID
+	ret.Action = AccessAccessTokensListAction(e.Action)
+	ret.Token = e.Token
+	ret.AccessID = e.AccessID
+	ret.Expiration = e.Expiration
 	return &ret
 }
 
-func NewAccessCreates(es []*ent.Access) []AccessCreate {
+func NewAccessAccessTokensLists(es []*ent.ActionTokens) []AccessAccessTokensList {
 	if len(es) == 0 {
 		return nil
 	}
-	r := make([]AccessCreate, len(es))
+	r := make([]AccessAccessTokensList, len(es))
 	for i, e := range es {
-		r[i] = NewAccessCreate(e).Elem()
+		r[i] = NewAccessAccessTokensList(e).Elem()
 	}
 	return r
 }
 
-func (a *AccessCreate) Elem() AccessCreate {
-	if a == nil {
-		return AccessCreate{}
+func (at *AccessAccessTokensList) Elem() AccessAccessTokensList {
+	if at == nil {
+		return AccessAccessTokensList{}
 	}
-	return *a
+	return *at
 }
 
-func NewAccessList(e *ent.Access) *AccessList {
+func NewApiKeyCreate(e *ent.ApiKey) *ApiKeyCreate {
 	if e == nil {
 		return nil
 	}
-	var ret AccessList
+	var ret ApiKeyCreate
 	ret.ID = e.ID
-	ret.AccessTime = e.AccessTime
-	ret.Approved = e.Approved
-	ret.RolledBack = e.RolledBack
-	ret.RollbackTime = NewOptDateTime(e.RollbackTime)
-	ret.EndTime = e.EndTime
-	ret.RequestID = e.RequestID
+	ret.Name = e.Name
 	return &ret
 }
 
-func NewAccessLists(es []*ent.Access) []AccessList {
+func NewApiKeyCreates(es []*ent.ApiKey) []ApiKeyCreate {
 	if len(es) == 0 {
 		return nil
 	}
-	r := make([]AccessList, len(es))
+	r := make([]ApiKeyCreate, len(es))
 	for i, e := range es {
-		r[i] = NewAccessList(e).Elem()
+		r[i] = NewApiKeyCreate(e).Elem()
 	}
 	return r
 }
 
-func (a *AccessList) Elem() AccessList {
-	if a == nil {
-		return AccessList{}
+func (ak *ApiKeyCreate) Elem() ApiKeyCreate {
+	if ak == nil {
+		return ApiKeyCreate{}
 	}
-	return *a
+	return *ak
 }
 
-func NewAccessRead(e *ent.Access) *AccessRead {
+func NewApiKeyList(e *ent.ApiKey) *ApiKeyList {
 	if e == nil {
 		return nil
 	}
-	var ret AccessRead
+	var ret ApiKeyList
 	ret.ID = e.ID
-	ret.AccessTime = e.AccessTime
-	ret.Approved = e.Approved
-	ret.RolledBack = e.RolledBack
-	ret.RollbackTime = NewOptDateTime(e.RollbackTime)
-	ret.EndTime = e.EndTime
-	ret.RequestID = e.RequestID
+	ret.Name = e.Name
 	return &ret
 }
 
-func NewAccessReads(es []*ent.Access) []AccessRead {
+func NewApiKeyLists(es []*ent.ApiKey) []ApiKeyList {
 	if len(es) == 0 {
 		return nil
 	}
-	r := make([]AccessRead, len(es))
+	r := make([]ApiKeyList, len(es))
 	for i, e := range es {
-		r[i] = NewAccessRead(e).Elem()
+		r[i] = NewApiKeyList(e).Elem()
 	}
 	return r
 }
 
-func (a *AccessRead) Elem() AccessRead {
-	if a == nil {
-		return AccessRead{}
+func (ak *ApiKeyList) Elem() ApiKeyList {
+	if ak == nil {
+		return ApiKeyList{}
 	}
-	return *a
+	return *ak
 }
 
-func NewAccessUpdate(e *ent.Access) *AccessUpdate {
+func NewApiKeyRead(e *ent.ApiKey) *ApiKeyRead {
 	if e == nil {
 		return nil
 	}
-	var ret AccessUpdate
+	var ret ApiKeyRead
 	ret.ID = e.ID
-	ret.AccessTime = e.AccessTime
-	ret.Approved = e.Approved
-	ret.RolledBack = e.RolledBack
-	ret.RollbackTime = NewOptDateTime(e.RollbackTime)
-	ret.EndTime = e.EndTime
-	ret.RequestID = e.RequestID
+	ret.Name = e.Name
 	return &ret
 }
 
-func NewAccessUpdates(es []*ent.Access) []AccessUpdate {
+func NewApiKeyReads(es []*ent.ApiKey) []ApiKeyRead {
 	if len(es) == 0 {
 		return nil
 	}
-	r := make([]AccessUpdate, len(es))
+	r := make([]ApiKeyRead, len(es))
 	for i, e := range es {
-		r[i] = NewAccessUpdate(e).Elem()
+		r[i] = NewApiKeyRead(e).Elem()
 	}
 	return r
 }
 
-func (a *AccessUpdate) Elem() AccessUpdate {
-	if a == nil {
-		return AccessUpdate{}
+func (ak *ApiKeyRead) Elem() ApiKeyRead {
+	if ak == nil {
+		return ApiKeyRead{}
 	}
-	return *a
-}
-
-func NewAccessApprovalsRead(e *ent.Access) *AccessApprovalsRead {
-	if e == nil {
-		return nil
-	}
-	var ret AccessApprovalsRead
-	ret.ID = e.ID
-	ret.AccessTime = e.AccessTime
-	ret.Approved = e.Approved
-	ret.RolledBack = e.RolledBack
-	ret.RollbackTime = NewOptDateTime(e.RollbackTime)
-	ret.EndTime = e.EndTime
-	ret.RequestID = e.RequestID
-	return &ret
-}
-
-func NewAccessApprovalsReads(es []*ent.Access) []AccessApprovalsRead {
-	if len(es) == 0 {
-		return nil
-	}
-	r := make([]AccessApprovalsRead, len(es))
-	for i, e := range es {
-		r[i] = NewAccessApprovalsRead(e).Elem()
-	}
-	return r
-}
-
-func (a *AccessApprovalsRead) Elem() AccessApprovalsRead {
-	if a == nil {
-		return AccessApprovalsRead{}
-	}
-	return *a
+	return *ak
 }
 
 func NewApprovalCreate(e *ent.Approval) *ApprovalCreate {
@@ -301,73 +251,13 @@ func (a *ApprovalUpdate) Elem() ApprovalUpdate {
 	return *a
 }
 
-func NewApprovalRequestsRead(e *ent.Request) *ApprovalRequestsRead {
-	if e == nil {
-		return nil
-	}
-	var ret ApprovalRequestsRead
-	ret.ID = e.ID
-	ret.Reason = e.Reason
-	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
-	return &ret
-}
-
-func NewApprovalRequestsReads(es []*ent.Request) []ApprovalRequestsRead {
-	if len(es) == 0 {
-		return nil
-	}
-	r := make([]ApprovalRequestsRead, len(es))
-	for i, e := range es {
-		r[i] = NewApprovalRequestsRead(e).Elem()
-	}
-	return r
-}
-
-func (r *ApprovalRequestsRead) Elem() ApprovalRequestsRead {
-	if r == nil {
-		return ApprovalRequestsRead{}
-	}
-	return *r
-}
-
-func NewAuditCreate(e *ent.Audit) *AuditCreate {
-	if e == nil {
-		return nil
-	}
-	var ret AuditCreate
-	ret.ID = e.ID
-	ret.Action = e.Action
-	ret.Author = e.Author
-	ret.Timestamp = e.Timestamp
-	return &ret
-}
-
-func NewAuditCreates(es []*ent.Audit) []AuditCreate {
-	if len(es) == 0 {
-		return nil
-	}
-	r := make([]AuditCreate, len(es))
-	for i, e := range es {
-		r[i] = NewAuditCreate(e).Elem()
-	}
-	return r
-}
-
-func (a *AuditCreate) Elem() AuditCreate {
-	if a == nil {
-		return AuditCreate{}
-	}
-	return *a
-}
-
 func NewAuditList(e *ent.Audit) *AuditList {
 	if e == nil {
 		return nil
 	}
 	var ret AuditList
 	ret.ID = e.ID
-	ret.Action = e.Action
+	ret.Action = AuditListAction(e.Action)
 	ret.Author = e.Author
 	ret.Timestamp = e.Timestamp
 	return &ret
@@ -397,7 +287,7 @@ func NewAuditRead(e *ent.Audit) *AuditRead {
 	}
 	var ret AuditRead
 	ret.ID = e.ID
-	ret.Action = e.Action
+	ret.Action = AuditReadAction(e.Action)
 	ret.Author = e.Author
 	ret.Timestamp = e.Timestamp
 	return &ret
@@ -421,36 +311,6 @@ func (a *AuditRead) Elem() AuditRead {
 	return *a
 }
 
-func NewAuditUpdate(e *ent.Audit) *AuditUpdate {
-	if e == nil {
-		return nil
-	}
-	var ret AuditUpdate
-	ret.ID = e.ID
-	ret.Action = e.Action
-	ret.Author = e.Author
-	ret.Timestamp = e.Timestamp
-	return &ret
-}
-
-func NewAuditUpdates(es []*ent.Audit) []AuditUpdate {
-	if len(es) == 0 {
-		return nil
-	}
-	r := make([]AuditUpdate, len(es))
-	for i, e := range es {
-		r[i] = NewAuditUpdate(e).Elem()
-	}
-	return r
-}
-
-func (a *AuditUpdate) Elem() AuditUpdate {
-	if a == nil {
-		return AuditUpdate{}
-	}
-	return *a
-}
-
 func NewMissionCreate(e *ent.Mission) *MissionCreate {
 	if e == nil {
 		return nil
@@ -458,9 +318,8 @@ func NewMissionCreate(e *ent.Mission) *MissionCreate {
 	var ret MissionCreate
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
 	ret.MinApprovers = e.MinApprovers
-	ret.RocketID = e.RocketID
+	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
 }
 
@@ -489,9 +348,8 @@ func NewMissionList(e *ent.Mission) *MissionList {
 	var ret MissionList
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
 	ret.MinApprovers = e.MinApprovers
-	ret.RocketID = e.RocketID
+	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
 }
 
@@ -520,9 +378,8 @@ func NewMissionRead(e *ent.Mission) *MissionRead {
 	var ret MissionRead
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
 	ret.MinApprovers = e.MinApprovers
-	ret.RocketID = e.RocketID
+	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
 }
 
@@ -551,9 +408,8 @@ func NewMissionUpdate(e *ent.Mission) *MissionUpdate {
 	var ret MissionUpdate
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
 	ret.MinApprovers = e.MinApprovers
-	ret.RocketID = e.RocketID
+	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
 }
 
@@ -583,7 +439,7 @@ func NewMissionRequestsList(e *ent.Request) *MissionRequestsList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
+	ret.RocketConfig = e.RocketConfig
 	return &ret
 }
 
@@ -605,32 +461,33 @@ func (r *MissionRequestsList) Elem() MissionRequestsList {
 	return *r
 }
 
-func NewMissionRocketRead(e *ent.Rocket) *MissionRocketRead {
+func NewMissionRocketsList(e *ent.Rocket) *MissionRocketsList {
 	if e == nil {
 		return nil
 	}
-	var ret MissionRocketRead
+	var ret MissionRocketsList
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
+	ret.Image = NewOptString(e.Image)
+	ret.Zip = NewOptString(e.Zip)
 	ret.Config = e.Config
 	return &ret
 }
 
-func NewMissionRocketReads(es []*ent.Rocket) []MissionRocketRead {
+func NewMissionRocketsLists(es []*ent.Rocket) []MissionRocketsList {
 	if len(es) == 0 {
 		return nil
 	}
-	r := make([]MissionRocketRead, len(es))
+	r := make([]MissionRocketsList, len(es))
 	for i, e := range es {
-		r[i] = NewMissionRocketRead(e).Elem()
+		r[i] = NewMissionRocketsList(e).Elem()
 	}
 	return r
 }
 
-func (r *MissionRocketRead) Elem() MissionRocketRead {
+func (r *MissionRocketsList) Elem() MissionRocketsList {
 	if r == nil {
-		return MissionRocketRead{}
+		return MissionRocketsList{}
 	}
 	return *r
 }
@@ -643,7 +500,7 @@ func NewRequestCreate(e *ent.Request) *RequestCreate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
+	ret.RocketConfig = e.RocketConfig
 	return &ret
 }
 
@@ -673,7 +530,7 @@ func NewRequestList(e *ent.Request) *RequestList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
+	ret.RocketConfig = e.RocketConfig
 	return &ret
 }
 
@@ -703,7 +560,7 @@ func NewRequestRead(e *ent.Request) *RequestRead {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
+	ret.RocketConfig = e.RocketConfig
 	return &ret
 }
 
@@ -733,7 +590,7 @@ func NewRequestUpdate(e *ent.Request) *RequestUpdate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
+	ret.RocketConfig = e.RocketConfig
 	return &ret
 }
 
@@ -762,9 +619,8 @@ func NewRequestMissionRead(e *ent.Mission) *RequestMissionRead {
 	var ret RequestMissionRead
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
 	ret.MinApprovers = e.MinApprovers
-	ret.RocketID = e.RocketID
+	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
 }
 
@@ -793,7 +649,8 @@ func NewRocketCreate(e *ent.Rocket) *RocketCreate {
 	var ret RocketCreate
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
+	ret.Image = NewOptString(e.Image)
+	ret.Zip = NewOptString(e.Zip)
 	ret.Config = e.Config
 	return &ret
 }
@@ -823,7 +680,8 @@ func NewRocketList(e *ent.Rocket) *RocketList {
 	var ret RocketList
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
+	ret.Image = NewOptString(e.Image)
+	ret.Zip = NewOptString(e.Zip)
 	ret.Config = e.Config
 	return &ret
 }
@@ -853,7 +711,8 @@ func NewRocketRead(e *ent.Rocket) *RocketRead {
 	var ret RocketRead
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
+	ret.Image = NewOptString(e.Image)
+	ret.Zip = NewOptString(e.Zip)
 	ret.Config = e.Config
 	return &ret
 }
@@ -883,7 +742,8 @@ func NewRocketUpdate(e *ent.Rocket) *RocketUpdate {
 	var ret RocketUpdate
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
+	ret.Image = NewOptString(e.Image)
+	ret.Zip = NewOptString(e.Zip)
 	ret.Config = e.Config
 	return &ret
 }
@@ -913,9 +773,8 @@ func NewRocketMissionsList(e *ent.Mission) *RocketMissionsList {
 	var ret RocketMissionsList
 	ret.ID = e.ID
 	ret.Description = NewOptString(e.Description)
-	ret.Image = e.Image
 	ret.MinApprovers = e.MinApprovers
-	ret.RocketID = e.RocketID
+	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
 }
 

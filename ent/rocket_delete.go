@@ -8,8 +8,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/predicate"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // RocketDelete is the builder for deleting a Rocket entity.

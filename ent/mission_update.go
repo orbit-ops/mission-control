@@ -9,11 +9,12 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/predicate"
-	"github.com/orbit-ops/mission-control/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/request"
 )
 
 // MissionUpdate is the builder for updating Mission entities.
@@ -49,20 +50,6 @@ func (mu *MissionUpdate) ClearDescription() *MissionUpdate {
 	return mu
 }
 
-// SetImage sets the "image" field.
-func (mu *MissionUpdate) SetImage(s string) *MissionUpdate {
-	mu.mutation.SetImage(s)
-	return mu
-}
-
-// SetNillableImage sets the "image" field if the given value is not nil.
-func (mu *MissionUpdate) SetNillableImage(s *string) *MissionUpdate {
-	if s != nil {
-		mu.SetImage(*s)
-	}
-	return mu
-}
-
 // SetMinApprovers sets the "min_approvers" field.
 func (mu *MissionUpdate) SetMinApprovers(i int) *MissionUpdate {
 	mu.mutation.ResetMinApprovers()
@@ -81,6 +68,18 @@ func (mu *MissionUpdate) SetNillableMinApprovers(i *int) *MissionUpdate {
 // AddMinApprovers adds i to the "min_approvers" field.
 func (mu *MissionUpdate) AddMinApprovers(i int) *MissionUpdate {
 	mu.mutation.AddMinApprovers(i)
+	return mu
+}
+
+// SetPossibleApprovers sets the "possible_approvers" field.
+func (mu *MissionUpdate) SetPossibleApprovers(s []string) *MissionUpdate {
+	mu.mutation.SetPossibleApprovers(s)
+	return mu
+}
+
+// AppendPossibleApprovers appends s to the "possible_approvers" field.
+func (mu *MissionUpdate) AppendPossibleApprovers(s []string) *MissionUpdate {
+	mu.mutation.AppendPossibleApprovers(s)
 	return mu
 }
 
@@ -154,8 +153,10 @@ func (mu *MissionUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mu *MissionUpdate) check() error {
-	if _, ok := mu.mutation.RocketID(); mu.mutation.RocketCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Mission.rocket"`)
+	if v, ok := mu.mutation.MinApprovers(); ok {
+		if err := mission.MinApproversValidator(v); err != nil {
+			return &ValidationError{Name: "min_approvers", err: fmt.Errorf(`ent: validator failed for field "Mission.min_approvers": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -178,14 +179,19 @@ func (mu *MissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if mu.mutation.DescriptionCleared() {
 		_spec.ClearField(mission.FieldDescription, field.TypeString)
 	}
-	if value, ok := mu.mutation.Image(); ok {
-		_spec.SetField(mission.FieldImage, field.TypeString, value)
-	}
 	if value, ok := mu.mutation.MinApprovers(); ok {
 		_spec.SetField(mission.FieldMinApprovers, field.TypeInt, value)
 	}
 	if value, ok := mu.mutation.AddedMinApprovers(); ok {
 		_spec.AddField(mission.FieldMinApprovers, field.TypeInt, value)
+	}
+	if value, ok := mu.mutation.PossibleApprovers(); ok {
+		_spec.SetField(mission.FieldPossibleApprovers, field.TypeJSON, value)
+	}
+	if value, ok := mu.mutation.AppendedPossibleApprovers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, mission.FieldPossibleApprovers, value)
+		})
 	}
 	if mu.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -272,20 +278,6 @@ func (muo *MissionUpdateOne) ClearDescription() *MissionUpdateOne {
 	return muo
 }
 
-// SetImage sets the "image" field.
-func (muo *MissionUpdateOne) SetImage(s string) *MissionUpdateOne {
-	muo.mutation.SetImage(s)
-	return muo
-}
-
-// SetNillableImage sets the "image" field if the given value is not nil.
-func (muo *MissionUpdateOne) SetNillableImage(s *string) *MissionUpdateOne {
-	if s != nil {
-		muo.SetImage(*s)
-	}
-	return muo
-}
-
 // SetMinApprovers sets the "min_approvers" field.
 func (muo *MissionUpdateOne) SetMinApprovers(i int) *MissionUpdateOne {
 	muo.mutation.ResetMinApprovers()
@@ -304,6 +296,18 @@ func (muo *MissionUpdateOne) SetNillableMinApprovers(i *int) *MissionUpdateOne {
 // AddMinApprovers adds i to the "min_approvers" field.
 func (muo *MissionUpdateOne) AddMinApprovers(i int) *MissionUpdateOne {
 	muo.mutation.AddMinApprovers(i)
+	return muo
+}
+
+// SetPossibleApprovers sets the "possible_approvers" field.
+func (muo *MissionUpdateOne) SetPossibleApprovers(s []string) *MissionUpdateOne {
+	muo.mutation.SetPossibleApprovers(s)
+	return muo
+}
+
+// AppendPossibleApprovers appends s to the "possible_approvers" field.
+func (muo *MissionUpdateOne) AppendPossibleApprovers(s []string) *MissionUpdateOne {
+	muo.mutation.AppendPossibleApprovers(s)
 	return muo
 }
 
@@ -390,8 +394,10 @@ func (muo *MissionUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (muo *MissionUpdateOne) check() error {
-	if _, ok := muo.mutation.RocketID(); muo.mutation.RocketCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Mission.rocket"`)
+	if v, ok := muo.mutation.MinApprovers(); ok {
+		if err := mission.MinApproversValidator(v); err != nil {
+			return &ValidationError{Name: "min_approvers", err: fmt.Errorf(`ent: validator failed for field "Mission.min_approvers": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -431,14 +437,19 @@ func (muo *MissionUpdateOne) sqlSave(ctx context.Context) (_node *Mission, err e
 	if muo.mutation.DescriptionCleared() {
 		_spec.ClearField(mission.FieldDescription, field.TypeString)
 	}
-	if value, ok := muo.mutation.Image(); ok {
-		_spec.SetField(mission.FieldImage, field.TypeString, value)
-	}
 	if value, ok := muo.mutation.MinApprovers(); ok {
 		_spec.SetField(mission.FieldMinApprovers, field.TypeInt, value)
 	}
 	if value, ok := muo.mutation.AddedMinApprovers(); ok {
 		_spec.AddField(mission.FieldMinApprovers, field.TypeInt, value)
+	}
+	if value, ok := muo.mutation.PossibleApprovers(); ok {
+		_spec.SetField(mission.FieldPossibleApprovers, field.TypeJSON, value)
+	}
+	if value, ok := muo.mutation.AppendedPossibleApprovers(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, mission.FieldPossibleApprovers, value)
+		})
 	}
 	if muo.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/request"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // MissionCreate is the builder for creating a Mission entity.
@@ -39,21 +39,15 @@ func (mc *MissionCreate) SetNillableDescription(s *string) *MissionCreate {
 	return mc
 }
 
-// SetImage sets the "image" field.
-func (mc *MissionCreate) SetImage(s string) *MissionCreate {
-	mc.mutation.SetImage(s)
-	return mc
-}
-
 // SetMinApprovers sets the "min_approvers" field.
 func (mc *MissionCreate) SetMinApprovers(i int) *MissionCreate {
 	mc.mutation.SetMinApprovers(i)
 	return mc
 }
 
-// SetRocketID sets the "rocket_id" field.
-func (mc *MissionCreate) SetRocketID(s string) *MissionCreate {
-	mc.mutation.SetRocketID(s)
+// SetPossibleApprovers sets the "possible_approvers" field.
+func (mc *MissionCreate) SetPossibleApprovers(s []string) *MissionCreate {
+	mc.mutation.SetPossibleApprovers(s)
 	return mc
 }
 
@@ -63,9 +57,19 @@ func (mc *MissionCreate) SetID(s string) *MissionCreate {
 	return mc
 }
 
-// SetRocket sets the "rocket" edge to the Rocket entity.
-func (mc *MissionCreate) SetRocket(r *Rocket) *MissionCreate {
-	return mc.SetRocketID(r.ID)
+// AddRocketIDs adds the "rockets" edge to the Rocket entity by IDs.
+func (mc *MissionCreate) AddRocketIDs(ids ...string) *MissionCreate {
+	mc.mutation.AddRocketIDs(ids...)
+	return mc
+}
+
+// AddRockets adds the "rockets" edges to the Rocket entity.
+func (mc *MissionCreate) AddRockets(r ...*Rocket) *MissionCreate {
+	ids := make([]string, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return mc.AddRocketIDs(ids...)
 }
 
 // AddRequestIDs adds the "requests" edge to the Request entity by IDs.
@@ -117,17 +121,19 @@ func (mc *MissionCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mc *MissionCreate) check() error {
-	if _, ok := mc.mutation.Image(); !ok {
-		return &ValidationError{Name: "image", err: errors.New(`ent: missing required field "Mission.image"`)}
-	}
 	if _, ok := mc.mutation.MinApprovers(); !ok {
 		return &ValidationError{Name: "min_approvers", err: errors.New(`ent: missing required field "Mission.min_approvers"`)}
 	}
-	if _, ok := mc.mutation.RocketID(); !ok {
-		return &ValidationError{Name: "rocket_id", err: errors.New(`ent: missing required field "Mission.rocket_id"`)}
+	if v, ok := mc.mutation.MinApprovers(); ok {
+		if err := mission.MinApproversValidator(v); err != nil {
+			return &ValidationError{Name: "min_approvers", err: fmt.Errorf(`ent: validator failed for field "Mission.min_approvers": %w`, err)}
+		}
 	}
-	if _, ok := mc.mutation.RocketID(); !ok {
-		return &ValidationError{Name: "rocket", err: errors.New(`ent: missing required edge "Mission.rocket"`)}
+	if _, ok := mc.mutation.PossibleApprovers(); !ok {
+		return &ValidationError{Name: "possible_approvers", err: errors.New(`ent: missing required field "Mission.possible_approvers"`)}
+	}
+	if len(mc.mutation.RocketsIDs()) == 0 {
+		return &ValidationError{Name: "rockets", err: errors.New(`ent: missing required edge "Mission.rockets"`)}
 	}
 	return nil
 }
@@ -169,20 +175,20 @@ func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 		_spec.SetField(mission.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := mc.mutation.Image(); ok {
-		_spec.SetField(mission.FieldImage, field.TypeString, value)
-		_node.Image = value
-	}
 	if value, ok := mc.mutation.MinApprovers(); ok {
 		_spec.SetField(mission.FieldMinApprovers, field.TypeInt, value)
 		_node.MinApprovers = value
 	}
-	if nodes := mc.mutation.RocketIDs(); len(nodes) > 0 {
+	if value, ok := mc.mutation.PossibleApprovers(); ok {
+		_spec.SetField(mission.FieldPossibleApprovers, field.TypeJSON, value)
+		_node.PossibleApprovers = value
+	}
+	if nodes := mc.mutation.RocketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
-			Table:   mission.RocketTable,
-			Columns: []string{mission.RocketColumn},
+			Table:   mission.RocketsTable,
+			Columns: mission.RocketsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeString),
@@ -191,7 +197,6 @@ func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.RocketID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := mc.mutation.RequestsIDs(); len(nodes) > 0 {
@@ -280,18 +285,6 @@ func (u *MissionUpsert) ClearDescription() *MissionUpsert {
 	return u
 }
 
-// SetImage sets the "image" field.
-func (u *MissionUpsert) SetImage(v string) *MissionUpsert {
-	u.Set(mission.FieldImage, v)
-	return u
-}
-
-// UpdateImage sets the "image" field to the value that was provided on create.
-func (u *MissionUpsert) UpdateImage() *MissionUpsert {
-	u.SetExcluded(mission.FieldImage)
-	return u
-}
-
 // SetMinApprovers sets the "min_approvers" field.
 func (u *MissionUpsert) SetMinApprovers(v int) *MissionUpsert {
 	u.Set(mission.FieldMinApprovers, v)
@@ -307,6 +300,18 @@ func (u *MissionUpsert) UpdateMinApprovers() *MissionUpsert {
 // AddMinApprovers adds v to the "min_approvers" field.
 func (u *MissionUpsert) AddMinApprovers(v int) *MissionUpsert {
 	u.Add(mission.FieldMinApprovers, v)
+	return u
+}
+
+// SetPossibleApprovers sets the "possible_approvers" field.
+func (u *MissionUpsert) SetPossibleApprovers(v []string) *MissionUpsert {
+	u.Set(mission.FieldPossibleApprovers, v)
+	return u
+}
+
+// UpdatePossibleApprovers sets the "possible_approvers" field to the value that was provided on create.
+func (u *MissionUpsert) UpdatePossibleApprovers() *MissionUpsert {
+	u.SetExcluded(mission.FieldPossibleApprovers)
 	return u
 }
 
@@ -326,9 +331,6 @@ func (u *MissionUpsertOne) UpdateNewValues() *MissionUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.ID(); exists {
 			s.SetIgnore(mission.FieldID)
-		}
-		if _, exists := u.create.mutation.RocketID(); exists {
-			s.SetIgnore(mission.FieldRocketID)
 		}
 	}))
 	return u
@@ -382,20 +384,6 @@ func (u *MissionUpsertOne) ClearDescription() *MissionUpsertOne {
 	})
 }
 
-// SetImage sets the "image" field.
-func (u *MissionUpsertOne) SetImage(v string) *MissionUpsertOne {
-	return u.Update(func(s *MissionUpsert) {
-		s.SetImage(v)
-	})
-}
-
-// UpdateImage sets the "image" field to the value that was provided on create.
-func (u *MissionUpsertOne) UpdateImage() *MissionUpsertOne {
-	return u.Update(func(s *MissionUpsert) {
-		s.UpdateImage()
-	})
-}
-
 // SetMinApprovers sets the "min_approvers" field.
 func (u *MissionUpsertOne) SetMinApprovers(v int) *MissionUpsertOne {
 	return u.Update(func(s *MissionUpsert) {
@@ -414,6 +402,20 @@ func (u *MissionUpsertOne) AddMinApprovers(v int) *MissionUpsertOne {
 func (u *MissionUpsertOne) UpdateMinApprovers() *MissionUpsertOne {
 	return u.Update(func(s *MissionUpsert) {
 		s.UpdateMinApprovers()
+	})
+}
+
+// SetPossibleApprovers sets the "possible_approvers" field.
+func (u *MissionUpsertOne) SetPossibleApprovers(v []string) *MissionUpsertOne {
+	return u.Update(func(s *MissionUpsert) {
+		s.SetPossibleApprovers(v)
+	})
+}
+
+// UpdatePossibleApprovers sets the "possible_approvers" field to the value that was provided on create.
+func (u *MissionUpsertOne) UpdatePossibleApprovers() *MissionUpsertOne {
+	return u.Update(func(s *MissionUpsert) {
+		s.UpdatePossibleApprovers()
 	})
 }
 
@@ -599,9 +601,6 @@ func (u *MissionUpsertBulk) UpdateNewValues() *MissionUpsertBulk {
 			if _, exists := b.mutation.ID(); exists {
 				s.SetIgnore(mission.FieldID)
 			}
-			if _, exists := b.mutation.RocketID(); exists {
-				s.SetIgnore(mission.FieldRocketID)
-			}
 		}
 	}))
 	return u
@@ -655,20 +654,6 @@ func (u *MissionUpsertBulk) ClearDescription() *MissionUpsertBulk {
 	})
 }
 
-// SetImage sets the "image" field.
-func (u *MissionUpsertBulk) SetImage(v string) *MissionUpsertBulk {
-	return u.Update(func(s *MissionUpsert) {
-		s.SetImage(v)
-	})
-}
-
-// UpdateImage sets the "image" field to the value that was provided on create.
-func (u *MissionUpsertBulk) UpdateImage() *MissionUpsertBulk {
-	return u.Update(func(s *MissionUpsert) {
-		s.UpdateImage()
-	})
-}
-
 // SetMinApprovers sets the "min_approvers" field.
 func (u *MissionUpsertBulk) SetMinApprovers(v int) *MissionUpsertBulk {
 	return u.Update(func(s *MissionUpsert) {
@@ -687,6 +672,20 @@ func (u *MissionUpsertBulk) AddMinApprovers(v int) *MissionUpsertBulk {
 func (u *MissionUpsertBulk) UpdateMinApprovers() *MissionUpsertBulk {
 	return u.Update(func(s *MissionUpsert) {
 		s.UpdateMinApprovers()
+	})
+}
+
+// SetPossibleApprovers sets the "possible_approvers" field.
+func (u *MissionUpsertBulk) SetPossibleApprovers(v []string) *MissionUpsertBulk {
+	return u.Update(func(s *MissionUpsert) {
+		s.SetPossibleApprovers(v)
+	})
+}
+
+// UpdatePossibleApprovers sets the "possible_approvers" field to the value that was provided on create.
+func (u *MissionUpsertBulk) UpdatePossibleApprovers() *MissionUpsertBulk {
+	return u.Update(func(s *MissionUpsert) {
+		s.UpdatePossibleApprovers()
 	})
 }
 

@@ -9,6 +9,12 @@ import (
 // Access is the predicate function for access builders.
 type Access func(*sql.Selector)
 
+// ActionTokens is the predicate function for actiontokens builders.
+type ActionTokens func(*sql.Selector)
+
+// ApiKey is the predicate function for apikey builders.
+type ApiKey func(*sql.Selector)
+
 // Approval is the predicate function for approval builders.
 type Approval func(*sql.Selector)
 

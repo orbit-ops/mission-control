@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
@@ -64,11 +64,6 @@ func IDContainsFold(id string) predicate.Audit {
 	return predicate.Audit(sql.FieldContainsFold(FieldID, id))
 }
 
-// Action applies equality check predicate on the "action" field. It's identical to ActionEQ.
-func Action(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldEQ(FieldAction, v))
-}
-
 // Author applies equality check predicate on the "author" field. It's identical to AuthorEQ.
 func Author(v string) predicate.Audit {
 	return predicate.Audit(sql.FieldEQ(FieldAuthor, v))
@@ -80,68 +75,23 @@ func Timestamp(v time.Time) predicate.Audit {
 }
 
 // ActionEQ applies the EQ predicate on the "action" field.
-func ActionEQ(v string) predicate.Audit {
+func ActionEQ(v Action) predicate.Audit {
 	return predicate.Audit(sql.FieldEQ(FieldAction, v))
 }
 
 // ActionNEQ applies the NEQ predicate on the "action" field.
-func ActionNEQ(v string) predicate.Audit {
+func ActionNEQ(v Action) predicate.Audit {
 	return predicate.Audit(sql.FieldNEQ(FieldAction, v))
 }
 
 // ActionIn applies the In predicate on the "action" field.
-func ActionIn(vs ...string) predicate.Audit {
+func ActionIn(vs ...Action) predicate.Audit {
 	return predicate.Audit(sql.FieldIn(FieldAction, vs...))
 }
 
 // ActionNotIn applies the NotIn predicate on the "action" field.
-func ActionNotIn(vs ...string) predicate.Audit {
+func ActionNotIn(vs ...Action) predicate.Audit {
 	return predicate.Audit(sql.FieldNotIn(FieldAction, vs...))
-}
-
-// ActionGT applies the GT predicate on the "action" field.
-func ActionGT(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldGT(FieldAction, v))
-}
-
-// ActionGTE applies the GTE predicate on the "action" field.
-func ActionGTE(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldGTE(FieldAction, v))
-}
-
-// ActionLT applies the LT predicate on the "action" field.
-func ActionLT(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldLT(FieldAction, v))
-}
-
-// ActionLTE applies the LTE predicate on the "action" field.
-func ActionLTE(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldLTE(FieldAction, v))
-}
-
-// ActionContains applies the Contains predicate on the "action" field.
-func ActionContains(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldContains(FieldAction, v))
-}
-
-// ActionHasPrefix applies the HasPrefix predicate on the "action" field.
-func ActionHasPrefix(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldHasPrefix(FieldAction, v))
-}
-
-// ActionHasSuffix applies the HasSuffix predicate on the "action" field.
-func ActionHasSuffix(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldHasSuffix(FieldAction, v))
-}
-
-// ActionEqualFold applies the EqualFold predicate on the "action" field.
-func ActionEqualFold(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldEqualFold(FieldAction, v))
-}
-
-// ActionContainsFold applies the ContainsFold predicate on the "action" field.
-func ActionContainsFold(v string) predicate.Audit {
-	return predicate.Audit(sql.FieldContainsFold(FieldAction, v))
 }
 
 // AuthorEQ applies the EQ predicate on the "author" field.

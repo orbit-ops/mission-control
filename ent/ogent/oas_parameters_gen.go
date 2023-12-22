@@ -16,29 +16,33 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-// DeleteAccessParams is parameters of deleteAccess operation.
-type DeleteAccessParams struct {
-	// ID of the Access.
-	ID uuid.UUID
+// DeleteApiKeyParams is parameters of deleteApiKey operation.
+type DeleteApiKeyParams struct {
+	// ID of the ApiKey.
+	ID int
 }
 
-func unpackDeleteAccessParams(packed middleware.Parameters) (params DeleteAccessParams) {
+func unpackDeleteApiKeyParams(packed middleware.Parameters) (params DeleteApiKeyParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(uuid.UUID)
+		params.ID = packed[key].(int)
 	}
 	return params
 }
 
-func decodeDeleteAccessParams(args [1]string, r *http.Request) (params DeleteAccessParams, _ error) {
+func decodeDeleteApiKeyParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteApiKeyParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -54,7 +58,7 @@ func decodeDeleteAccessParams(args [1]string, r *http.Request) (params DeleteAcc
 					return err
 				}
 
-				c, err := conv.ToUUID(val)
+				c, err := conv.ToInt(val)
 				if err != nil {
 					return err
 				}
@@ -95,12 +99,16 @@ func unpackDeleteApprovalParams(packed middleware.Parameters) (params DeleteAppr
 	return params
 }
 
-func decodeDeleteApprovalParams(args [1]string, r *http.Request) (params DeleteApprovalParams, _ error) {
+func decodeDeleteApprovalParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteApprovalParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -117,68 +125,6 @@ func decodeDeleteApprovalParams(args [1]string, r *http.Request) (params DeleteA
 				}
 
 				c, err := conv.ToUUID(val)
-				if err != nil {
-					return err
-				}
-
-				params.ID = c
-				return nil
-			}(); err != nil {
-				return err
-			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "id",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
-// DeleteAuditParams is parameters of deleteAudit operation.
-type DeleteAuditParams struct {
-	// ID of the Audit.
-	ID string
-}
-
-func unpackDeleteAuditParams(packed middleware.Parameters) (params DeleteAuditParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "id",
-			In:   "path",
-		}
-		params.ID = packed[key].(string)
-	}
-	return params
-}
-
-func decodeDeleteAuditParams(args [1]string, r *http.Request) (params DeleteAuditParams, _ error) {
-	// Decode path: id.
-	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "id",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToString(val)
 				if err != nil {
 					return err
 				}
@@ -219,12 +165,16 @@ func unpackDeleteMissionParams(packed middleware.Parameters) (params DeleteMissi
 	return params
 }
 
-func decodeDeleteMissionParams(args [1]string, r *http.Request) (params DeleteMissionParams, _ error) {
+func decodeDeleteMissionParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteMissionParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -281,12 +231,16 @@ func unpackDeleteRequestParams(packed middleware.Parameters) (params DeleteReque
 	return params
 }
 
-func decodeDeleteRequestParams(args [1]string, r *http.Request) (params DeleteRequestParams, _ error) {
+func decodeDeleteRequestParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteRequestParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -343,12 +297,16 @@ func unpackDeleteRocketParams(packed middleware.Parameters) (params DeleteRocket
 	return params
 }
 
-func decodeDeleteRocketParams(args [1]string, r *http.Request) (params DeleteRocketParams, _ error) {
+func decodeDeleteRocketParams(args [1]string, argsEscaped bool, r *http.Request) (params DeleteRocketParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -388,15 +346,24 @@ func decodeDeleteRocketParams(args [1]string, r *http.Request) (params DeleteRoc
 	return params, nil
 }
 
-// ListAccessParams is parameters of listAccess operation.
-type ListAccessParams struct {
+// ListAccessAccessTokensParams is parameters of listAccessAccessTokens operation.
+type ListAccessAccessTokensParams struct {
+	// ID of the Access.
+	ID uuid.UUID
 	// What page to render.
 	Page OptInt
 	// Item count to render per page.
 	ItemsPerPage OptInt
 }
 
-func unpackListAccessParams(packed middleware.Parameters) (params ListAccessParams) {
+func unpackListAccessAccessTokensParams(packed middleware.Parameters) (params ListAccessAccessTokensParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "id",
+			In:   "path",
+		}
+		params.ID = packed[key].(uuid.UUID)
+	}
 	{
 		key := middleware.ParameterKey{
 			Name: "page",
@@ -418,7 +385,169 @@ func unpackListAccessParams(packed middleware.Parameters) (params ListAccessPara
 	return params
 }
 
-func decodeListAccessParams(args [0]string, r *http.Request) (params ListAccessParams, _ error) {
+func decodeListAccessAccessTokensParams(args [1]string, argsEscaped bool, r *http.Request) (params ListAccessAccessTokensParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: id.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.ID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "id",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: page.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Page.SetTo(paramsDotPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: itemsPerPage.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "itemsPerPage",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotItemsPerPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotItemsPerPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.ItemsPerPage.SetTo(paramsDotItemsPerPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "itemsPerPage",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ListApiKeyParams is parameters of listApiKey operation.
+type ListApiKeyParams struct {
+	// What page to render.
+	Page OptInt
+	// Item count to render per page.
+	ItemsPerPage OptInt
+}
+
+func unpackListApiKeyParams(packed middleware.Parameters) (params ListApiKeyParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "page",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Page = v.(OptInt)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "itemsPerPage",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.ItemsPerPage = v.(OptInt)
+		}
+	}
+	return params
+}
+
+func decodeListApiKeyParams(args [0]string, argsEscaped bool, r *http.Request) (params ListApiKeyParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode query: page.
 	if err := func() error {
@@ -453,7 +582,7 @@ func decodeListAccessParams(args [0]string, r *http.Request) (params ListAccessP
 				return err
 			}
 			if err := func() error {
-				if params.Page.Set {
+				if value, ok := params.Page.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -464,7 +593,7 @@ func decodeListAccessParams(args [0]string, r *http.Request) (params ListAccessP
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.Page.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -518,7 +647,7 @@ func decodeListAccessParams(args [0]string, r *http.Request) (params ListAccessP
 				return err
 			}
 			if err := func() error {
-				if params.ItemsPerPage.Set {
+				if value, ok := params.ItemsPerPage.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -529,7 +658,7 @@ func decodeListAccessParams(args [0]string, r *http.Request) (params ListAccessP
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.ItemsPerPage.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -583,7 +712,7 @@ func unpackListApprovalParams(packed middleware.Parameters) (params ListApproval
 	return params
 }
 
-func decodeListApprovalParams(args [0]string, r *http.Request) (params ListApprovalParams, _ error) {
+func decodeListApprovalParams(args [0]string, argsEscaped bool, r *http.Request) (params ListApprovalParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode query: page.
 	if err := func() error {
@@ -618,7 +747,7 @@ func decodeListApprovalParams(args [0]string, r *http.Request) (params ListAppro
 				return err
 			}
 			if err := func() error {
-				if params.Page.Set {
+				if value, ok := params.Page.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -629,7 +758,7 @@ func decodeListApprovalParams(args [0]string, r *http.Request) (params ListAppro
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.Page.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -683,7 +812,7 @@ func decodeListApprovalParams(args [0]string, r *http.Request) (params ListAppro
 				return err
 			}
 			if err := func() error {
-				if params.ItemsPerPage.Set {
+				if value, ok := params.ItemsPerPage.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -694,7 +823,7 @@ func decodeListApprovalParams(args [0]string, r *http.Request) (params ListAppro
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.ItemsPerPage.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -748,7 +877,7 @@ func unpackListAuditParams(packed middleware.Parameters) (params ListAuditParams
 	return params
 }
 
-func decodeListAuditParams(args [0]string, r *http.Request) (params ListAuditParams, _ error) {
+func decodeListAuditParams(args [0]string, argsEscaped bool, r *http.Request) (params ListAuditParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode query: page.
 	if err := func() error {
@@ -783,7 +912,7 @@ func decodeListAuditParams(args [0]string, r *http.Request) (params ListAuditPar
 				return err
 			}
 			if err := func() error {
-				if params.Page.Set {
+				if value, ok := params.Page.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -794,7 +923,7 @@ func decodeListAuditParams(args [0]string, r *http.Request) (params ListAuditPar
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.Page.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -848,7 +977,7 @@ func decodeListAuditParams(args [0]string, r *http.Request) (params ListAuditPar
 				return err
 			}
 			if err := func() error {
-				if params.ItemsPerPage.Set {
+				if value, ok := params.ItemsPerPage.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -859,7 +988,7 @@ func decodeListAuditParams(args [0]string, r *http.Request) (params ListAuditPar
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.ItemsPerPage.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -913,7 +1042,7 @@ func unpackListMissionParams(packed middleware.Parameters) (params ListMissionPa
 	return params
 }
 
-func decodeListMissionParams(args [0]string, r *http.Request) (params ListMissionParams, _ error) {
+func decodeListMissionParams(args [0]string, argsEscaped bool, r *http.Request) (params ListMissionParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode query: page.
 	if err := func() error {
@@ -948,7 +1077,7 @@ func decodeListMissionParams(args [0]string, r *http.Request) (params ListMissio
 				return err
 			}
 			if err := func() error {
-				if params.Page.Set {
+				if value, ok := params.Page.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -959,7 +1088,7 @@ func decodeListMissionParams(args [0]string, r *http.Request) (params ListMissio
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.Page.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -1013,7 +1142,7 @@ func decodeListMissionParams(args [0]string, r *http.Request) (params ListMissio
 				return err
 			}
 			if err := func() error {
-				if params.ItemsPerPage.Set {
+				if value, ok := params.ItemsPerPage.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -1024,7 +1153,7 @@ func decodeListMissionParams(args [0]string, r *http.Request) (params ListMissio
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.ItemsPerPage.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -1087,13 +1216,188 @@ func unpackListMissionRequestsParams(packed middleware.Parameters) (params ListM
 	return params
 }
 
-func decodeListMissionRequestsParams(args [1]string, r *http.Request) (params ListMissionRequestsParams, _ error) {
+func decodeListMissionRequestsParams(args [1]string, argsEscaped bool, r *http.Request) (params ListMissionRequestsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.ID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "id",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: page.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Page.SetTo(paramsDotPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: itemsPerPage.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "itemsPerPage",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotItemsPerPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotItemsPerPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.ItemsPerPage.SetTo(paramsDotItemsPerPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "itemsPerPage",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ListMissionRocketsParams is parameters of listMissionRockets operation.
+type ListMissionRocketsParams struct {
+	// ID of the Mission.
+	ID string
+	// What page to render.
+	Page OptInt
+	// Item count to render per page.
+	ItemsPerPage OptInt
+}
+
+func unpackListMissionRocketsParams(packed middleware.Parameters) (params ListMissionRocketsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "id",
+			In:   "path",
+		}
+		params.ID = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "page",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Page = v.(OptInt)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "itemsPerPage",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.ItemsPerPage = v.(OptInt)
+		}
+	}
+	return params
+}
+
+func decodeListMissionRocketsParams(args [1]string, argsEscaped bool, r *http.Request) (params ListMissionRocketsParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: id.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -1245,7 +1549,7 @@ func unpackListRequestParams(packed middleware.Parameters) (params ListRequestPa
 	return params
 }
 
-func decodeListRequestParams(args [0]string, r *http.Request) (params ListRequestParams, _ error) {
+func decodeListRequestParams(args [0]string, argsEscaped bool, r *http.Request) (params ListRequestParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode query: page.
 	if err := func() error {
@@ -1280,7 +1584,7 @@ func decodeListRequestParams(args [0]string, r *http.Request) (params ListReques
 				return err
 			}
 			if err := func() error {
-				if params.Page.Set {
+				if value, ok := params.Page.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -1291,7 +1595,7 @@ func decodeListRequestParams(args [0]string, r *http.Request) (params ListReques
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.Page.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -1345,7 +1649,7 @@ func decodeListRequestParams(args [0]string, r *http.Request) (params ListReques
 				return err
 			}
 			if err := func() error {
-				if params.ItemsPerPage.Set {
+				if value, ok := params.ItemsPerPage.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -1356,7 +1660,7 @@ func decodeListRequestParams(args [0]string, r *http.Request) (params ListReques
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.ItemsPerPage.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -1410,7 +1714,7 @@ func unpackListRocketParams(packed middleware.Parameters) (params ListRocketPara
 	return params
 }
 
-func decodeListRocketParams(args [0]string, r *http.Request) (params ListRocketParams, _ error) {
+func decodeListRocketParams(args [0]string, argsEscaped bool, r *http.Request) (params ListRocketParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode query: page.
 	if err := func() error {
@@ -1445,7 +1749,7 @@ func decodeListRocketParams(args [0]string, r *http.Request) (params ListRocketP
 				return err
 			}
 			if err := func() error {
-				if params.Page.Set {
+				if value, ok := params.Page.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -1456,7 +1760,7 @@ func decodeListRocketParams(args [0]string, r *http.Request) (params ListRocketP
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.Page.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -1510,7 +1814,7 @@ func decodeListRocketParams(args [0]string, r *http.Request) (params ListRocketP
 				return err
 			}
 			if err := func() error {
-				if params.ItemsPerPage.Set {
+				if value, ok := params.ItemsPerPage.Get(); ok {
 					if err := func() error {
 						if err := (validate.Int{
 							MinSet:        true,
@@ -1521,7 +1825,7 @@ func decodeListRocketParams(args [0]string, r *http.Request) (params ListRocketP
 							MaxExclusive:  false,
 							MultipleOfSet: false,
 							MultipleOf:    0,
-						}).Validate(int64(params.ItemsPerPage.Value)); err != nil {
+						}).Validate(int64(value)); err != nil {
 							return errors.Wrap(err, "int")
 						}
 						return nil
@@ -1584,13 +1888,17 @@ func unpackListRocketMissionsParams(packed middleware.Parameters) (params ListRo
 	return params
 }
 
-func decodeListRocketMissionsParams(args [1]string, r *http.Request) (params ListRocketMissionsParams, _ error) {
+func decodeListRocketMissionsParams(args [1]string, argsEscaped bool, r *http.Request) (params ListRocketMissionsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -1712,91 +2020,33 @@ func decodeListRocketMissionsParams(args [1]string, r *http.Request) (params Lis
 	return params, nil
 }
 
-// ReadAccessParams is parameters of readAccess operation.
-type ReadAccessParams struct {
-	// ID of the Access.
-	ID uuid.UUID
+// ReadApiKeyParams is parameters of readApiKey operation.
+type ReadApiKeyParams struct {
+	// ID of the ApiKey.
+	ID int
 }
 
-func unpackReadAccessParams(packed middleware.Parameters) (params ReadAccessParams) {
+func unpackReadApiKeyParams(packed middleware.Parameters) (params ReadApiKeyParams) {
 	{
 		key := middleware.ParameterKey{
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(uuid.UUID)
+		params.ID = packed[key].(int)
 	}
 	return params
 }
 
-func decodeReadAccessParams(args [1]string, r *http.Request) (params ReadAccessParams, _ error) {
+func decodeReadApiKeyParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadApiKeyParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "id",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToUUID(val)
-				if err != nil {
-					return err
-				}
-
-				params.ID = c
-				return nil
-			}(); err != nil {
-				return err
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
 			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "id",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
-// ReadAccessApprovalsParams is parameters of readAccessApprovals operation.
-type ReadAccessApprovalsParams struct {
-	// ID of the Access.
-	ID uuid.UUID
-}
-
-func unpackReadAccessApprovalsParams(packed middleware.Parameters) (params ReadAccessApprovalsParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "id",
-			In:   "path",
-		}
-		params.ID = packed[key].(uuid.UUID)
-	}
-	return params
-}
-
-func decodeReadAccessApprovalsParams(args [1]string, r *http.Request) (params ReadAccessApprovalsParams, _ error) {
-	// Decode path: id.
-	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -1812,7 +2062,7 @@ func decodeReadAccessApprovalsParams(args [1]string, r *http.Request) (params Re
 					return err
 				}
 
-				c, err := conv.ToUUID(val)
+				c, err := conv.ToInt(val)
 				if err != nil {
 					return err
 				}
@@ -1853,74 +2103,16 @@ func unpackReadApprovalParams(packed middleware.Parameters) (params ReadApproval
 	return params
 }
 
-func decodeReadApprovalParams(args [1]string, r *http.Request) (params ReadApprovalParams, _ error) {
+func decodeReadApprovalParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadApprovalParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "id",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToUUID(val)
-				if err != nil {
-					return err
-				}
-
-				params.ID = c
-				return nil
-			}(); err != nil {
-				return err
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
 			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "id",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
-// ReadApprovalRequestsParams is parameters of readApprovalRequests operation.
-type ReadApprovalRequestsParams struct {
-	// ID of the Approval.
-	ID uuid.UUID
-}
-
-func unpackReadApprovalRequestsParams(packed middleware.Parameters) (params ReadApprovalRequestsParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "id",
-			In:   "path",
-		}
-		params.ID = packed[key].(uuid.UUID)
-	}
-	return params
-}
-
-func decodeReadApprovalRequestsParams(args [1]string, r *http.Request) (params ReadApprovalRequestsParams, _ error) {
-	// Decode path: id.
-	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -1977,12 +2169,16 @@ func unpackReadAuditParams(packed middleware.Parameters) (params ReadAuditParams
 	return params
 }
 
-func decodeReadAuditParams(args [1]string, r *http.Request) (params ReadAuditParams, _ error) {
+func decodeReadAuditParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadAuditParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2039,74 +2235,16 @@ func unpackReadMissionParams(packed middleware.Parameters) (params ReadMissionPa
 	return params
 }
 
-func decodeReadMissionParams(args [1]string, r *http.Request) (params ReadMissionParams, _ error) {
+func decodeReadMissionParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadMissionParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "id",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToString(val)
-				if err != nil {
-					return err
-				}
-
-				params.ID = c
-				return nil
-			}(); err != nil {
-				return err
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
 			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "id",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
-// ReadMissionRocketParams is parameters of readMissionRocket operation.
-type ReadMissionRocketParams struct {
-	// ID of the Mission.
-	ID string
-}
-
-func unpackReadMissionRocketParams(packed middleware.Parameters) (params ReadMissionRocketParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "id",
-			In:   "path",
-		}
-		params.ID = packed[key].(string)
-	}
-	return params
-}
-
-func decodeReadMissionRocketParams(args [1]string, r *http.Request) (params ReadMissionRocketParams, _ error) {
-	// Decode path: id.
-	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2163,12 +2301,16 @@ func unpackReadRequestParams(packed middleware.Parameters) (params ReadRequestPa
 	return params
 }
 
-func decodeReadRequestParams(args [1]string, r *http.Request) (params ReadRequestParams, _ error) {
+func decodeReadRequestParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadRequestParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2225,12 +2367,16 @@ func unpackReadRequestMissionParams(packed middleware.Parameters) (params ReadRe
 	return params
 }
 
-func decodeReadRequestMissionParams(args [1]string, r *http.Request) (params ReadRequestMissionParams, _ error) {
+func decodeReadRequestMissionParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadRequestMissionParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2287,12 +2433,16 @@ func unpackReadRocketParams(packed middleware.Parameters) (params ReadRocketPara
 	return params
 }
 
-func decodeReadRocketParams(args [1]string, r *http.Request) (params ReadRocketParams, _ error) {
+func decodeReadRocketParams(args [1]string, argsEscaped bool, r *http.Request) (params ReadRocketParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2309,68 +2459,6 @@ func decodeReadRocketParams(args [1]string, r *http.Request) (params ReadRocketP
 				}
 
 				c, err := conv.ToString(val)
-				if err != nil {
-					return err
-				}
-
-				params.ID = c
-				return nil
-			}(); err != nil {
-				return err
-			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "id",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
-// UpdateAccessParams is parameters of updateAccess operation.
-type UpdateAccessParams struct {
-	// ID of the Access.
-	ID uuid.UUID
-}
-
-func unpackUpdateAccessParams(packed middleware.Parameters) (params UpdateAccessParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "id",
-			In:   "path",
-		}
-		params.ID = packed[key].(uuid.UUID)
-	}
-	return params
-}
-
-func decodeUpdateAccessParams(args [1]string, r *http.Request) (params UpdateAccessParams, _ error) {
-	// Decode path: id.
-	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "id",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -2411,12 +2499,16 @@ func unpackUpdateApprovalParams(packed middleware.Parameters) (params UpdateAppr
 	return params
 }
 
-func decodeUpdateApprovalParams(args [1]string, r *http.Request) (params UpdateApprovalParams, _ error) {
+func decodeUpdateApprovalParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdateApprovalParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2433,68 +2525,6 @@ func decodeUpdateApprovalParams(args [1]string, r *http.Request) (params UpdateA
 				}
 
 				c, err := conv.ToUUID(val)
-				if err != nil {
-					return err
-				}
-
-				params.ID = c
-				return nil
-			}(); err != nil {
-				return err
-			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "id",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
-// UpdateAuditParams is parameters of updateAudit operation.
-type UpdateAuditParams struct {
-	// ID of the Audit.
-	ID string
-}
-
-func unpackUpdateAuditParams(packed middleware.Parameters) (params UpdateAuditParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "id",
-			In:   "path",
-		}
-		params.ID = packed[key].(string)
-	}
-	return params
-}
-
-func decodeUpdateAuditParams(args [1]string, r *http.Request) (params UpdateAuditParams, _ error) {
-	// Decode path: id.
-	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "id",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToString(val)
 				if err != nil {
 					return err
 				}
@@ -2535,12 +2565,16 @@ func unpackUpdateMissionParams(packed middleware.Parameters) (params UpdateMissi
 	return params
 }
 
-func decodeUpdateMissionParams(args [1]string, r *http.Request) (params UpdateMissionParams, _ error) {
+func decodeUpdateMissionParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdateMissionParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2597,12 +2631,16 @@ func unpackUpdateRequestParams(packed middleware.Parameters) (params UpdateReque
 	return params
 }
 
-func decodeUpdateRequestParams(args [1]string, r *http.Request) (params UpdateRequestParams, _ error) {
+func decodeUpdateRequestParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdateRequestParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{
@@ -2659,12 +2697,16 @@ func unpackUpdateRocketParams(packed middleware.Parameters) (params UpdateRocket
 	return params
 }
 
-func decodeUpdateRocketParams(args [1]string, r *http.Request) (params UpdateRocketParams, _ error) {
+func decodeUpdateRocketParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdateRocketParams, _ error) {
 	// Decode path: id.
 	if err := func() error {
-		param, err := url.PathUnescape(args[0])
-		if err != nil {
-			return errors.Wrap(err, "unescape path")
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
 		}
 		if len(param) > 0 {
 			d := uri.NewPathDecoder(uri.PathDecoderConfig{

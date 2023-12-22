@@ -11,10 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/predicate"
-	"github.com/orbit-ops/mission-control/ent/request"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // MissionQuery is the builder for querying Mission entities.
@@ -24,8 +24,9 @@ type MissionQuery struct {
 	order             []mission.OrderOption
 	inters            []Interceptor
 	predicates        []predicate.Mission
-	withRocket        *RocketQuery
+	withRockets       *RocketQuery
 	withRequests      *RequestQuery
+	withNamedRockets  map[string]*RocketQuery
 	withNamedRequests map[string]*RequestQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -63,8 +64,8 @@ func (mq *MissionQuery) Order(o ...mission.OrderOption) *MissionQuery {
 	return mq
 }
 
-// QueryRocket chains the current query on the "rocket" edge.
-func (mq *MissionQuery) QueryRocket() *RocketQuery {
+// QueryRockets chains the current query on the "rockets" edge.
+func (mq *MissionQuery) QueryRockets() *RocketQuery {
 	query := (&RocketClient{config: mq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := mq.prepareQuery(ctx); err != nil {
@@ -77,7 +78,7 @@ func (mq *MissionQuery) QueryRocket() *RocketQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mission.Table, mission.FieldID, selector),
 			sqlgraph.To(rocket.Table, rocket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, mission.RocketTable, mission.RocketColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, mission.RocketsTable, mission.RocketsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -299,7 +300,7 @@ func (mq *MissionQuery) Clone() *MissionQuery {
 		order:        append([]mission.OrderOption{}, mq.order...),
 		inters:       append([]Interceptor{}, mq.inters...),
 		predicates:   append([]predicate.Mission{}, mq.predicates...),
-		withRocket:   mq.withRocket.Clone(),
+		withRockets:  mq.withRockets.Clone(),
 		withRequests: mq.withRequests.Clone(),
 		// clone intermediate query.
 		sql:  mq.sql.Clone(),
@@ -307,14 +308,14 @@ func (mq *MissionQuery) Clone() *MissionQuery {
 	}
 }
 
-// WithRocket tells the query-builder to eager-load the nodes that are connected to
-// the "rocket" edge. The optional arguments are used to configure the query builder of the edge.
-func (mq *MissionQuery) WithRocket(opts ...func(*RocketQuery)) *MissionQuery {
+// WithRockets tells the query-builder to eager-load the nodes that are connected to
+// the "rockets" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MissionQuery) WithRockets(opts ...func(*RocketQuery)) *MissionQuery {
 	query := (&RocketClient{config: mq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	mq.withRocket = query
+	mq.withRockets = query
 	return mq
 }
 
@@ -408,7 +409,7 @@ func (mq *MissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Miss
 		nodes       = []*Mission{}
 		_spec       = mq.querySpec()
 		loadedTypes = [2]bool{
-			mq.withRocket != nil,
+			mq.withRockets != nil,
 			mq.withRequests != nil,
 		}
 	)
@@ -430,9 +431,10 @@ func (mq *MissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Miss
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := mq.withRocket; query != nil {
-		if err := mq.loadRocket(ctx, query, nodes, nil,
-			func(n *Mission, e *Rocket) { n.Edges.Rocket = e }); err != nil {
+	if query := mq.withRockets; query != nil {
+		if err := mq.loadRockets(ctx, query, nodes,
+			func(n *Mission) { n.Edges.Rockets = []*Rocket{} },
+			func(n *Mission, e *Rocket) { n.Edges.Rockets = append(n.Edges.Rockets, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -440,6 +442,13 @@ func (mq *MissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Miss
 		if err := mq.loadRequests(ctx, query, nodes,
 			func(n *Mission) { n.Edges.Requests = []*Request{} },
 			func(n *Mission, e *Request) { n.Edges.Requests = append(n.Edges.Requests, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range mq.withNamedRockets {
+		if err := mq.loadRockets(ctx, query, nodes,
+			func(n *Mission) { n.appendNamedRockets(name) },
+			func(n *Mission, e *Rocket) { n.appendNamedRockets(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -453,31 +462,63 @@ func (mq *MissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Miss
 	return nodes, nil
 }
 
-func (mq *MissionQuery) loadRocket(ctx context.Context, query *RocketQuery, nodes []*Mission, init func(*Mission), assign func(*Mission, *Rocket)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Mission)
-	for i := range nodes {
-		fk := nodes[i].RocketID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
+func (mq *MissionQuery) loadRockets(ctx context.Context, query *RocketQuery, nodes []*Mission, init func(*Mission), assign func(*Mission, *Rocket)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*Mission)
+	nids := make(map[string]map[*Mission]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
 		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	if len(ids) == 0 {
-		return nil
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(mission.RocketsTable)
+		s.Join(joinT).On(s.C(rocket.FieldID), joinT.C(mission.RocketsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(mission.RocketsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(mission.RocketsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
 	}
-	query.Where(rocket.IDIn(ids...))
-	neighbors, err := query.All(ctx)
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Mission]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Rocket](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "rocket_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "rockets" node returned %v`, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil
@@ -539,9 +580,6 @@ func (mq *MissionQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if mq.withRocket != nil {
-			_spec.Node.AddColumnOnce(mission.FieldRocketID)
-		}
 	}
 	if ps := mq.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -596,6 +634,20 @@ func (mq *MissionQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// WithNamedRockets tells the query-builder to eager-load the nodes that are connected to the "rockets"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (mq *MissionQuery) WithNamedRockets(name string, opts ...func(*RocketQuery)) *MissionQuery {
+	query := (&RocketClient{config: mq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if mq.withNamedRockets == nil {
+		mq.withNamedRockets = make(map[string]*RocketQuery)
+	}
+	mq.withNamedRockets[name] = query
+	return mq
 }
 
 // WithNamedRequests tells the query-builder to eager-load the nodes that are connected to the "requests"

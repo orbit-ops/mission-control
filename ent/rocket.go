@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // Rocket is the model entity for the Rocket schema.
@@ -21,6 +21,8 @@ type Rocket struct {
 	Description string `json:"description,omitempty"`
 	// Image holds the value of the "image" field.
 	Image string `json:"image,omitempty"`
+	// Zip holds the value of the "zip" field.
+	Zip string `json:"zip,omitempty"`
 	// Config holds the value of the "config" field.
 	Config map[string]string `json:"config,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -55,7 +57,7 @@ func (*Rocket) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case rocket.FieldConfig:
 			values[i] = new([]byte)
-		case rocket.FieldID, rocket.FieldDescription, rocket.FieldImage:
+		case rocket.FieldID, rocket.FieldDescription, rocket.FieldImage, rocket.FieldZip:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -89,6 +91,12 @@ func (r *Rocket) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field image", values[i])
 			} else if value.Valid {
 				r.Image = value.String
+			}
+		case rocket.FieldZip:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field zip", values[i])
+			} else if value.Valid {
+				r.Zip = value.String
 			}
 		case rocket.FieldConfig:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -144,6 +152,9 @@ func (r *Rocket) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("image=")
 	builder.WriteString(r.Image)
+	builder.WriteString(", ")
+	builder.WriteString("zip=")
+	builder.WriteString(r.Zip)
 	builder.WriteString(", ")
 	builder.WriteString("config=")
 	builder.WriteString(fmt.Sprintf("%v", r.Config))

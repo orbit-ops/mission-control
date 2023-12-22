@@ -5,7 +5,7 @@ package rocket
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
@@ -71,6 +71,11 @@ func Description(v string) predicate.Rocket {
 // Image applies equality check predicate on the "image" field. It's identical to ImageEQ.
 func Image(v string) predicate.Rocket {
 	return predicate.Rocket(sql.FieldEQ(FieldImage, v))
+}
+
+// Zip applies equality check predicate on the "zip" field. It's identical to ZipEQ.
+func Zip(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEQ(FieldZip, v))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.
@@ -203,6 +208,16 @@ func ImageHasSuffix(v string) predicate.Rocket {
 	return predicate.Rocket(sql.FieldHasSuffix(FieldImage, v))
 }
 
+// ImageIsNil applies the IsNil predicate on the "image" field.
+func ImageIsNil() predicate.Rocket {
+	return predicate.Rocket(sql.FieldIsNull(FieldImage))
+}
+
+// ImageNotNil applies the NotNil predicate on the "image" field.
+func ImageNotNil() predicate.Rocket {
+	return predicate.Rocket(sql.FieldNotNull(FieldImage))
+}
+
 // ImageEqualFold applies the EqualFold predicate on the "image" field.
 func ImageEqualFold(v string) predicate.Rocket {
 	return predicate.Rocket(sql.FieldEqualFold(FieldImage, v))
@@ -213,12 +228,87 @@ func ImageContainsFold(v string) predicate.Rocket {
 	return predicate.Rocket(sql.FieldContainsFold(FieldImage, v))
 }
 
+// ZipEQ applies the EQ predicate on the "zip" field.
+func ZipEQ(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEQ(FieldZip, v))
+}
+
+// ZipNEQ applies the NEQ predicate on the "zip" field.
+func ZipNEQ(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldNEQ(FieldZip, v))
+}
+
+// ZipIn applies the In predicate on the "zip" field.
+func ZipIn(vs ...string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldIn(FieldZip, vs...))
+}
+
+// ZipNotIn applies the NotIn predicate on the "zip" field.
+func ZipNotIn(vs ...string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldNotIn(FieldZip, vs...))
+}
+
+// ZipGT applies the GT predicate on the "zip" field.
+func ZipGT(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldGT(FieldZip, v))
+}
+
+// ZipGTE applies the GTE predicate on the "zip" field.
+func ZipGTE(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldGTE(FieldZip, v))
+}
+
+// ZipLT applies the LT predicate on the "zip" field.
+func ZipLT(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldLT(FieldZip, v))
+}
+
+// ZipLTE applies the LTE predicate on the "zip" field.
+func ZipLTE(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldLTE(FieldZip, v))
+}
+
+// ZipContains applies the Contains predicate on the "zip" field.
+func ZipContains(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldContains(FieldZip, v))
+}
+
+// ZipHasPrefix applies the HasPrefix predicate on the "zip" field.
+func ZipHasPrefix(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldHasPrefix(FieldZip, v))
+}
+
+// ZipHasSuffix applies the HasSuffix predicate on the "zip" field.
+func ZipHasSuffix(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldHasSuffix(FieldZip, v))
+}
+
+// ZipIsNil applies the IsNil predicate on the "zip" field.
+func ZipIsNil() predicate.Rocket {
+	return predicate.Rocket(sql.FieldIsNull(FieldZip))
+}
+
+// ZipNotNil applies the NotNil predicate on the "zip" field.
+func ZipNotNil() predicate.Rocket {
+	return predicate.Rocket(sql.FieldNotNull(FieldZip))
+}
+
+// ZipEqualFold applies the EqualFold predicate on the "zip" field.
+func ZipEqualFold(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEqualFold(FieldZip, v))
+}
+
+// ZipContainsFold applies the ContainsFold predicate on the "zip" field.
+func ZipContainsFold(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldContainsFold(FieldZip, v))
+}
+
 // HasMissions applies the HasEdge predicate on the "missions" edge.
 func HasMissions() predicate.Rocket {
 	return predicate.Rocket(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, MissionsTable, MissionsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, MissionsTable, MissionsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

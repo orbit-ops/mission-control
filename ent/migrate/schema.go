@@ -11,10 +11,11 @@ var (
 	// AccessesColumns holds the columns for the "accesses" table.
 	AccessesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
-		{Name: "access_time", Type: field.TypeTime},
+		{Name: "start_time", Type: field.TypeTime},
 		{Name: "approved", Type: field.TypeBool},
 		{Name: "rolled_back", Type: field.TypeBool, Default: false},
 		{Name: "rollback_time", Type: field.TypeTime, Nullable: true},
+		{Name: "rollback_reason", Type: field.TypeString, Nullable: true},
 		{Name: "end_time", Type: field.TypeTime},
 		{Name: "request_id", Type: field.TypeUUID},
 		{Name: "access_approvals", Type: field.TypeUUID, Unique: true, Nullable: true},
@@ -27,11 +28,45 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "accesses_accesses_approvals",
-				Columns:    []*schema.Column{AccessesColumns[7]},
+				Columns:    []*schema.Column{AccessesColumns[8]},
 				RefColumns: []*schema.Column{AccessesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
+	}
+	// ActionTokensColumns holds the columns for the "action_tokens" table.
+	ActionTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "action", Type: field.TypeEnum, Enums: []string{"create", "remove"}},
+		{Name: "token", Type: field.TypeString},
+		{Name: "expiration", Type: field.TypeTime},
+		{Name: "access_id", Type: field.TypeUUID},
+	}
+	// ActionTokensTable holds the schema information for the "action_tokens" table.
+	ActionTokensTable = &schema.Table{
+		Name:       "action_tokens",
+		Columns:    ActionTokensColumns,
+		PrimaryKey: []*schema.Column{ActionTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "action_tokens_accesses_accessTokens",
+				Columns:    []*schema.Column{ActionTokensColumns[4]},
+				RefColumns: []*schema.Column{AccessesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// APIKeysColumns holds the columns for the "api_keys" table.
+	APIKeysColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "key", Type: field.TypeString},
+	}
+	// APIKeysTable holds the schema information for the "api_keys" table.
+	APIKeysTable = &schema.Table{
+		Name:       "api_keys",
+		Columns:    APIKeysColumns,
+		PrimaryKey: []*schema.Column{APIKeysColumns[0]},
 	}
 	// ApprovalsColumns holds the columns for the "approvals" table.
 	ApprovalsColumns = []*schema.Column{
@@ -61,7 +96,7 @@ var (
 	// AuditsColumns holds the columns for the "audits" table.
 	AuditsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
-		{Name: "action", Type: field.TypeString},
+		{Name: "action", Type: field.TypeEnum, Enums: []string{"ApproveRequest", "RevokeApprovalRequest", "RejectRequest", "CreateAccess", "RemoveAccess"}},
 		{Name: "author", Type: field.TypeString},
 		{Name: "timestamp", Type: field.TypeTime},
 	}
@@ -75,30 +110,21 @@ var (
 	MissionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "image", Type: field.TypeString},
 		{Name: "min_approvers", Type: field.TypeInt},
-		{Name: "rocket_id", Type: field.TypeString},
+		{Name: "possible_approvers", Type: field.TypeJSON},
 	}
 	// MissionsTable holds the schema information for the "missions" table.
 	MissionsTable = &schema.Table{
 		Name:       "missions",
 		Columns:    MissionsColumns,
 		PrimaryKey: []*schema.Column{MissionsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "missions_rockets_missions",
-				Columns:    []*schema.Column{MissionsColumns[4]},
-				RefColumns: []*schema.Column{RocketsColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
 	}
 	// RequestsColumns holds the columns for the "requests" table.
 	RequestsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "reason", Type: field.TypeString},
 		{Name: "requester", Type: field.TypeString},
-		{Name: "mission_id", Type: field.TypeString},
+		{Name: "rocket_config", Type: field.TypeJSON},
 		{Name: "mission_requests", Type: field.TypeString},
 	}
 	// RequestsTable holds the schema information for the "requests" table.
@@ -119,7 +145,8 @@ var (
 	RocketsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "image", Type: field.TypeString},
+		{Name: "image", Type: field.TypeString, Nullable: true},
+		{Name: "zip", Type: field.TypeString, Nullable: true},
 		{Name: "config", Type: field.TypeJSON},
 	}
 	// RocketsTable holds the schema information for the "rockets" table.
@@ -128,20 +155,50 @@ var (
 		Columns:    RocketsColumns,
 		PrimaryKey: []*schema.Column{RocketsColumns[0]},
 	}
+	// RocketMissionsColumns holds the columns for the "rocket_missions" table.
+	RocketMissionsColumns = []*schema.Column{
+		{Name: "rocket_id", Type: field.TypeString},
+		{Name: "mission_id", Type: field.TypeString},
+	}
+	// RocketMissionsTable holds the schema information for the "rocket_missions" table.
+	RocketMissionsTable = &schema.Table{
+		Name:       "rocket_missions",
+		Columns:    RocketMissionsColumns,
+		PrimaryKey: []*schema.Column{RocketMissionsColumns[0], RocketMissionsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "rocket_missions_rocket_id",
+				Columns:    []*schema.Column{RocketMissionsColumns[0]},
+				RefColumns: []*schema.Column{RocketsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "rocket_missions_mission_id",
+				Columns:    []*schema.Column{RocketMissionsColumns[1]},
+				RefColumns: []*schema.Column{MissionsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccessesTable,
+		ActionTokensTable,
+		APIKeysTable,
 		ApprovalsTable,
 		AuditsTable,
 		MissionsTable,
 		RequestsTable,
 		RocketsTable,
+		RocketMissionsTable,
 	}
 )
 
 func init() {
 	AccessesTable.ForeignKeys[0].RefTable = AccessesTable
+	ActionTokensTable.ForeignKeys[0].RefTable = AccessesTable
 	ApprovalsTable.ForeignKeys[0].RefTable = RequestsTable
-	MissionsTable.ForeignKeys[0].RefTable = RocketsTable
 	RequestsTable.ForeignKeys[0].RefTable = MissionsTable
+	RocketMissionsTable.ForeignKeys[0].RefTable = RocketsTable
+	RocketMissionsTable.ForeignKeys[1].RefTable = MissionsTable
 }

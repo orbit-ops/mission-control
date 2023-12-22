@@ -5,12 +5,12 @@ package enttest
 import (
 	"context"
 
-	"github.com/orbit-ops/mission-control/ent"
+	"github.com/orbit-ops/launchpad-core/ent"
 	// required by schema hooks.
-	_ "github.com/orbit-ops/mission-control/ent/runtime"
+	_ "github.com/orbit-ops/launchpad-core/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
-	"github.com/orbit-ops/mission-control/ent/migrate"
+	"github.com/orbit-ops/launchpad-core/ent/migrate"
 )
 
 type (

@@ -16,19 +16,19 @@ const (
 	FieldDescription = "description"
 	// FieldImage holds the string denoting the image field in the database.
 	FieldImage = "image"
+	// FieldZip holds the string denoting the zip field in the database.
+	FieldZip = "zip"
 	// FieldConfig holds the string denoting the config field in the database.
 	FieldConfig = "config"
 	// EdgeMissions holds the string denoting the missions edge name in mutations.
 	EdgeMissions = "missions"
 	// Table holds the table name of the rocket in the database.
 	Table = "rockets"
-	// MissionsTable is the table that holds the missions relation/edge.
-	MissionsTable = "missions"
+	// MissionsTable is the table that holds the missions relation/edge. The primary key declared below.
+	MissionsTable = "rocket_missions"
 	// MissionsInverseTable is the table name for the Mission entity.
 	// It exists in this package in order to avoid circular dependency with the "mission" package.
 	MissionsInverseTable = "missions"
-	// MissionsColumn is the table column denoting the missions relation/edge.
-	MissionsColumn = "rocket_id"
 )
 
 // Columns holds all SQL columns for rocket fields.
@@ -36,8 +36,15 @@ var Columns = []string{
 	FieldID,
 	FieldDescription,
 	FieldImage,
+	FieldZip,
 	FieldConfig,
 }
+
+var (
+	// MissionsPrimaryKey and MissionsColumn2 are the table columns denoting the
+	// primary key for the missions relation (M2M).
+	MissionsPrimaryKey = []string{"rocket_id", "mission_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -72,6 +79,11 @@ func ByImage(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImage, opts...).ToFunc()
 }
 
+// ByZip orders the results by the zip field.
+func ByZip(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldZip, opts...).ToFunc()
+}
+
 // ByMissionsCount orders the results by missions count.
 func ByMissionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -89,6 +101,6 @@ func newMissionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MissionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, MissionsTable, MissionsColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, MissionsTable, MissionsPrimaryKey...),
 	)
 }

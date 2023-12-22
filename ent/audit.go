@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/orbit-ops/mission-control/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/audit"
 )
 
 // Audit is the model entity for the Audit schema.
@@ -18,7 +18,7 @@ type Audit struct {
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
 	// Action holds the value of the "action" field.
-	Action string `json:"action,omitempty"`
+	Action audit.Action `json:"action,omitempty"`
 	// Author holds the value of the "author" field.
 	Author string `json:"author,omitempty"`
 	// Timestamp holds the value of the "timestamp" field.
@@ -60,7 +60,7 @@ func (a *Audit) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field action", values[i])
 			} else if value.Valid {
-				a.Action = value.String
+				a.Action = audit.Action(value.String)
 			}
 		case audit.FieldAuthor:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -111,7 +111,7 @@ func (a *Audit) String() string {
 	builder.WriteString("Audit(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
 	builder.WriteString("action=")
-	builder.WriteString(a.Action)
+	builder.WriteString(fmt.Sprintf("%v", a.Action))
 	builder.WriteString(", ")
 	builder.WriteString("author=")
 	builder.WriteString(a.Author)

@@ -3,54 +3,403 @@
 package ogent
 
 import (
+	"fmt"
+
 	"github.com/go-faster/errors"
+
+	"github.com/ogen-go/ogen/validate"
 )
 
-func (s ListAccessOKApplicationJSON) Validate() error {
-	if s == nil {
+func (s *AccessAccessTokensList) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Action.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "action",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s AccessAccessTokensListAction) Validate() error {
+	switch s {
+	case "create":
+		return nil
+	case "remove":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s *AuditList) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Action.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "action",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s AuditListAction) Validate() error {
+	switch s {
+	case "ApproveRequest":
+		return nil
+	case "RevokeApprovalRequest":
+		return nil
+	case "RejectRequest":
+		return nil
+	case "CreateAccess":
+		return nil
+	case "RemoveAccess":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s *AuditRead) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Action.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "action",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s AuditReadAction) Validate() error {
+	switch s {
+	case "ApproveRequest":
+		return nil
+	case "RevokeApprovalRequest":
+		return nil
+	case "RejectRequest":
+		return nil
+	case "CreateAccess":
+		return nil
+	case "RemoveAccess":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s *CreateMissionReq) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.PossibleApprovers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "possible_approvers",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if s.Rockets == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "rockets",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s ListAccessAccessTokensOKApplicationJSON) Validate() error {
+	alias := ([]AccessAccessTokensList)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s ListApiKeyOKApplicationJSON) Validate() error {
+	alias := ([]ApiKeyList)(s)
+	if alias == nil {
 		return errors.New("nil is invalid value")
 	}
 	return nil
 }
+
 func (s ListApprovalOKApplicationJSON) Validate() error {
-	if s == nil {
+	alias := ([]ApprovalList)(s)
+	if alias == nil {
 		return errors.New("nil is invalid value")
 	}
 	return nil
 }
+
 func (s ListAuditOKApplicationJSON) Validate() error {
-	if s == nil {
+	alias := ([]AuditList)(s)
+	if alias == nil {
 		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
+
 func (s ListMissionOKApplicationJSON) Validate() error {
-	if s == nil {
+	alias := ([]MissionList)(s)
+	if alias == nil {
 		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
+
 func (s ListMissionRequestsOKApplicationJSON) Validate() error {
-	if s == nil {
+	alias := ([]MissionRequestsList)(s)
+	if alias == nil {
 		return errors.New("nil is invalid value")
 	}
 	return nil
 }
+
+func (s ListMissionRocketsOKApplicationJSON) Validate() error {
+	alias := ([]MissionRocketsList)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	return nil
+}
+
 func (s ListRequestOKApplicationJSON) Validate() error {
-	if s == nil {
+	alias := ([]RequestList)(s)
+	if alias == nil {
 		return errors.New("nil is invalid value")
 	}
 	return nil
 }
+
 func (s ListRocketMissionsOKApplicationJSON) Validate() error {
-	if s == nil {
+	alias := ([]RocketMissionsList)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	var failures []validate.FieldError
+	for i, elem := range alias {
+		if err := func() error {
+			if err := elem.Validate(); err != nil {
+				return err
+			}
+			return nil
+		}(); err != nil {
+			failures = append(failures, validate.FieldError{
+				Name:  fmt.Sprintf("[%d]", i),
+				Error: err,
+			})
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s ListRocketOKApplicationJSON) Validate() error {
+	alias := ([]RocketList)(s)
+	if alias == nil {
 		return errors.New("nil is invalid value")
 	}
 	return nil
 }
-func (s ListRocketOKApplicationJSON) Validate() error {
-	if s == nil {
-		return errors.New("nil is invalid value")
+
+func (s *MissionCreate) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.PossibleApprovers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "possible_approvers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *MissionList) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.PossibleApprovers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "possible_approvers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *MissionRead) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.PossibleApprovers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "possible_approvers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *MissionUpdate) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.PossibleApprovers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "possible_approvers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *RequestMissionRead) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.PossibleApprovers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "possible_approvers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *RocketMissionsList) Validate() error {
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.PossibleApprovers == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "possible_approvers",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
 	}
 	return nil
 }

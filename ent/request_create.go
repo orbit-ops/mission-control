@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/request"
 )
 
 // RequestCreate is the builder for creating a Request entity.
@@ -36,9 +36,9 @@ func (rc *RequestCreate) SetRequester(s string) *RequestCreate {
 	return rc
 }
 
-// SetMissionID sets the "mission_id" field.
-func (rc *RequestCreate) SetMissionID(s string) *RequestCreate {
-	rc.mutation.SetMissionID(s)
+// SetRocketConfig sets the "rocket_config" field.
+func (rc *RequestCreate) SetRocketConfig(m map[string]string) *RequestCreate {
+	rc.mutation.SetRocketConfig(m)
 	return rc
 }
 
@@ -116,8 +116,8 @@ func (rc *RequestCreate) check() error {
 	if _, ok := rc.mutation.Requester(); !ok {
 		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required field "Request.requester"`)}
 	}
-	if _, ok := rc.mutation.MissionID(); !ok {
-		return &ValidationError{Name: "mission_id", err: errors.New(`ent: missing required field "Request.mission_id"`)}
+	if _, ok := rc.mutation.RocketConfig(); !ok {
+		return &ValidationError{Name: "rocket_config", err: errors.New(`ent: missing required field "Request.rocket_config"`)}
 	}
 	if _, ok := rc.mutation.MissionID(); !ok {
 		return &ValidationError{Name: "mission", err: errors.New(`ent: missing required edge "Request.mission"`)}
@@ -166,9 +166,9 @@ func (rc *RequestCreate) createSpec() (*Request, *sqlgraph.CreateSpec) {
 		_spec.SetField(request.FieldRequester, field.TypeString, value)
 		_node.Requester = value
 	}
-	if value, ok := rc.mutation.MissionID(); ok {
-		_spec.SetField(request.FieldMissionID, field.TypeString, value)
-		_node.MissionID = value
+	if value, ok := rc.mutation.RocketConfig(); ok {
+		_spec.SetField(request.FieldRocketConfig, field.TypeJSON, value)
+		_node.RocketConfig = value
 	}
 	if nodes := rc.mutation.MissionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -251,6 +251,18 @@ func (u *RequestUpsert) UpdateReason() *RequestUpsert {
 	return u
 }
 
+// SetRocketConfig sets the "rocket_config" field.
+func (u *RequestUpsert) SetRocketConfig(v map[string]string) *RequestUpsert {
+	u.Set(request.FieldRocketConfig, v)
+	return u
+}
+
+// UpdateRocketConfig sets the "rocket_config" field to the value that was provided on create.
+func (u *RequestUpsert) UpdateRocketConfig() *RequestUpsert {
+	u.SetExcluded(request.FieldRocketConfig)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -270,9 +282,6 @@ func (u *RequestUpsertOne) UpdateNewValues() *RequestUpsertOne {
 		}
 		if _, exists := u.create.mutation.Requester(); exists {
 			s.SetIgnore(request.FieldRequester)
-		}
-		if _, exists := u.create.mutation.MissionID(); exists {
-			s.SetIgnore(request.FieldMissionID)
 		}
 	}))
 	return u
@@ -316,6 +325,20 @@ func (u *RequestUpsertOne) SetReason(v string) *RequestUpsertOne {
 func (u *RequestUpsertOne) UpdateReason() *RequestUpsertOne {
 	return u.Update(func(s *RequestUpsert) {
 		s.UpdateReason()
+	})
+}
+
+// SetRocketConfig sets the "rocket_config" field.
+func (u *RequestUpsertOne) SetRocketConfig(v map[string]string) *RequestUpsertOne {
+	return u.Update(func(s *RequestUpsert) {
+		s.SetRocketConfig(v)
+	})
+}
+
+// UpdateRocketConfig sets the "rocket_config" field to the value that was provided on create.
+func (u *RequestUpsertOne) UpdateRocketConfig() *RequestUpsertOne {
+	return u.Update(func(s *RequestUpsert) {
+		s.UpdateRocketConfig()
 	})
 }
 
@@ -505,9 +528,6 @@ func (u *RequestUpsertBulk) UpdateNewValues() *RequestUpsertBulk {
 			if _, exists := b.mutation.Requester(); exists {
 				s.SetIgnore(request.FieldRequester)
 			}
-			if _, exists := b.mutation.MissionID(); exists {
-				s.SetIgnore(request.FieldMissionID)
-			}
 		}
 	}))
 	return u
@@ -551,6 +571,20 @@ func (u *RequestUpsertBulk) SetReason(v string) *RequestUpsertBulk {
 func (u *RequestUpsertBulk) UpdateReason() *RequestUpsertBulk {
 	return u.Update(func(s *RequestUpsert) {
 		s.UpdateReason()
+	})
+}
+
+// SetRocketConfig sets the "rocket_config" field.
+func (u *RequestUpsertBulk) SetRocketConfig(v map[string]string) *RequestUpsertBulk {
+	return u.Update(func(s *RequestUpsert) {
+		s.SetRocketConfig(v)
+	})
+}
+
+// UpdateRocketConfig sets the "rocket_config" field to the value that was provided on create.
+func (u *RequestUpsertBulk) UpdateRocketConfig() *RequestUpsertBulk {
+	return u.Update(func(s *RequestUpsert) {
+		s.UpdateRocketConfig()
 	})
 }
 

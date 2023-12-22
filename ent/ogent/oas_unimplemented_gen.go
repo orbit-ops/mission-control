@@ -5,8 +5,6 @@ package ogent
 import (
 	"context"
 
-	"github.com/go-faster/jx"
-
 	ht "github.com/ogen-go/ogen/http"
 )
 
@@ -15,12 +13,12 @@ type UnimplementedHandler struct{}
 
 var _ Handler = UnimplementedHandler{}
 
-// CreateAccess implements createAccess operation.
+// CreateApiKey implements createApiKey operation.
 //
-// Creates a new Access and persists it to storage.
+// Creates a new ApiKey and persists it to storage.
 //
-// POST /accesses
-func (UnimplementedHandler) CreateAccess(ctx context.Context, req *CreateAccessReq) (r CreateAccessRes, _ error) {
+// POST /api-keys
+func (UnimplementedHandler) CreateApiKey(ctx context.Context, req *CreateApiKeyReq) (r CreateApiKeyRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -30,15 +28,6 @@ func (UnimplementedHandler) CreateAccess(ctx context.Context, req *CreateAccessR
 //
 // POST /approvals
 func (UnimplementedHandler) CreateApproval(ctx context.Context, req *CreateApprovalReq) (r CreateApprovalRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// CreateAudit implements createAudit operation.
-//
-// Creates a new Audit and persists it to storage.
-//
-// POST /audits
-func (UnimplementedHandler) CreateAudit(ctx context.Context, req *CreateAuditReq) (r CreateAuditRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -69,12 +58,12 @@ func (UnimplementedHandler) CreateRocket(ctx context.Context, req *CreateRocketR
 	return r, ht.ErrNotImplemented
 }
 
-// DeleteAccess implements deleteAccess operation.
+// DeleteApiKey implements deleteApiKey operation.
 //
-// Deletes the Access with the requested ID.
+// Deletes the ApiKey with the requested ID.
 //
-// DELETE /accesses/{id}
-func (UnimplementedHandler) DeleteAccess(ctx context.Context, params DeleteAccessParams) (r DeleteAccessRes, _ error) {
+// DELETE /api-keys/{id}
+func (UnimplementedHandler) DeleteApiKey(ctx context.Context, params DeleteApiKeyParams) (r DeleteApiKeyRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -84,15 +73,6 @@ func (UnimplementedHandler) DeleteAccess(ctx context.Context, params DeleteAcces
 //
 // DELETE /approvals/{id}
 func (UnimplementedHandler) DeleteApproval(ctx context.Context, params DeleteApprovalParams) (r DeleteApprovalRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// DeleteAudit implements deleteAudit operation.
-//
-// Deletes the Audit with the requested ID.
-//
-// DELETE /audits/{id}
-func (UnimplementedHandler) DeleteAudit(ctx context.Context, params DeleteAuditParams) (r DeleteAuditRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -123,12 +103,21 @@ func (UnimplementedHandler) DeleteRocket(ctx context.Context, params DeleteRocke
 	return r, ht.ErrNotImplemented
 }
 
-// ListAccess implements listAccess operation.
+// ListAccessAccessTokens implements listAccessAccessTokens operation.
 //
-// List Accesses.
+// List attached AccessTokens.
 //
-// GET /accesses
-func (UnimplementedHandler) ListAccess(ctx context.Context, params ListAccessParams) (r ListAccessRes, _ error) {
+// GET /accesses/{id}/access-tokens
+func (UnimplementedHandler) ListAccessAccessTokens(ctx context.Context, params ListAccessAccessTokensParams) (r ListAccessAccessTokensRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListApiKey implements listApiKey operation.
+//
+// List ApiKeys.
+//
+// GET /api-keys
+func (UnimplementedHandler) ListApiKey(ctx context.Context, params ListApiKeyParams) (r ListApiKeyRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -168,6 +157,15 @@ func (UnimplementedHandler) ListMissionRequests(ctx context.Context, params List
 	return r, ht.ErrNotImplemented
 }
 
+// ListMissionRockets implements listMissionRockets operation.
+//
+// List attached Rockets.
+//
+// GET /missions/{id}/rockets
+func (UnimplementedHandler) ListMissionRockets(ctx context.Context, params ListMissionRocketsParams) (r ListMissionRocketsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListRequest implements listRequest operation.
 //
 // List Requests.
@@ -195,21 +193,12 @@ func (UnimplementedHandler) ListRocketMissions(ctx context.Context, params ListR
 	return r, ht.ErrNotImplemented
 }
 
-// ReadAccess implements readAccess operation.
+// ReadApiKey implements readApiKey operation.
 //
-// Finds the Access with the requested ID and returns it.
+// Finds the ApiKey with the requested ID and returns it.
 //
-// GET /accesses/{id}
-func (UnimplementedHandler) ReadAccess(ctx context.Context, params ReadAccessParams) (r ReadAccessRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// ReadAccessApprovals implements readAccessApprovals operation.
-//
-// Find the attached Access of the Access with the given ID.
-//
-// GET /accesses/{id}/approvals
-func (UnimplementedHandler) ReadAccessApprovals(ctx context.Context, params ReadAccessApprovalsParams) (r ReadAccessApprovalsRes, _ error) {
+// GET /api-keys/{id}
+func (UnimplementedHandler) ReadApiKey(ctx context.Context, params ReadApiKeyParams) (r ReadApiKeyRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -219,15 +208,6 @@ func (UnimplementedHandler) ReadAccessApprovals(ctx context.Context, params Read
 //
 // GET /approvals/{id}
 func (UnimplementedHandler) ReadApproval(ctx context.Context, params ReadApprovalParams) (r ReadApprovalRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// ReadApprovalRequests implements readApprovalRequests operation.
-//
-// Find the attached Request of the Approval with the given ID.
-//
-// GET /approvals/{id}/requests
-func (UnimplementedHandler) ReadApprovalRequests(ctx context.Context, params ReadApprovalRequestsParams) (r ReadApprovalRequestsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -246,15 +226,6 @@ func (UnimplementedHandler) ReadAudit(ctx context.Context, params ReadAuditParam
 //
 // GET /missions/{id}
 func (UnimplementedHandler) ReadMission(ctx context.Context, params ReadMissionParams) (r ReadMissionRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// ReadMissionRocket implements readMissionRocket operation.
-//
-// Find the attached Rocket of the Mission with the given ID.
-//
-// GET /missions/{id}/rocket
-func (UnimplementedHandler) ReadMissionRocket(ctx context.Context, params ReadMissionRocketParams) (r ReadMissionRocketRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -285,30 +256,12 @@ func (UnimplementedHandler) ReadRocket(ctx context.Context, params ReadRocketPar
 	return r, ht.ErrNotImplemented
 }
 
-// UpdateAccess implements updateAccess operation.
-//
-// Updates a Access and persists changes to storage.
-//
-// PATCH /accesses/{id}
-func (UnimplementedHandler) UpdateAccess(ctx context.Context, req *UpdateAccessReq, params UpdateAccessParams) (r UpdateAccessRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
 // UpdateApproval implements updateApproval operation.
 //
 // Updates a Approval and persists changes to storage.
 //
 // PATCH /approvals/{id}
 func (UnimplementedHandler) UpdateApproval(ctx context.Context, req *UpdateApprovalReq, params UpdateApprovalParams) (r UpdateApprovalRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// UpdateAudit implements updateAudit operation.
-//
-// Updates a Audit and persists changes to storage.
-//
-// PATCH /audits/{id}
-func (UnimplementedHandler) UpdateAudit(ctx context.Context, req jx.Raw, params UpdateAuditParams) (r UpdateAuditRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

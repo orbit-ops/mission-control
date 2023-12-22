@@ -14,6 +14,10 @@ type Tx struct {
 	config
 	// Access is the client for interacting with the Access builders.
 	Access *AccessClient
+	// ActionTokens is the client for interacting with the ActionTokens builders.
+	ActionTokens *ActionTokensClient
+	// ApiKey is the client for interacting with the ApiKey builders.
+	ApiKey *ApiKeyClient
 	// Approval is the client for interacting with the Approval builders.
 	Approval *ApprovalClient
 	// Audit is the client for interacting with the Audit builders.
@@ -156,6 +160,8 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Access = NewAccessClient(tx.config)
+	tx.ActionTokens = NewActionTokensClient(tx.config)
+	tx.ApiKey = NewApiKeyClient(tx.config)
 	tx.Approval = NewApprovalClient(tx.config)
 	tx.Audit = NewAuditClient(tx.config)
 	tx.Mission = NewMissionClient(tx.config)

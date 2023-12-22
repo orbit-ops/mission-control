@@ -12,8 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/access"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // AccessUpdate is the builder for updating Access entities.
@@ -63,6 +64,26 @@ func (au *AccessUpdate) ClearRollbackTime() *AccessUpdate {
 	return au
 }
 
+// SetRollbackReason sets the "rollback_reason" field.
+func (au *AccessUpdate) SetRollbackReason(s string) *AccessUpdate {
+	au.mutation.SetRollbackReason(s)
+	return au
+}
+
+// SetNillableRollbackReason sets the "rollback_reason" field if the given value is not nil.
+func (au *AccessUpdate) SetNillableRollbackReason(s *string) *AccessUpdate {
+	if s != nil {
+		au.SetRollbackReason(*s)
+	}
+	return au
+}
+
+// ClearRollbackReason clears the value of the "rollback_reason" field.
+func (au *AccessUpdate) ClearRollbackReason() *AccessUpdate {
+	au.mutation.ClearRollbackReason()
+	return au
+}
+
 // SetRequestID sets the "request_id" field.
 func (au *AccessUpdate) SetRequestID(u uuid.UUID) *AccessUpdate {
 	au.mutation.SetRequestID(u)
@@ -96,6 +117,21 @@ func (au *AccessUpdate) SetApprovals(a *Access) *AccessUpdate {
 	return au.SetApprovalsID(a.ID)
 }
 
+// AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by IDs.
+func (au *AccessUpdate) AddAccessTokenIDs(ids ...uuid.UUID) *AccessUpdate {
+	au.mutation.AddAccessTokenIDs(ids...)
+	return au
+}
+
+// AddAccessTokens adds the "accessTokens" edges to the ActionTokens entity.
+func (au *AccessUpdate) AddAccessTokens(a ...*ActionTokens) *AccessUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.AddAccessTokenIDs(ids...)
+}
+
 // Mutation returns the AccessMutation object of the builder.
 func (au *AccessUpdate) Mutation() *AccessMutation {
 	return au.mutation
@@ -105,6 +141,27 @@ func (au *AccessUpdate) Mutation() *AccessMutation {
 func (au *AccessUpdate) ClearApprovals() *AccessUpdate {
 	au.mutation.ClearApprovals()
 	return au
+}
+
+// ClearAccessTokens clears all "accessTokens" edges to the ActionTokens entity.
+func (au *AccessUpdate) ClearAccessTokens() *AccessUpdate {
+	au.mutation.ClearAccessTokens()
+	return au
+}
+
+// RemoveAccessTokenIDs removes the "accessTokens" edge to ActionTokens entities by IDs.
+func (au *AccessUpdate) RemoveAccessTokenIDs(ids ...uuid.UUID) *AccessUpdate {
+	au.mutation.RemoveAccessTokenIDs(ids...)
+	return au
+}
+
+// RemoveAccessTokens removes "accessTokens" edges to ActionTokens entities.
+func (au *AccessUpdate) RemoveAccessTokens(a ...*ActionTokens) *AccessUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.RemoveAccessTokenIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -152,6 +209,12 @@ func (au *AccessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if au.mutation.RollbackTimeCleared() {
 		_spec.ClearField(access.FieldRollbackTime, field.TypeTime)
 	}
+	if value, ok := au.mutation.RollbackReason(); ok {
+		_spec.SetField(access.FieldRollbackReason, field.TypeString, value)
+	}
+	if au.mutation.RollbackReasonCleared() {
+		_spec.ClearField(access.FieldRollbackReason, field.TypeString)
+	}
 	if value, ok := au.mutation.RequestID(); ok {
 		_spec.SetField(access.FieldRequestID, field.TypeUUID, value)
 	}
@@ -177,6 +240,51 @@ func (au *AccessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    true,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if au.mutation.AccessTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   access.AccessTokensTable,
+			Columns: []string{access.AccessTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(actiontokens.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedAccessTokensIDs(); len(nodes) > 0 && !au.mutation.AccessTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   access.AccessTokensTable,
+			Columns: []string{access.AccessTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(actiontokens.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.AccessTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   access.AccessTokensTable,
+			Columns: []string{access.AccessTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(actiontokens.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -238,6 +346,26 @@ func (auo *AccessUpdateOne) ClearRollbackTime() *AccessUpdateOne {
 	return auo
 }
 
+// SetRollbackReason sets the "rollback_reason" field.
+func (auo *AccessUpdateOne) SetRollbackReason(s string) *AccessUpdateOne {
+	auo.mutation.SetRollbackReason(s)
+	return auo
+}
+
+// SetNillableRollbackReason sets the "rollback_reason" field if the given value is not nil.
+func (auo *AccessUpdateOne) SetNillableRollbackReason(s *string) *AccessUpdateOne {
+	if s != nil {
+		auo.SetRollbackReason(*s)
+	}
+	return auo
+}
+
+// ClearRollbackReason clears the value of the "rollback_reason" field.
+func (auo *AccessUpdateOne) ClearRollbackReason() *AccessUpdateOne {
+	auo.mutation.ClearRollbackReason()
+	return auo
+}
+
 // SetRequestID sets the "request_id" field.
 func (auo *AccessUpdateOne) SetRequestID(u uuid.UUID) *AccessUpdateOne {
 	auo.mutation.SetRequestID(u)
@@ -271,6 +399,21 @@ func (auo *AccessUpdateOne) SetApprovals(a *Access) *AccessUpdateOne {
 	return auo.SetApprovalsID(a.ID)
 }
 
+// AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by IDs.
+func (auo *AccessUpdateOne) AddAccessTokenIDs(ids ...uuid.UUID) *AccessUpdateOne {
+	auo.mutation.AddAccessTokenIDs(ids...)
+	return auo
+}
+
+// AddAccessTokens adds the "accessTokens" edges to the ActionTokens entity.
+func (auo *AccessUpdateOne) AddAccessTokens(a ...*ActionTokens) *AccessUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.AddAccessTokenIDs(ids...)
+}
+
 // Mutation returns the AccessMutation object of the builder.
 func (auo *AccessUpdateOne) Mutation() *AccessMutation {
 	return auo.mutation
@@ -280,6 +423,27 @@ func (auo *AccessUpdateOne) Mutation() *AccessMutation {
 func (auo *AccessUpdateOne) ClearApprovals() *AccessUpdateOne {
 	auo.mutation.ClearApprovals()
 	return auo
+}
+
+// ClearAccessTokens clears all "accessTokens" edges to the ActionTokens entity.
+func (auo *AccessUpdateOne) ClearAccessTokens() *AccessUpdateOne {
+	auo.mutation.ClearAccessTokens()
+	return auo
+}
+
+// RemoveAccessTokenIDs removes the "accessTokens" edge to ActionTokens entities by IDs.
+func (auo *AccessUpdateOne) RemoveAccessTokenIDs(ids ...uuid.UUID) *AccessUpdateOne {
+	auo.mutation.RemoveAccessTokenIDs(ids...)
+	return auo
+}
+
+// RemoveAccessTokens removes "accessTokens" edges to ActionTokens entities.
+func (auo *AccessUpdateOne) RemoveAccessTokens(a ...*ActionTokens) *AccessUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.RemoveAccessTokenIDs(ids...)
 }
 
 // Where appends a list predicates to the AccessUpdate builder.
@@ -357,6 +521,12 @@ func (auo *AccessUpdateOne) sqlSave(ctx context.Context) (_node *Access, err err
 	if auo.mutation.RollbackTimeCleared() {
 		_spec.ClearField(access.FieldRollbackTime, field.TypeTime)
 	}
+	if value, ok := auo.mutation.RollbackReason(); ok {
+		_spec.SetField(access.FieldRollbackReason, field.TypeString, value)
+	}
+	if auo.mutation.RollbackReasonCleared() {
+		_spec.ClearField(access.FieldRollbackReason, field.TypeString)
+	}
 	if value, ok := auo.mutation.RequestID(); ok {
 		_spec.SetField(access.FieldRequestID, field.TypeUUID, value)
 	}
@@ -382,6 +552,51 @@ func (auo *AccessUpdateOne) sqlSave(ctx context.Context) (_node *Access, err err
 			Bidi:    true,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.AccessTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   access.AccessTokensTable,
+			Columns: []string{access.AccessTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(actiontokens.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedAccessTokensIDs(); len(nodes) > 0 && !auo.mutation.AccessTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   access.AccessTokensTable,
+			Columns: []string{access.AccessTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(actiontokens.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.AccessTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   access.AccessTokensTable,
+			Columns: []string{access.AccessTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(actiontokens.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

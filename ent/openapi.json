@@ -6,14 +6,80 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/accesses": {
+    "/accesses/{id}/access-tokens": {
       "get": {
         "tags": [
-          "Access"
+          "Access",
+          "x-tf-ignore"
         ],
-        "summary": "List Accesses",
-        "description": "List Accesses.",
-        "operationId": "listAccess",
+        "summary": "List attached AccessTokens",
+        "description": "List attached AccessTokens.",
+        "operationId": "listAccessAccessTokens",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Access",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "result Accesses list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Access_AccessTokensList"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        }
+      }
+    },
+    "/api-keys": {
+      "get": {
+        "tags": [
+          "ApiKey"
+        ],
+        "summary": "List ApiKeys",
+        "description": "List ApiKeys.",
+        "operationId": "listApiKey",
         "parameters": [
           {
             "name": "page",
@@ -37,13 +103,13 @@
         ],
         "responses": {
           "200": {
-            "description": "result Access list",
+            "description": "result ApiKey list",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AccessList"
+                    "$ref": "#/components/schemas/ApiKeyList"
                   }
                 }
               }
@@ -61,55 +127,40 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "post": {
         "tags": [
-          "Access"
+          "ApiKey"
         ],
-        "summary": "Create a new Access",
-        "description": "Creates a new Access and persists it to storage.",
-        "operationId": "createAccess",
+        "summary": "Create a new ApiKey",
+        "description": "Creates a new ApiKey and persists it to storage.",
+        "operationId": "createApiKey",
         "requestBody": {
-          "description": "Access to create",
+          "description": "ApiKey to create",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "access_time": {
-                    "type": "string",
-                    "format": "date-time"
+                  "name": {
+                    "type": "string"
                   },
-                  "approved": {
-                    "type": "boolean"
-                  },
-                  "rolled_back": {
-                    "type": "boolean"
-                  },
-                  "rollback_time": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "end_time": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "request_id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "approvals": {
-                    "type": "string",
-                    "format": "uuid"
+                  "key": {
+                    "type": "string"
                   }
                 },
                 "required": [
-                  "access_time",
-                  "approved",
-                  "rolled_back",
-                  "end_time",
-                  "request_id"
+                  "name",
+                  "key"
                 ]
               }
             }
@@ -118,11 +169,11 @@
         },
         "responses": {
           "200": {
-            "description": "Access created",
+            "description": "ApiKey created",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccessCreate"
+                  "$ref": "#/components/schemas/ApiKeyCreate"
                 }
               }
             }
@@ -136,36 +187,43 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
-    "/accesses/{id}": {
+    "/api-keys/{id}": {
       "get": {
         "tags": [
-          "Access"
+          "ApiKey"
         ],
-        "summary": "Find a Access by ID",
-        "description": "Finds the Access with the requested ID and returns it.",
-        "operationId": "readAccess",
+        "summary": "Find a ApiKey by ID",
+        "description": "Finds the ApiKey with the requested ID and returns it.",
+        "operationId": "readApiKey",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "ID of the Access",
+            "description": "ID of the ApiKey",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "integer"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Access with requested ID was found",
+            "description": "ApiKey with requested ID was found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AccessRead"
+                  "$ref": "#/components/schemas/ApiKeyRead"
                 }
               }
             }
@@ -182,30 +240,37 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
-          "Access"
+          "ApiKey"
         ],
-        "summary": "Deletes a Access by ID",
-        "description": "Deletes the Access with the requested ID.",
-        "operationId": "deleteAccess",
+        "summary": "Deletes a ApiKey by ID",
+        "description": "Deletes the ApiKey with the requested ID.",
+        "operationId": "deleteApiKey",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "ID of the Access",
+            "description": "ID of the ApiKey",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "type": "integer"
             }
           }
         ],
         "responses": {
           "204": {
-            "description": "Access with requested ID was deleted"
+            "description": "ApiKey with requested ID was deleted"
           },
           "400": {
             "$ref": "#/components/responses/400"
@@ -219,131 +284,22 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Access"
-        ],
-        "summary": "Updates a Access",
-        "description": "Updates a Access and persists changes to storage.",
-        "operationId": "updateAccess",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the Access",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Access properties to update",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "rolled_back": {
-                    "type": "boolean"
-                  },
-                  "rollback_time": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "request_id": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "approvals": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "Access updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessUpdate"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "404": {
-            "$ref": "#/components/responses/404"
-          },
-          "409": {
-            "$ref": "#/components/responses/409"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
-          }
-        }
-      }
-    },
-    "/accesses/{id}/approvals": {
-      "get": {
-        "tags": [
-          "Access"
-        ],
-        "summary": "Find the attached Access",
-        "description": "Find the attached Access of the Access with the given ID",
-        "operationId": "readAccessApprovals",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the Access",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "Access attached to Access with requested ID was found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Access_ApprovalsRead"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "404": {
-            "$ref": "#/components/responses/404"
-          },
-          "409": {
-            "$ref": "#/components/responses/409"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
-          }
-        }
+        ]
       }
     },
     "/approvals": {
       "get": {
         "tags": [
-          "Approval"
+          "Approval",
+          "x-tf-ignore"
         ],
         "summary": "List Approvals",
         "description": "List Approvals.",
@@ -395,11 +351,20 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "post": {
         "tags": [
-          "Approval"
+          "Approval",
+          "x-tf-ignore"
         ],
         "summary": "Create a new Approval",
         "description": "Creates a new Approval and persists it to storage.",
@@ -470,13 +435,22 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/approvals/{id}": {
       "get": {
         "tags": [
-          "Approval"
+          "Approval",
+          "x-tf-ignore"
         ],
         "summary": "Find a Approval by ID",
         "description": "Finds the Approval with the requested ID and returns it.",
@@ -516,11 +490,20 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
-          "Approval"
+          "Approval",
+          "x-tf-ignore"
         ],
         "summary": "Deletes a Approval by ID",
         "description": "Deletes the Approval with the requested ID.",
@@ -553,11 +536,20 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
-          "Approval"
+          "Approval",
+          "x-tf-ignore"
         ],
         "summary": "Updates a Approval",
         "description": "Updates a Approval and persists changes to storage.",
@@ -628,56 +620,11 @@
         }
       }
     },
-    "/approvals/{id}/requests": {
-      "get": {
-        "tags": [
-          "Approval"
-        ],
-        "summary": "Find the attached Request",
-        "description": "Find the attached Request of the Approval with the given ID",
-        "operationId": "readApprovalRequests",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the Approval",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Request attached to Approval with requested ID was found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Approval_RequestsRead"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "404": {
-            "$ref": "#/components/responses/404"
-          },
-          "409": {
-            "$ref": "#/components/responses/409"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
-          }
-        }
-      }
-    },
     "/audits": {
       "get": {
         "tags": [
-          "Audit"
+          "Audit",
+          "x-tf-ignore"
         ],
         "summary": "List Audits",
         "description": "List Audits.",
@@ -729,70 +676,22 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
-      },
-      "post": {
-        "tags": [
-          "Audit"
-        ],
-        "summary": "Create a new Audit",
-        "description": "Creates a new Audit and persists it to storage.",
-        "operationId": "createAudit",
-        "requestBody": {
-          "description": "Audit to create",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "action": {
-                    "type": "string"
-                  },
-                  "author": {
-                    "type": "string"
-                  },
-                  "timestamp": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                },
-                "required": [
-                  "action",
-                  "author",
-                  "timestamp"
-                ]
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "Audit created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditCreate"
-                }
-              }
-            }
+        "security": [
+          {
+            "ApiKeyAuth": []
           },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "409": {
-            "$ref": "#/components/responses/409"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
+          {
+            "CookieAuth": []
           }
-        }
+        ]
       }
     },
     "/audits/{id}": {
       "get": {
         "tags": [
-          "Audit"
+          "Audit",
+          "x-tf-ignore"
         ],
         "summary": "Find a Audit by ID",
         "description": "Finds the Audit with the requested ID and returns it.",
@@ -831,95 +730,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Audit"
-        ],
-        "summary": "Deletes a Audit by ID",
-        "description": "Deletes the Audit with the requested ID.",
-        "operationId": "deleteAudit",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the Audit",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Audit with requested ID was deleted"
-          },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "404": {
-            "$ref": "#/components/responses/404"
-          },
-          "409": {
-            "$ref": "#/components/responses/409"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Audit"
-        ],
-        "summary": "Updates a Audit",
-        "description": "Updates a Audit and persists changes to storage.",
-        "operationId": "updateAudit",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the Audit",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "description": "Audit properties to update",
-          "content": {
-            "application/json": {
-              "schema": {}
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "Audit updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditUpdate"
-                }
-              }
-            }
+        "security": [
+          {
+            "ApiKeyAuth": []
           },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "404": {
-            "$ref": "#/components/responses/404"
-          },
-          "409": {
-            "$ref": "#/components/responses/409"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
+          {
+            "CookieAuth": []
           }
-        }
+        ]
       }
     },
     "/missions": {
@@ -977,7 +796,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -996,17 +823,20 @@
                   "description": {
                     "type": "string"
                   },
-                  "image": {
-                    "type": "string"
-                  },
                   "min_approvers": {
                     "type": "integer"
                   },
-                  "rocket_id": {
-                    "type": "string"
+                  "possible_approvers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   },
-                  "rocket": {
-                    "type": "string"
+                  "rockets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "requests": {
                     "type": "array",
@@ -1017,10 +847,9 @@
                   }
                 },
                 "required": [
-                  "image",
                   "min_approvers",
-                  "rocket_id",
-                  "rocket"
+                  "possible_approvers",
+                  "rockets"
                 ]
               }
             }
@@ -1047,7 +876,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/missions/{id}": {
@@ -1092,7 +929,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -1128,7 +973,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -1158,14 +1011,20 @@
                   "description": {
                     "type": "string"
                   },
-                  "image": {
-                    "type": "string"
-                  },
                   "min_approvers": {
                     "type": "integer"
                   },
-                  "rocket": {
-                    "type": "string"
+                  "possible_approvers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "rockets": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "requests": {
                     "type": "array",
@@ -1267,17 +1126,25 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
-    "/missions/{id}/rocket": {
+    "/missions/{id}/rockets": {
       "get": {
         "tags": [
           "Mission"
         ],
-        "summary": "Find the attached Rocket",
-        "description": "Find the attached Rocket of the Mission with the given ID",
-        "operationId": "readMissionRocket",
+        "summary": "List attached Rockets",
+        "description": "List attached Rockets.",
+        "operationId": "listMissionRockets",
         "parameters": [
           {
             "name": "id",
@@ -1287,15 +1154,34 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Rocket attached to Mission with requested ID was found",
+            "description": "result Missions list",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Mission_RocketRead"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Mission_RocketsList"
+                  }
                 }
               }
             }
@@ -1312,7 +1198,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/requests": {
@@ -1370,7 +1264,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -1392,8 +1294,11 @@
                   "requester": {
                     "type": "string"
                   },
-                  "mission_id": {
-                    "type": "string"
+                  "rocket_config": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   },
                   "mission": {
                     "type": "string"
@@ -1402,7 +1307,7 @@
                 "required": [
                   "reason",
                   "requester",
-                  "mission_id",
+                  "rocket_config",
                   "mission"
                 ]
               }
@@ -1430,7 +1335,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/requests/{id}": {
@@ -1476,7 +1389,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -1513,7 +1434,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -1543,6 +1472,12 @@
                 "properties": {
                   "reason": {
                     "type": "string"
+                  },
+                  "rocket_config": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   },
                   "mission": {
                     "type": "string"
@@ -1622,7 +1557,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/rockets": {
@@ -1680,7 +1623,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -1702,6 +1653,9 @@
                   "image": {
                     "type": "string"
                   },
+                  "zip": {
+                    "type": "string"
+                  },
                   "config": {
                     "type": "object",
                     "additionalProperties": {
@@ -1716,7 +1670,6 @@
                   }
                 },
                 "required": [
-                  "image",
                   "config"
                 ]
               }
@@ -1744,7 +1697,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/rockets/{id}": {
@@ -1789,7 +1750,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -1825,7 +1794,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -1856,6 +1833,9 @@
                     "type": "string"
                   },
                   "image": {
+                    "type": "string"
+                  },
+                  "zip": {
                     "type": "string"
                   },
                   "config": {
@@ -1963,7 +1943,15 @@
           "500": {
             "$ref": "#/components/responses/500"
           }
-        }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     }
   },
@@ -1976,7 +1964,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "access_time": {
+          "start_time": {
             "type": "string",
             "format": "date-time"
           },
@@ -1989,6 +1977,9 @@
           "rollback_time": {
             "type": "string",
             "format": "date-time"
+          },
+          "rollback_reason": {
+            "type": "string"
           },
           "end_time": {
             "type": "string",
@@ -2000,210 +1991,157 @@
           },
           "approvals": {
             "$ref": "#/components/schemas/Access"
+          },
+          "accessTokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionTokens"
+            }
           }
         },
         "required": [
           "id",
-          "access_time",
+          "start_time",
           "approved",
           "rolled_back",
           "end_time",
           "request_id"
         ]
       },
-      "AccessCreate": {
+      "Access_AccessTokensList": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "access_time": {
+          "action": {
             "type": "string",
-            "format": "date-time"
+            "enum": [
+              "create",
+              "remove"
+            ]
           },
-          "approved": {
-            "type": "boolean"
+          "token": {
+            "type": "string"
           },
-          "rolled_back": {
-            "type": "boolean"
-          },
-          "rollback_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "request_id": {
+          "access_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "expiration": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
           "id",
-          "access_time",
-          "approved",
-          "rolled_back",
-          "end_time",
-          "request_id"
+          "action",
+          "token",
+          "access_id",
+          "expiration"
         ]
       },
-      "AccessList": {
+      "ActionTokens": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "access_time": {
+          "action": {
             "type": "string",
-            "format": "date-time"
+            "enum": [
+              "create",
+              "remove"
+            ]
           },
-          "approved": {
-            "type": "boolean"
+          "token": {
+            "type": "string"
           },
-          "rolled_back": {
-            "type": "boolean"
-          },
-          "rollback_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "request_id": {
+          "access_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "expiration": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accessTokens": {
+            "$ref": "#/components/schemas/Access"
           }
         },
         "required": [
           "id",
-          "access_time",
-          "approved",
-          "rolled_back",
-          "end_time",
-          "request_id"
+          "action",
+          "token",
+          "access_id",
+          "expiration",
+          "accessTokens"
         ]
       },
-      "AccessRead": {
+      "ApiKey": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "integer"
           },
-          "access_time": {
-            "type": "string",
-            "format": "date-time"
+          "name": {
+            "type": "string"
           },
-          "approved": {
-            "type": "boolean"
-          },
-          "rolled_back": {
-            "type": "boolean"
-          },
-          "rollback_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
+          "key": {
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "access_time",
-          "approved",
-          "rolled_back",
-          "end_time",
-          "request_id"
+          "name",
+          "key"
         ]
       },
-      "AccessUpdate": {
+      "ApiKeyCreate": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "integer"
           },
-          "access_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "approved": {
-            "type": "boolean"
-          },
-          "rolled_back": {
-            "type": "boolean"
-          },
-          "rollback_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
+          "name": {
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "access_time",
-          "approved",
-          "rolled_back",
-          "end_time",
-          "request_id"
+          "name"
         ]
       },
-      "Access_ApprovalsRead": {
+      "ApiKeyList": {
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
+            "type": "integer"
           },
-          "access_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "approved": {
-            "type": "boolean"
-          },
-          "rolled_back": {
-            "type": "boolean"
-          },
-          "rollback_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
+          "name": {
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "access_time",
-          "approved",
-          "rolled_back",
-          "end_time",
-          "request_id"
+          "name"
+        ]
+      },
+      "ApiKeyRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
         ]
       },
       "Approval": {
@@ -2400,30 +2338,6 @@
           "request_id"
         ]
       },
-      "Approval_RequestsRead": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "requester": {
-            "type": "string"
-          },
-          "mission_id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "reason",
-          "requester",
-          "mission_id"
-        ]
-      },
       "Audit": {
         "type": "object",
         "properties": {
@@ -2431,31 +2345,14 @@
             "type": "string"
           },
           "action": {
-            "type": "string"
-          },
-          "author": {
-            "type": "string"
-          },
-          "timestamp": {
             "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "action",
-          "author",
-          "timestamp"
-        ]
-      },
-      "AuditCreate": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "action": {
-            "type": "string"
+            "enum": [
+              "ApproveRequest",
+              "RevokeApprovalRequest",
+              "RejectRequest",
+              "CreateAccess",
+              "RemoveAccess"
+            ]
           },
           "author": {
             "type": "string"
@@ -2479,7 +2376,14 @@
             "type": "string"
           },
           "action": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "ApproveRequest",
+              "RevokeApprovalRequest",
+              "RejectRequest",
+              "CreateAccess",
+              "RemoveAccess"
+            ]
           },
           "author": {
             "type": "string"
@@ -2503,31 +2407,14 @@
             "type": "string"
           },
           "action": {
-            "type": "string"
-          },
-          "author": {
-            "type": "string"
-          },
-          "timestamp": {
             "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "action",
-          "author",
-          "timestamp"
-        ]
-      },
-      "AuditUpdate": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "action": {
-            "type": "string"
+            "enum": [
+              "ApproveRequest",
+              "RevokeApprovalRequest",
+              "RejectRequest",
+              "CreateAccess",
+              "RemoveAccess"
+            ]
           },
           "author": {
             "type": "string"
@@ -2553,17 +2440,20 @@
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
           "min_approvers": {
             "type": "integer"
           },
-          "rocket_id": {
-            "type": "string"
+          "possible_approvers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
-          "rocket": {
-            "$ref": "#/components/schemas/Rocket"
+          "rockets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rocket"
+            }
           },
           "requests": {
             "type": "array",
@@ -2574,10 +2464,9 @@
         },
         "required": [
           "id",
-          "image",
           "min_approvers",
-          "rocket_id",
-          "rocket"
+          "possible_approvers",
+          "rockets"
         ]
       },
       "MissionCreate": {
@@ -2589,21 +2478,20 @@
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
           "min_approvers": {
             "type": "integer"
           },
-          "rocket_id": {
-            "type": "string"
+          "possible_approvers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
-          "image",
           "min_approvers",
-          "rocket_id"
+          "possible_approvers"
         ]
       },
       "MissionList": {
@@ -2615,21 +2503,20 @@
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
           "min_approvers": {
             "type": "integer"
           },
-          "rocket_id": {
-            "type": "string"
+          "possible_approvers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
-          "image",
           "min_approvers",
-          "rocket_id"
+          "possible_approvers"
         ]
       },
       "MissionRead": {
@@ -2641,21 +2528,20 @@
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
           "min_approvers": {
             "type": "integer"
           },
-          "rocket_id": {
-            "type": "string"
+          "possible_approvers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
-          "image",
           "min_approvers",
-          "rocket_id"
+          "possible_approvers"
         ]
       },
       "MissionUpdate": {
@@ -2667,21 +2553,20 @@
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
           "min_approvers": {
             "type": "integer"
           },
-          "rocket_id": {
-            "type": "string"
+          "possible_approvers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
-          "image",
           "min_approvers",
-          "rocket_id"
+          "possible_approvers"
         ]
       },
       "Mission_RequestsList": {
@@ -2697,18 +2582,21 @@
           "requester": {
             "type": "string"
           },
-          "mission_id": {
-            "type": "string"
+          "rocket_config": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "mission_id"
+          "rocket_config"
         ]
       },
-      "Mission_RocketRead": {
+      "Mission_RocketsList": {
         "type": "object",
         "properties": {
           "id": {
@@ -2720,6 +2608,9 @@
           "image": {
             "type": "string"
           },
+          "zip": {
+            "type": "string"
+          },
           "config": {
             "type": "object",
             "additionalProperties": {
@@ -2729,8 +2620,22 @@
         },
         "required": [
           "id",
-          "image",
           "config"
+        ]
+      },
+      "Provider": {
+        "type": "object",
+        "properties": {
+          "ApiKey": {
+            "type": "string"
+          },
+          "Endpoint": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ApiKey",
+          "Endpoint"
         ]
       },
       "Request": {
@@ -2746,8 +2651,11 @@
           "requester": {
             "type": "string"
           },
-          "mission_id": {
-            "type": "string"
+          "rocket_config": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           },
           "mission": {
             "$ref": "#/components/schemas/Mission"
@@ -2757,7 +2665,7 @@
           "id",
           "reason",
           "requester",
-          "mission_id",
+          "rocket_config",
           "mission"
         ]
       },
@@ -2774,15 +2682,18 @@
           "requester": {
             "type": "string"
           },
-          "mission_id": {
-            "type": "string"
+          "rocket_config": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "mission_id"
+          "rocket_config"
         ]
       },
       "RequestList": {
@@ -2798,15 +2709,18 @@
           "requester": {
             "type": "string"
           },
-          "mission_id": {
-            "type": "string"
+          "rocket_config": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "mission_id"
+          "rocket_config"
         ]
       },
       "RequestRead": {
@@ -2822,15 +2736,18 @@
           "requester": {
             "type": "string"
           },
-          "mission_id": {
-            "type": "string"
+          "rocket_config": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "mission_id"
+          "rocket_config"
         ]
       },
       "RequestUpdate": {
@@ -2846,15 +2763,18 @@
           "requester": {
             "type": "string"
           },
-          "mission_id": {
-            "type": "string"
+          "rocket_config": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "mission_id"
+          "rocket_config"
         ]
       },
       "Request_MissionRead": {
@@ -2866,21 +2786,20 @@
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
           "min_approvers": {
             "type": "integer"
           },
-          "rocket_id": {
-            "type": "string"
+          "possible_approvers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
-          "image",
           "min_approvers",
-          "rocket_id"
+          "possible_approvers"
         ]
       },
       "Rocket": {
@@ -2893,6 +2812,9 @@
             "type": "string"
           },
           "image": {
+            "type": "string"
+          },
+          "zip": {
             "type": "string"
           },
           "config": {
@@ -2910,7 +2832,6 @@
         },
         "required": [
           "id",
-          "image",
           "config"
         ]
       },
@@ -2926,6 +2847,9 @@
           "image": {
             "type": "string"
           },
+          "zip": {
+            "type": "string"
+          },
           "config": {
             "type": "object",
             "additionalProperties": {
@@ -2935,7 +2859,6 @@
         },
         "required": [
           "id",
-          "image",
           "config"
         ]
       },
@@ -2951,6 +2874,9 @@
           "image": {
             "type": "string"
           },
+          "zip": {
+            "type": "string"
+          },
           "config": {
             "type": "object",
             "additionalProperties": {
@@ -2960,7 +2886,6 @@
         },
         "required": [
           "id",
-          "image",
           "config"
         ]
       },
@@ -2976,6 +2901,9 @@
           "image": {
             "type": "string"
           },
+          "zip": {
+            "type": "string"
+          },
           "config": {
             "type": "object",
             "additionalProperties": {
@@ -2985,7 +2913,6 @@
         },
         "required": [
           "id",
-          "image",
           "config"
         ]
       },
@@ -3001,6 +2928,9 @@
           "image": {
             "type": "string"
           },
+          "zip": {
+            "type": "string"
+          },
           "config": {
             "type": "object",
             "additionalProperties": {
@@ -3010,7 +2940,6 @@
         },
         "required": [
           "id",
-          "image",
           "config"
         ]
       },
@@ -3023,21 +2952,20 @@
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
           "min_approvers": {
             "type": "integer"
           },
-          "rocket_id": {
-            "type": "string"
+          "possible_approvers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
-          "image",
           "min_approvers",
-          "rocket_id"
+          "possible_approvers"
         ]
       }
     },
@@ -3156,6 +3084,18 @@
             }
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      },
+      "CookieAuth": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "cookie"
       }
     }
   }

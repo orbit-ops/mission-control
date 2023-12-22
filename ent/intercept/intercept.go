@@ -7,14 +7,16 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/orbit-ops/mission-control/ent"
-	"github.com/orbit-ops/mission-control/ent/access"
-	"github.com/orbit-ops/mission-control/ent/approval"
-	"github.com/orbit-ops/mission-control/ent/audit"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/predicate"
-	"github.com/orbit-ops/mission-control/ent/request"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
+	"github.com/orbit-ops/launchpad-core/ent/apikey"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
+	"github.com/orbit-ops/launchpad-core/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // The Query interface represents an operation that queries a graph.
@@ -98,6 +100,60 @@ func (f TraverseAccess) Traverse(ctx context.Context, q ent.Query) error {
 		return f(ctx, q)
 	}
 	return fmt.Errorf("unexpected query type %T. expect *ent.AccessQuery", q)
+}
+
+// The ActionTokensFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ActionTokensFunc func(context.Context, *ent.ActionTokensQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ActionTokensFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ActionTokensQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ActionTokensQuery", q)
+}
+
+// The TraverseActionTokens type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseActionTokens func(context.Context, *ent.ActionTokensQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseActionTokens) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseActionTokens) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ActionTokensQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ActionTokensQuery", q)
+}
+
+// The ApiKeyFunc type is an adapter to allow the use of ordinary function as a Querier.
+type ApiKeyFunc func(context.Context, *ent.ApiKeyQuery) (ent.Value, error)
+
+// Query calls f(ctx, q).
+func (f ApiKeyFunc) Query(ctx context.Context, q ent.Query) (ent.Value, error) {
+	if q, ok := q.(*ent.ApiKeyQuery); ok {
+		return f(ctx, q)
+	}
+	return nil, fmt.Errorf("unexpected query type %T. expect *ent.ApiKeyQuery", q)
+}
+
+// The TraverseApiKey type is an adapter to allow the use of ordinary function as Traverser.
+type TraverseApiKey func(context.Context, *ent.ApiKeyQuery) error
+
+// Intercept is a dummy implementation of Intercept that returns the next Querier in the pipeline.
+func (f TraverseApiKey) Intercept(next ent.Querier) ent.Querier {
+	return next
+}
+
+// Traverse calls f(ctx, q).
+func (f TraverseApiKey) Traverse(ctx context.Context, q ent.Query) error {
+	if q, ok := q.(*ent.ApiKeyQuery); ok {
+		return f(ctx, q)
+	}
+	return fmt.Errorf("unexpected query type %T. expect *ent.ApiKeyQuery", q)
 }
 
 // The ApprovalFunc type is an adapter to allow the use of ordinary function as a Querier.
@@ -240,6 +296,10 @@ func NewQuery(q ent.Query) (Query, error) {
 	switch q := q.(type) {
 	case *ent.AccessQuery:
 		return &query[*ent.AccessQuery, predicate.Access, access.OrderOption]{typ: ent.TypeAccess, tq: q}, nil
+	case *ent.ActionTokensQuery:
+		return &query[*ent.ActionTokensQuery, predicate.ActionTokens, actiontokens.OrderOption]{typ: ent.TypeActionTokens, tq: q}, nil
+	case *ent.ApiKeyQuery:
+		return &query[*ent.ApiKeyQuery, predicate.ApiKey, apikey.OrderOption]{typ: ent.TypeApiKey, tq: q}, nil
 	case *ent.ApprovalQuery:
 		return &query[*ent.ApprovalQuery, predicate.Approval, approval.OrderOption]{typ: ent.TypeApproval, tq: q}, nil
 	case *ent.AuditQuery:

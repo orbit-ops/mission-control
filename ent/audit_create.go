@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/audit"
 )
 
 // AuditCreate is the builder for creating a Audit entity.
@@ -24,8 +24,8 @@ type AuditCreate struct {
 }
 
 // SetAction sets the "action" field.
-func (ac *AuditCreate) SetAction(s string) *AuditCreate {
-	ac.mutation.SetAction(s)
+func (ac *AuditCreate) SetAction(a audit.Action) *AuditCreate {
+	ac.mutation.SetAction(a)
 	return ac
 }
 
@@ -154,7 +154,7 @@ func (ac *AuditCreate) createSpec() (*Audit, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = id
 	}
 	if value, ok := ac.mutation.Action(); ok {
-		_spec.SetField(audit.FieldAction, field.TypeString, value)
+		_spec.SetField(audit.FieldAction, field.TypeEnum, value)
 		_node.Action = value
 	}
 	if value, ok := ac.mutation.Author(); ok {

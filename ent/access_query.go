@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -11,19 +12,22 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/access"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // AccessQuery is the builder for querying Access entities.
 type AccessQuery struct {
 	config
-	ctx           *QueryContext
-	order         []access.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.Access
-	withApprovals *AccessQuery
-	withFKs       bool
+	ctx                   *QueryContext
+	order                 []access.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.Access
+	withApprovals         *AccessQuery
+	withAccessTokens      *ActionTokensQuery
+	withFKs               bool
+	withNamedAccessTokens map[string]*ActionTokensQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +79,28 @@ func (aq *AccessQuery) QueryApprovals() *AccessQuery {
 			sqlgraph.From(access.Table, access.FieldID, selector),
 			sqlgraph.To(access.Table, access.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, access.ApprovalsTable, access.ApprovalsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccessTokens chains the current query on the "accessTokens" edge.
+func (aq *AccessQuery) QueryAccessTokens() *ActionTokensQuery {
+	query := (&ActionTokensClient{config: aq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(access.Table, access.FieldID, selector),
+			sqlgraph.To(actiontokens.Table, actiontokens.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, access.AccessTokensTable, access.AccessTokensColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,12 +295,13 @@ func (aq *AccessQuery) Clone() *AccessQuery {
 		return nil
 	}
 	return &AccessQuery{
-		config:        aq.config,
-		ctx:           aq.ctx.Clone(),
-		order:         append([]access.OrderOption{}, aq.order...),
-		inters:        append([]Interceptor{}, aq.inters...),
-		predicates:    append([]predicate.Access{}, aq.predicates...),
-		withApprovals: aq.withApprovals.Clone(),
+		config:           aq.config,
+		ctx:              aq.ctx.Clone(),
+		order:            append([]access.OrderOption{}, aq.order...),
+		inters:           append([]Interceptor{}, aq.inters...),
+		predicates:       append([]predicate.Access{}, aq.predicates...),
+		withApprovals:    aq.withApprovals.Clone(),
+		withAccessTokens: aq.withAccessTokens.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
@@ -292,18 +319,29 @@ func (aq *AccessQuery) WithApprovals(opts ...func(*AccessQuery)) *AccessQuery {
 	return aq
 }
 
+// WithAccessTokens tells the query-builder to eager-load the nodes that are connected to
+// the "accessTokens" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AccessQuery) WithAccessTokens(opts ...func(*ActionTokensQuery)) *AccessQuery {
+	query := (&ActionTokensClient{config: aq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withAccessTokens = query
+	return aq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
 // Example:
 //
 //	var v []struct {
-//		AccessTime time.Time `json:"access_time,omitempty"`
+//		StartTime time.Time `json:"start_time,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Access.Query().
-//		GroupBy(access.FieldAccessTime).
+//		GroupBy(access.FieldStartTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (aq *AccessQuery) GroupBy(field string, fields ...string) *AccessGroupBy {
@@ -321,11 +359,11 @@ func (aq *AccessQuery) GroupBy(field string, fields ...string) *AccessGroupBy {
 // Example:
 //
 //	var v []struct {
-//		AccessTime time.Time `json:"access_time,omitempty"`
+//		StartTime time.Time `json:"start_time,omitempty"`
 //	}
 //
 //	client.Access.Query().
-//		Select(access.FieldAccessTime).
+//		Select(access.FieldStartTime).
 //		Scan(ctx, &v)
 func (aq *AccessQuery) Select(fields ...string) *AccessSelect {
 	aq.ctx.Fields = append(aq.ctx.Fields, fields...)
@@ -371,8 +409,9 @@ func (aq *AccessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acces
 		nodes       = []*Access{}
 		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			aq.withApprovals != nil,
+			aq.withAccessTokens != nil,
 		}
 	)
 	if aq.withApprovals != nil {
@@ -402,6 +441,20 @@ func (aq *AccessQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Acces
 	if query := aq.withApprovals; query != nil {
 		if err := aq.loadApprovals(ctx, query, nodes, nil,
 			func(n *Access, e *Access) { n.Edges.Approvals = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := aq.withAccessTokens; query != nil {
+		if err := aq.loadAccessTokens(ctx, query, nodes,
+			func(n *Access) { n.Edges.AccessTokens = []*ActionTokens{} },
+			func(n *Access, e *ActionTokens) { n.Edges.AccessTokens = append(n.Edges.AccessTokens, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range aq.withNamedAccessTokens {
+		if err := aq.loadAccessTokens(ctx, query, nodes,
+			func(n *Access) { n.appendNamedAccessTokens(name) },
+			func(n *Access, e *ActionTokens) { n.appendNamedAccessTokens(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -437,6 +490,36 @@ func (aq *AccessQuery) loadApprovals(ctx context.Context, query *AccessQuery, no
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (aq *AccessQuery) loadAccessTokens(ctx context.Context, query *ActionTokensQuery, nodes []*Access, init func(*Access), assign func(*Access, *ActionTokens)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Access)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(actiontokens.FieldAccessID)
+	}
+	query.Where(predicate.ActionTokens(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(access.AccessTokensColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.AccessID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "access_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }
@@ -520,6 +603,20 @@ func (aq *AccessQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// WithNamedAccessTokens tells the query-builder to eager-load the nodes that are connected to the "accessTokens"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (aq *AccessQuery) WithNamedAccessTokens(name string, opts ...func(*ActionTokensQuery)) *AccessQuery {
+	query := (&ActionTokensClient{config: aq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if aq.withNamedAccessTokens == nil {
+		aq.withNamedAccessTokens = make(map[string]*ActionTokensQuery)
+	}
+	aq.withNamedAccessTokens[name] = query
+	return aq
 }
 
 // AccessGroupBy is the group-by builder for Access entities.

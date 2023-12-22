@@ -4,12 +4,15 @@ package ent
 
 import (
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/access"
-	"github.com/orbit-ops/mission-control/ent/approval"
-	"github.com/orbit-ops/mission-control/ent/audit"
-	"github.com/orbit-ops/mission-control/ent/request"
-	"github.com/orbit-ops/mission-control/ent/rocket"
-	"github.com/orbit-ops/mission-control/ent/schema"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
+	"github.com/orbit-ops/launchpad-core/ent/apikey"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
+	"github.com/orbit-ops/launchpad-core/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/schema"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -26,6 +29,18 @@ func init() {
 	accessDescID := accessFields[0].Descriptor()
 	// access.DefaultID holds the default value on creation for the id field.
 	access.DefaultID = accessDescID.Default.(func() uuid.UUID)
+	actiontokensFields := schema.ActionTokens{}.Fields()
+	_ = actiontokensFields
+	// actiontokensDescID is the schema descriptor for id field.
+	actiontokensDescID := actiontokensFields[0].Descriptor()
+	// actiontokens.DefaultID holds the default value on creation for the id field.
+	actiontokens.DefaultID = actiontokensDescID.Default.(func() uuid.UUID)
+	apikeyFields := schema.ApiKey{}.Fields()
+	_ = apikeyFields
+	// apikeyDescName is the schema descriptor for name field.
+	apikeyDescName := apikeyFields[0].Descriptor()
+	// apikey.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	apikey.NameValidator = apikeyDescName.Validators[0].(func(string) error)
 	approvalFields := schema.Approval{}.Fields()
 	_ = approvalFields
 	// approvalDescRevoked is the schema descriptor for revoked field.
@@ -38,10 +53,6 @@ func init() {
 	approval.DefaultID = approvalDescID.Default.(func() uuid.UUID)
 	auditFields := schema.Audit{}.Fields()
 	_ = auditFields
-	// auditDescAction is the schema descriptor for action field.
-	auditDescAction := auditFields[1].Descriptor()
-	// audit.ActionValidator is a validator for the "action" field. It is called by the builders before save.
-	audit.ActionValidator = auditDescAction.Validators[0].(func(string) error)
 	// auditDescAuthor is the schema descriptor for author field.
 	auditDescAuthor := auditFields[2].Descriptor()
 	// audit.AuthorValidator is a validator for the "author" field. It is called by the builders before save.
@@ -50,6 +61,12 @@ func init() {
 	auditDescID := auditFields[0].Descriptor()
 	// audit.DefaultID holds the default value on creation for the id field.
 	audit.DefaultID = auditDescID.Default.(func() string)
+	missionFields := schema.Mission{}.Fields()
+	_ = missionFields
+	// missionDescMinApprovers is the schema descriptor for min_approvers field.
+	missionDescMinApprovers := missionFields[2].Descriptor()
+	// mission.MinApproversValidator is a validator for the "min_approvers" field. It is called by the builders before save.
+	mission.MinApproversValidator = missionDescMinApprovers.Validators[0].(func(int) error)
 	requestFields := schema.Request{}.Fields()
 	_ = requestFields
 	// requestDescID is the schema descriptor for id field.

@@ -11,8 +11,8 @@ import (
 	ht "github.com/ogen-go/ogen/http"
 )
 
-func encodeCreateAccessRequest(
-	req *CreateAccessReq,
+func encodeCreateApiKeyRequest(
+	req *CreateApiKeyReq,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -27,20 +27,6 @@ func encodeCreateAccessRequest(
 
 func encodeCreateApprovalRequest(
 	req *CreateApprovalReq,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := jx.GetEncoder()
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeCreateAuditRequest(
-	req *CreateAuditReq,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -95,20 +81,6 @@ func encodeCreateRocketRequest(
 	return nil
 }
 
-func encodeUpdateAccessRequest(
-	req *UpdateAccessReq,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := jx.GetEncoder()
-	{
-		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
 func encodeUpdateApprovalRequest(
 	req *UpdateApprovalReq,
 	r *http.Request,
@@ -117,22 +89,6 @@ func encodeUpdateApprovalRequest(
 	e := jx.GetEncoder()
 	{
 		req.Encode(e)
-	}
-	encoded := e.Bytes()
-	ht.SetBody(r, bytes.NewReader(encoded), contentType)
-	return nil
-}
-
-func encodeUpdateAuditRequest(
-	req jx.Raw,
-	r *http.Request,
-) error {
-	const contentType = "application/json"
-	e := jx.GetEncoder()
-	{
-		if len(req) != 0 {
-			e.Raw(req)
-		}
 	}
 	encoded := e.Bytes()
 	ht.SetBody(r, bytes.NewReader(encoded), contentType)

@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/audit"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // AuditQuery is the builder for querying Audit entities.
@@ -261,7 +261,7 @@ func (aq *AuditQuery) Clone() *AuditQuery {
 // Example:
 //
 //	var v []struct {
-//		Action string `json:"action,omitempty"`
+//		Action audit.Action `json:"action,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -284,7 +284,7 @@ func (aq *AuditQuery) GroupBy(field string, fields ...string) *AuditGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Action string `json:"action,omitempty"`
+//		Action audit.Action `json:"action,omitempty"`
 //	}
 //
 //	client.Audit.Query().

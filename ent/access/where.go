@@ -8,7 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
@@ -56,9 +56,9 @@ func IDLTE(id uuid.UUID) predicate.Access {
 	return predicate.Access(sql.FieldLTE(FieldID, id))
 }
 
-// AccessTime applies equality check predicate on the "access_time" field. It's identical to AccessTimeEQ.
-func AccessTime(v time.Time) predicate.Access {
-	return predicate.Access(sql.FieldEQ(FieldAccessTime, v))
+// StartTime applies equality check predicate on the "start_time" field. It's identical to StartTimeEQ.
+func StartTime(v time.Time) predicate.Access {
+	return predicate.Access(sql.FieldEQ(FieldStartTime, v))
 }
 
 // Approved applies equality check predicate on the "approved" field. It's identical to ApprovedEQ.
@@ -76,6 +76,11 @@ func RollbackTime(v time.Time) predicate.Access {
 	return predicate.Access(sql.FieldEQ(FieldRollbackTime, v))
 }
 
+// RollbackReason applies equality check predicate on the "rollback_reason" field. It's identical to RollbackReasonEQ.
+func RollbackReason(v string) predicate.Access {
+	return predicate.Access(sql.FieldEQ(FieldRollbackReason, v))
+}
+
 // EndTime applies equality check predicate on the "end_time" field. It's identical to EndTimeEQ.
 func EndTime(v time.Time) predicate.Access {
 	return predicate.Access(sql.FieldEQ(FieldEndTime, v))
@@ -86,44 +91,44 @@ func RequestID(v uuid.UUID) predicate.Access {
 	return predicate.Access(sql.FieldEQ(FieldRequestID, v))
 }
 
-// AccessTimeEQ applies the EQ predicate on the "access_time" field.
-func AccessTimeEQ(v time.Time) predicate.Access {
-	return predicate.Access(sql.FieldEQ(FieldAccessTime, v))
+// StartTimeEQ applies the EQ predicate on the "start_time" field.
+func StartTimeEQ(v time.Time) predicate.Access {
+	return predicate.Access(sql.FieldEQ(FieldStartTime, v))
 }
 
-// AccessTimeNEQ applies the NEQ predicate on the "access_time" field.
-func AccessTimeNEQ(v time.Time) predicate.Access {
-	return predicate.Access(sql.FieldNEQ(FieldAccessTime, v))
+// StartTimeNEQ applies the NEQ predicate on the "start_time" field.
+func StartTimeNEQ(v time.Time) predicate.Access {
+	return predicate.Access(sql.FieldNEQ(FieldStartTime, v))
 }
 
-// AccessTimeIn applies the In predicate on the "access_time" field.
-func AccessTimeIn(vs ...time.Time) predicate.Access {
-	return predicate.Access(sql.FieldIn(FieldAccessTime, vs...))
+// StartTimeIn applies the In predicate on the "start_time" field.
+func StartTimeIn(vs ...time.Time) predicate.Access {
+	return predicate.Access(sql.FieldIn(FieldStartTime, vs...))
 }
 
-// AccessTimeNotIn applies the NotIn predicate on the "access_time" field.
-func AccessTimeNotIn(vs ...time.Time) predicate.Access {
-	return predicate.Access(sql.FieldNotIn(FieldAccessTime, vs...))
+// StartTimeNotIn applies the NotIn predicate on the "start_time" field.
+func StartTimeNotIn(vs ...time.Time) predicate.Access {
+	return predicate.Access(sql.FieldNotIn(FieldStartTime, vs...))
 }
 
-// AccessTimeGT applies the GT predicate on the "access_time" field.
-func AccessTimeGT(v time.Time) predicate.Access {
-	return predicate.Access(sql.FieldGT(FieldAccessTime, v))
+// StartTimeGT applies the GT predicate on the "start_time" field.
+func StartTimeGT(v time.Time) predicate.Access {
+	return predicate.Access(sql.FieldGT(FieldStartTime, v))
 }
 
-// AccessTimeGTE applies the GTE predicate on the "access_time" field.
-func AccessTimeGTE(v time.Time) predicate.Access {
-	return predicate.Access(sql.FieldGTE(FieldAccessTime, v))
+// StartTimeGTE applies the GTE predicate on the "start_time" field.
+func StartTimeGTE(v time.Time) predicate.Access {
+	return predicate.Access(sql.FieldGTE(FieldStartTime, v))
 }
 
-// AccessTimeLT applies the LT predicate on the "access_time" field.
-func AccessTimeLT(v time.Time) predicate.Access {
-	return predicate.Access(sql.FieldLT(FieldAccessTime, v))
+// StartTimeLT applies the LT predicate on the "start_time" field.
+func StartTimeLT(v time.Time) predicate.Access {
+	return predicate.Access(sql.FieldLT(FieldStartTime, v))
 }
 
-// AccessTimeLTE applies the LTE predicate on the "access_time" field.
-func AccessTimeLTE(v time.Time) predicate.Access {
-	return predicate.Access(sql.FieldLTE(FieldAccessTime, v))
+// StartTimeLTE applies the LTE predicate on the "start_time" field.
+func StartTimeLTE(v time.Time) predicate.Access {
+	return predicate.Access(sql.FieldLTE(FieldStartTime, v))
 }
 
 // ApprovedEQ applies the EQ predicate on the "approved" field.
@@ -194,6 +199,81 @@ func RollbackTimeIsNil() predicate.Access {
 // RollbackTimeNotNil applies the NotNil predicate on the "rollback_time" field.
 func RollbackTimeNotNil() predicate.Access {
 	return predicate.Access(sql.FieldNotNull(FieldRollbackTime))
+}
+
+// RollbackReasonEQ applies the EQ predicate on the "rollback_reason" field.
+func RollbackReasonEQ(v string) predicate.Access {
+	return predicate.Access(sql.FieldEQ(FieldRollbackReason, v))
+}
+
+// RollbackReasonNEQ applies the NEQ predicate on the "rollback_reason" field.
+func RollbackReasonNEQ(v string) predicate.Access {
+	return predicate.Access(sql.FieldNEQ(FieldRollbackReason, v))
+}
+
+// RollbackReasonIn applies the In predicate on the "rollback_reason" field.
+func RollbackReasonIn(vs ...string) predicate.Access {
+	return predicate.Access(sql.FieldIn(FieldRollbackReason, vs...))
+}
+
+// RollbackReasonNotIn applies the NotIn predicate on the "rollback_reason" field.
+func RollbackReasonNotIn(vs ...string) predicate.Access {
+	return predicate.Access(sql.FieldNotIn(FieldRollbackReason, vs...))
+}
+
+// RollbackReasonGT applies the GT predicate on the "rollback_reason" field.
+func RollbackReasonGT(v string) predicate.Access {
+	return predicate.Access(sql.FieldGT(FieldRollbackReason, v))
+}
+
+// RollbackReasonGTE applies the GTE predicate on the "rollback_reason" field.
+func RollbackReasonGTE(v string) predicate.Access {
+	return predicate.Access(sql.FieldGTE(FieldRollbackReason, v))
+}
+
+// RollbackReasonLT applies the LT predicate on the "rollback_reason" field.
+func RollbackReasonLT(v string) predicate.Access {
+	return predicate.Access(sql.FieldLT(FieldRollbackReason, v))
+}
+
+// RollbackReasonLTE applies the LTE predicate on the "rollback_reason" field.
+func RollbackReasonLTE(v string) predicate.Access {
+	return predicate.Access(sql.FieldLTE(FieldRollbackReason, v))
+}
+
+// RollbackReasonContains applies the Contains predicate on the "rollback_reason" field.
+func RollbackReasonContains(v string) predicate.Access {
+	return predicate.Access(sql.FieldContains(FieldRollbackReason, v))
+}
+
+// RollbackReasonHasPrefix applies the HasPrefix predicate on the "rollback_reason" field.
+func RollbackReasonHasPrefix(v string) predicate.Access {
+	return predicate.Access(sql.FieldHasPrefix(FieldRollbackReason, v))
+}
+
+// RollbackReasonHasSuffix applies the HasSuffix predicate on the "rollback_reason" field.
+func RollbackReasonHasSuffix(v string) predicate.Access {
+	return predicate.Access(sql.FieldHasSuffix(FieldRollbackReason, v))
+}
+
+// RollbackReasonIsNil applies the IsNil predicate on the "rollback_reason" field.
+func RollbackReasonIsNil() predicate.Access {
+	return predicate.Access(sql.FieldIsNull(FieldRollbackReason))
+}
+
+// RollbackReasonNotNil applies the NotNil predicate on the "rollback_reason" field.
+func RollbackReasonNotNil() predicate.Access {
+	return predicate.Access(sql.FieldNotNull(FieldRollbackReason))
+}
+
+// RollbackReasonEqualFold applies the EqualFold predicate on the "rollback_reason" field.
+func RollbackReasonEqualFold(v string) predicate.Access {
+	return predicate.Access(sql.FieldEqualFold(FieldRollbackReason, v))
+}
+
+// RollbackReasonContainsFold applies the ContainsFold predicate on the "rollback_reason" field.
+func RollbackReasonContainsFold(v string) predicate.Access {
+	return predicate.Access(sql.FieldContainsFold(FieldRollbackReason, v))
 }
 
 // EndTimeEQ applies the EQ predicate on the "end_time" field.
@@ -291,6 +371,29 @@ func HasApprovals() predicate.Access {
 func HasApprovalsWith(preds ...predicate.Access) predicate.Access {
 	return predicate.Access(func(s *sql.Selector) {
 		step := newApprovalsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAccessTokens applies the HasEdge predicate on the "accessTokens" edge.
+func HasAccessTokens() predicate.Access {
+	return predicate.Access(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, AccessTokensTable, AccessTokensColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccessTokensWith applies the HasEdge predicate on the "accessTokens" edge with a given conditions (other predicates).
+func HasAccessTokensWith(preds ...predicate.ActionTokens) predicate.Access {
+	return predicate.Access(func(s *sql.Selector) {
+		step := newAccessTokensStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

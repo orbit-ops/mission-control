@@ -17,8 +17,8 @@ const (
 	FieldReason = "reason"
 	// FieldRequester holds the string denoting the requester field in the database.
 	FieldRequester = "requester"
-	// FieldMissionID holds the string denoting the mission_id field in the database.
-	FieldMissionID = "mission_id"
+	// FieldRocketConfig holds the string denoting the rocket_config field in the database.
+	FieldRocketConfig = "rocket_config"
 	// EdgeMission holds the string denoting the mission edge name in mutations.
 	EdgeMission = "mission"
 	// Table holds the table name of the request in the database.
@@ -37,7 +37,7 @@ var Columns = []string{
 	FieldID,
 	FieldReason,
 	FieldRequester,
-	FieldMissionID,
+	FieldRocketConfig,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "requests"
@@ -82,11 +82,6 @@ func ByReason(opts ...sql.OrderTermOption) OrderOption {
 // ByRequester orders the results by the requester field.
 func ByRequester(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRequester, opts...).ToFunc()
-}
-
-// ByMissionID orders the results by the mission_id field.
-func ByMissionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldMissionID, opts...).ToFunc()
 }
 
 // ByMissionField orders the results by mission field.

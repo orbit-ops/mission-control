@@ -3,13 +3,13 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
 )
 
 // Mission is the model entity for the Mission schema.
@@ -19,12 +19,10 @@ type Mission struct {
 	ID string `json:"id,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// Image holds the value of the "image" field.
-	Image string `json:"image,omitempty"`
 	// MinApprovers holds the value of the "min_approvers" field.
 	MinApprovers int `json:"min_approvers,omitempty"`
-	// RocketID holds the value of the "rocket_id" field.
-	RocketID string `json:"rocket_id,omitempty"`
+	// PossibleApprovers holds the value of the "possible_approvers" field.
+	PossibleApprovers []string `json:"possible_approvers,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MissionQuery when eager-loading is set.
 	Edges        MissionEdges `json:"edges"`
@@ -33,27 +31,24 @@ type Mission struct {
 
 // MissionEdges holds the relations/edges for other nodes in the graph.
 type MissionEdges struct {
-	// Rocket holds the value of the rocket edge.
-	Rocket *Rocket `json:"rocket,omitempty"`
+	// Rockets holds the value of the rockets edge.
+	Rockets []*Rocket `json:"rockets,omitempty"`
 	// Requests holds the value of the requests edge.
 	Requests []*Request `json:"requests,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes   [2]bool
+	namedRockets  map[string][]*Rocket
 	namedRequests map[string][]*Request
 }
 
-// RocketOrErr returns the Rocket value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e MissionEdges) RocketOrErr() (*Rocket, error) {
+// RocketsOrErr returns the Rockets value or an error if the edge
+// was not loaded in eager-loading.
+func (e MissionEdges) RocketsOrErr() ([]*Rocket, error) {
 	if e.loadedTypes[0] {
-		if e.Rocket == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: rocket.Label}
-		}
-		return e.Rocket, nil
+		return e.Rockets, nil
 	}
-	return nil, &NotLoadedError{edge: "rocket"}
+	return nil, &NotLoadedError{edge: "rockets"}
 }
 
 // RequestsOrErr returns the Requests value or an error if the edge
@@ -70,9 +65,11 @@ func (*Mission) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case mission.FieldPossibleApprovers:
+			values[i] = new([]byte)
 		case mission.FieldMinApprovers:
 			values[i] = new(sql.NullInt64)
-		case mission.FieldID, mission.FieldDescription, mission.FieldImage, mission.FieldRocketID:
+		case mission.FieldID, mission.FieldDescription:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -101,23 +98,19 @@ func (m *Mission) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				m.Description = value.String
 			}
-		case mission.FieldImage:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field image", values[i])
-			} else if value.Valid {
-				m.Image = value.String
-			}
 		case mission.FieldMinApprovers:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field min_approvers", values[i])
 			} else if value.Valid {
 				m.MinApprovers = int(value.Int64)
 			}
-		case mission.FieldRocketID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field rocket_id", values[i])
-			} else if value.Valid {
-				m.RocketID = value.String
+		case mission.FieldPossibleApprovers:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field possible_approvers", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &m.PossibleApprovers); err != nil {
+					return fmt.Errorf("unmarshal field possible_approvers: %w", err)
+				}
 			}
 		default:
 			m.selectValues.Set(columns[i], values[i])
@@ -132,9 +125,9 @@ func (m *Mission) Value(name string) (ent.Value, error) {
 	return m.selectValues.Get(name)
 }
 
-// QueryRocket queries the "rocket" edge of the Mission entity.
-func (m *Mission) QueryRocket() *RocketQuery {
-	return NewMissionClient(m.config).QueryRocket(m)
+// QueryRockets queries the "rockets" edge of the Mission entity.
+func (m *Mission) QueryRockets() *RocketQuery {
+	return NewMissionClient(m.config).QueryRockets(m)
 }
 
 // QueryRequests queries the "requests" edge of the Mission entity.
@@ -168,16 +161,37 @@ func (m *Mission) String() string {
 	builder.WriteString("description=")
 	builder.WriteString(m.Description)
 	builder.WriteString(", ")
-	builder.WriteString("image=")
-	builder.WriteString(m.Image)
-	builder.WriteString(", ")
 	builder.WriteString("min_approvers=")
 	builder.WriteString(fmt.Sprintf("%v", m.MinApprovers))
 	builder.WriteString(", ")
-	builder.WriteString("rocket_id=")
-	builder.WriteString(m.RocketID)
+	builder.WriteString("possible_approvers=")
+	builder.WriteString(fmt.Sprintf("%v", m.PossibleApprovers))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedRockets returns the Rockets named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (m *Mission) NamedRockets(name string) ([]*Rocket, error) {
+	if m.Edges.namedRockets == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := m.Edges.namedRockets[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (m *Mission) appendNamedRockets(name string, edges ...*Rocket) {
+	if m.Edges.namedRockets == nil {
+		m.Edges.namedRockets = make(map[string][]*Rocket)
+	}
+	if len(edges) == 0 {
+		m.Edges.namedRockets[name] = []*Rocket{}
+	} else {
+		m.Edges.namedRockets[name] = append(m.Edges.namedRockets[name], edges...)
+	}
 }
 
 // NamedRequests returns the Requests named value or an error if the edge was not

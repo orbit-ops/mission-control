@@ -5,7 +5,7 @@ package mission
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/orbit-ops/mission-control/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
@@ -68,19 +68,9 @@ func Description(v string) predicate.Mission {
 	return predicate.Mission(sql.FieldEQ(FieldDescription, v))
 }
 
-// Image applies equality check predicate on the "image" field. It's identical to ImageEQ.
-func Image(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldEQ(FieldImage, v))
-}
-
 // MinApprovers applies equality check predicate on the "min_approvers" field. It's identical to MinApproversEQ.
 func MinApprovers(v int) predicate.Mission {
 	return predicate.Mission(sql.FieldEQ(FieldMinApprovers, v))
-}
-
-// RocketID applies equality check predicate on the "rocket_id" field. It's identical to RocketIDEQ.
-func RocketID(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldEQ(FieldRocketID, v))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.
@@ -158,71 +148,6 @@ func DescriptionContainsFold(v string) predicate.Mission {
 	return predicate.Mission(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// ImageEQ applies the EQ predicate on the "image" field.
-func ImageEQ(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldEQ(FieldImage, v))
-}
-
-// ImageNEQ applies the NEQ predicate on the "image" field.
-func ImageNEQ(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldNEQ(FieldImage, v))
-}
-
-// ImageIn applies the In predicate on the "image" field.
-func ImageIn(vs ...string) predicate.Mission {
-	return predicate.Mission(sql.FieldIn(FieldImage, vs...))
-}
-
-// ImageNotIn applies the NotIn predicate on the "image" field.
-func ImageNotIn(vs ...string) predicate.Mission {
-	return predicate.Mission(sql.FieldNotIn(FieldImage, vs...))
-}
-
-// ImageGT applies the GT predicate on the "image" field.
-func ImageGT(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldGT(FieldImage, v))
-}
-
-// ImageGTE applies the GTE predicate on the "image" field.
-func ImageGTE(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldGTE(FieldImage, v))
-}
-
-// ImageLT applies the LT predicate on the "image" field.
-func ImageLT(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldLT(FieldImage, v))
-}
-
-// ImageLTE applies the LTE predicate on the "image" field.
-func ImageLTE(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldLTE(FieldImage, v))
-}
-
-// ImageContains applies the Contains predicate on the "image" field.
-func ImageContains(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldContains(FieldImage, v))
-}
-
-// ImageHasPrefix applies the HasPrefix predicate on the "image" field.
-func ImageHasPrefix(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldHasPrefix(FieldImage, v))
-}
-
-// ImageHasSuffix applies the HasSuffix predicate on the "image" field.
-func ImageHasSuffix(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldHasSuffix(FieldImage, v))
-}
-
-// ImageEqualFold applies the EqualFold predicate on the "image" field.
-func ImageEqualFold(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldEqualFold(FieldImage, v))
-}
-
-// ImageContainsFold applies the ContainsFold predicate on the "image" field.
-func ImageContainsFold(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldContainsFold(FieldImage, v))
-}
-
 // MinApproversEQ applies the EQ predicate on the "min_approvers" field.
 func MinApproversEQ(v int) predicate.Mission {
 	return predicate.Mission(sql.FieldEQ(FieldMinApprovers, v))
@@ -263,86 +188,21 @@ func MinApproversLTE(v int) predicate.Mission {
 	return predicate.Mission(sql.FieldLTE(FieldMinApprovers, v))
 }
 
-// RocketIDEQ applies the EQ predicate on the "rocket_id" field.
-func RocketIDEQ(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldEQ(FieldRocketID, v))
-}
-
-// RocketIDNEQ applies the NEQ predicate on the "rocket_id" field.
-func RocketIDNEQ(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldNEQ(FieldRocketID, v))
-}
-
-// RocketIDIn applies the In predicate on the "rocket_id" field.
-func RocketIDIn(vs ...string) predicate.Mission {
-	return predicate.Mission(sql.FieldIn(FieldRocketID, vs...))
-}
-
-// RocketIDNotIn applies the NotIn predicate on the "rocket_id" field.
-func RocketIDNotIn(vs ...string) predicate.Mission {
-	return predicate.Mission(sql.FieldNotIn(FieldRocketID, vs...))
-}
-
-// RocketIDGT applies the GT predicate on the "rocket_id" field.
-func RocketIDGT(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldGT(FieldRocketID, v))
-}
-
-// RocketIDGTE applies the GTE predicate on the "rocket_id" field.
-func RocketIDGTE(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldGTE(FieldRocketID, v))
-}
-
-// RocketIDLT applies the LT predicate on the "rocket_id" field.
-func RocketIDLT(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldLT(FieldRocketID, v))
-}
-
-// RocketIDLTE applies the LTE predicate on the "rocket_id" field.
-func RocketIDLTE(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldLTE(FieldRocketID, v))
-}
-
-// RocketIDContains applies the Contains predicate on the "rocket_id" field.
-func RocketIDContains(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldContains(FieldRocketID, v))
-}
-
-// RocketIDHasPrefix applies the HasPrefix predicate on the "rocket_id" field.
-func RocketIDHasPrefix(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldHasPrefix(FieldRocketID, v))
-}
-
-// RocketIDHasSuffix applies the HasSuffix predicate on the "rocket_id" field.
-func RocketIDHasSuffix(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldHasSuffix(FieldRocketID, v))
-}
-
-// RocketIDEqualFold applies the EqualFold predicate on the "rocket_id" field.
-func RocketIDEqualFold(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldEqualFold(FieldRocketID, v))
-}
-
-// RocketIDContainsFold applies the ContainsFold predicate on the "rocket_id" field.
-func RocketIDContainsFold(v string) predicate.Mission {
-	return predicate.Mission(sql.FieldContainsFold(FieldRocketID, v))
-}
-
-// HasRocket applies the HasEdge predicate on the "rocket" edge.
-func HasRocket() predicate.Mission {
+// HasRockets applies the HasEdge predicate on the "rockets" edge.
+func HasRockets() predicate.Mission {
 	return predicate.Mission(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, RocketTable, RocketColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, RocketsTable, RocketsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasRocketWith applies the HasEdge predicate on the "rocket" edge with a given conditions (other predicates).
-func HasRocketWith(preds ...predicate.Rocket) predicate.Mission {
+// HasRocketsWith applies the HasEdge predicate on the "rockets" edge with a given conditions (other predicates).
+func HasRocketsWith(preds ...predicate.Rocket) predicate.Mission {
 	return predicate.Mission(func(s *sql.Selector) {
-		step := newRocketStep()
+		step := newRocketsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

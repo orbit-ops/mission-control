@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in github.com/orbit-ops/mission-control/ent/runtime.go
+// The schema-stitching logic is generated in github.com/orbit-ops/launchpad-core/ent/runtime.go
 
 const (
 	Version = "v0.12.5"                                         // Version of ent codegen.

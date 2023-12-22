@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"entgo.io/contrib/entoas"
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
@@ -14,7 +15,11 @@ type Audit struct {
 
 // Annotations of the User.
 func (Audit) Annotations() []schema.Annotation {
-	return []schema.Annotation{}
+	return []schema.Annotation{
+		entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+		entoas.UpdateOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+		entoas.DeleteOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+	}
 }
 
 // Fields of the User.
@@ -25,7 +30,13 @@ func (Audit) Fields() []ent.Field {
 			uuid, _ := uuid.NewUUID()
 			return uuid.String()
 		}),
-		field.String("action").NotEmpty().Immutable(),
+		field.Enum("action").Values(
+			"ApproveRequest",
+			"RevokeApprovalRequest",
+			"RejectRequest",
+			"CreateAccess",
+			"RemoveAccess",
+		).Immutable(),
 		field.String("author").NotEmpty().Immutable(),
 		field.Time("timestamp").Immutable(),
 	}

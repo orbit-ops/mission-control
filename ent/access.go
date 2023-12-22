@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/access"
 )
 
 // Access is the model entity for the Access schema.
@@ -18,14 +18,16 @@ type Access struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
-	// AccessTime holds the value of the "access_time" field.
-	AccessTime time.Time `json:"access_time,omitempty"`
+	// StartTime holds the value of the "start_time" field.
+	StartTime time.Time `json:"start_time,omitempty"`
 	// Approved holds the value of the "approved" field.
 	Approved bool `json:"approved,omitempty"`
 	// RolledBack holds the value of the "rolled_back" field.
 	RolledBack bool `json:"rolled_back,omitempty"`
 	// RollbackTime holds the value of the "rollback_time" field.
 	RollbackTime time.Time `json:"rollback_time,omitempty"`
+	// RollbackReason holds the value of the "rollback_reason" field.
+	RollbackReason string `json:"rollback_reason,omitempty"`
 	// EndTime holds the value of the "end_time" field.
 	EndTime time.Time `json:"end_time,omitempty"`
 	// RequestID holds the value of the "request_id" field.
@@ -41,9 +43,12 @@ type Access struct {
 type AccessEdges struct {
 	// Approvals holds the value of the approvals edge.
 	Approvals *Access `json:"approvals,omitempty"`
+	// AccessTokens holds the value of the accessTokens edge.
+	AccessTokens []*ActionTokens `json:"accessTokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes       [2]bool
+	namedAccessTokens map[string][]*ActionTokens
 }
 
 // ApprovalsOrErr returns the Approvals value or an error if the edge
@@ -59,6 +64,15 @@ func (e AccessEdges) ApprovalsOrErr() (*Access, error) {
 	return nil, &NotLoadedError{edge: "approvals"}
 }
 
+// AccessTokensOrErr returns the AccessTokens value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccessEdges) AccessTokensOrErr() ([]*ActionTokens, error) {
+	if e.loadedTypes[1] {
+		return e.AccessTokens, nil
+	}
+	return nil, &NotLoadedError{edge: "accessTokens"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Access) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -66,7 +80,9 @@ func (*Access) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case access.FieldApproved, access.FieldRolledBack:
 			values[i] = new(sql.NullBool)
-		case access.FieldAccessTime, access.FieldRollbackTime, access.FieldEndTime:
+		case access.FieldRollbackReason:
+			values[i] = new(sql.NullString)
+		case access.FieldStartTime, access.FieldRollbackTime, access.FieldEndTime:
 			values[i] = new(sql.NullTime)
 		case access.FieldID, access.FieldRequestID:
 			values[i] = new(uuid.UUID)
@@ -93,11 +109,11 @@ func (a *Access) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				a.ID = *value
 			}
-		case access.FieldAccessTime:
+		case access.FieldStartTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field access_time", values[i])
+				return fmt.Errorf("unexpected type %T for field start_time", values[i])
 			} else if value.Valid {
-				a.AccessTime = value.Time
+				a.StartTime = value.Time
 			}
 		case access.FieldApproved:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -116,6 +132,12 @@ func (a *Access) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field rollback_time", values[i])
 			} else if value.Valid {
 				a.RollbackTime = value.Time
+			}
+		case access.FieldRollbackReason:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field rollback_reason", values[i])
+			} else if value.Valid {
+				a.RollbackReason = value.String
 			}
 		case access.FieldEndTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -154,6 +176,11 @@ func (a *Access) QueryApprovals() *AccessQuery {
 	return NewAccessClient(a.config).QueryApprovals(a)
 }
 
+// QueryAccessTokens queries the "accessTokens" edge of the Access entity.
+func (a *Access) QueryAccessTokens() *ActionTokensQuery {
+	return NewAccessClient(a.config).QueryAccessTokens(a)
+}
+
 // Update returns a builder for updating this Access.
 // Note that you need to call Access.Unwrap() before calling this method if this Access
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -177,8 +204,8 @@ func (a *Access) String() string {
 	var builder strings.Builder
 	builder.WriteString("Access(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
-	builder.WriteString("access_time=")
-	builder.WriteString(a.AccessTime.Format(time.ANSIC))
+	builder.WriteString("start_time=")
+	builder.WriteString(a.StartTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("approved=")
 	builder.WriteString(fmt.Sprintf("%v", a.Approved))
@@ -189,6 +216,9 @@ func (a *Access) String() string {
 	builder.WriteString("rollback_time=")
 	builder.WriteString(a.RollbackTime.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("rollback_reason=")
+	builder.WriteString(a.RollbackReason)
+	builder.WriteString(", ")
 	builder.WriteString("end_time=")
 	builder.WriteString(a.EndTime.Format(time.ANSIC))
 	builder.WriteString(", ")
@@ -196,6 +226,30 @@ func (a *Access) String() string {
 	builder.WriteString(fmt.Sprintf("%v", a.RequestID))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedAccessTokens returns the AccessTokens named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (a *Access) NamedAccessTokens(name string) ([]*ActionTokens, error) {
+	if a.Edges.namedAccessTokens == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := a.Edges.namedAccessTokens[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (a *Access) appendNamedAccessTokens(name string, edges ...*ActionTokens) {
+	if a.Edges.namedAccessTokens == nil {
+		a.Edges.namedAccessTokens = make(map[string][]*ActionTokens)
+	}
+	if len(edges) == 0 {
+		a.Edges.namedAccessTokens[name] = []*ActionTokens{}
+	} else {
+		a.Edges.namedAccessTokens[name] = append(a.Edges.namedAccessTokens[name], edges...)
+	}
 }
 
 // Accesses is a parsable slice of Access.

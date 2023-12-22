@@ -13,7 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/mission-control/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
 )
 
 // AccessCreate is the builder for creating a Access entity.
@@ -24,9 +25,9 @@ type AccessCreate struct {
 	conflict []sql.ConflictOption
 }
 
-// SetAccessTime sets the "access_time" field.
-func (ac *AccessCreate) SetAccessTime(t time.Time) *AccessCreate {
-	ac.mutation.SetAccessTime(t)
+// SetStartTime sets the "start_time" field.
+func (ac *AccessCreate) SetStartTime(t time.Time) *AccessCreate {
+	ac.mutation.SetStartTime(t)
 	return ac
 }
 
@@ -60,6 +61,20 @@ func (ac *AccessCreate) SetRollbackTime(t time.Time) *AccessCreate {
 func (ac *AccessCreate) SetNillableRollbackTime(t *time.Time) *AccessCreate {
 	if t != nil {
 		ac.SetRollbackTime(*t)
+	}
+	return ac
+}
+
+// SetRollbackReason sets the "rollback_reason" field.
+func (ac *AccessCreate) SetRollbackReason(s string) *AccessCreate {
+	ac.mutation.SetRollbackReason(s)
+	return ac
+}
+
+// SetNillableRollbackReason sets the "rollback_reason" field if the given value is not nil.
+func (ac *AccessCreate) SetNillableRollbackReason(s *string) *AccessCreate {
+	if s != nil {
+		ac.SetRollbackReason(*s)
 	}
 	return ac
 }
@@ -109,6 +124,21 @@ func (ac *AccessCreate) SetApprovals(a *Access) *AccessCreate {
 	return ac.SetApprovalsID(a.ID)
 }
 
+// AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by IDs.
+func (ac *AccessCreate) AddAccessTokenIDs(ids ...uuid.UUID) *AccessCreate {
+	ac.mutation.AddAccessTokenIDs(ids...)
+	return ac
+}
+
+// AddAccessTokens adds the "accessTokens" edges to the ActionTokens entity.
+func (ac *AccessCreate) AddAccessTokens(a ...*ActionTokens) *AccessCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ac.AddAccessTokenIDs(ids...)
+}
+
 // Mutation returns the AccessMutation object of the builder.
 func (ac *AccessCreate) Mutation() *AccessMutation {
 	return ac.mutation
@@ -156,8 +186,8 @@ func (ac *AccessCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ac *AccessCreate) check() error {
-	if _, ok := ac.mutation.AccessTime(); !ok {
-		return &ValidationError{Name: "access_time", err: errors.New(`ent: missing required field "Access.access_time"`)}
+	if _, ok := ac.mutation.StartTime(); !ok {
+		return &ValidationError{Name: "start_time", err: errors.New(`ent: missing required field "Access.start_time"`)}
 	}
 	if _, ok := ac.mutation.Approved(); !ok {
 		return &ValidationError{Name: "approved", err: errors.New(`ent: missing required field "Access.approved"`)}
@@ -207,9 +237,9 @@ func (ac *AccessCreate) createSpec() (*Access, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
-	if value, ok := ac.mutation.AccessTime(); ok {
-		_spec.SetField(access.FieldAccessTime, field.TypeTime, value)
-		_node.AccessTime = value
+	if value, ok := ac.mutation.StartTime(); ok {
+		_spec.SetField(access.FieldStartTime, field.TypeTime, value)
+		_node.StartTime = value
 	}
 	if value, ok := ac.mutation.Approved(); ok {
 		_spec.SetField(access.FieldApproved, field.TypeBool, value)
@@ -222,6 +252,10 @@ func (ac *AccessCreate) createSpec() (*Access, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.RollbackTime(); ok {
 		_spec.SetField(access.FieldRollbackTime, field.TypeTime, value)
 		_node.RollbackTime = value
+	}
+	if value, ok := ac.mutation.RollbackReason(); ok {
+		_spec.SetField(access.FieldRollbackReason, field.TypeString, value)
+		_node.RollbackReason = value
 	}
 	if value, ok := ac.mutation.EndTime(); ok {
 		_spec.SetField(access.FieldEndTime, field.TypeTime, value)
@@ -248,6 +282,22 @@ func (ac *AccessCreate) createSpec() (*Access, *sqlgraph.CreateSpec) {
 		_node.access_approvals = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := ac.mutation.AccessTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   access.AccessTokensTable,
+			Columns: []string{access.AccessTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(actiontokens.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -255,7 +305,7 @@ func (ac *AccessCreate) createSpec() (*Access, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.Access.Create().
-//		SetAccessTime(v).
+//		SetStartTime(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -264,7 +314,7 @@ func (ac *AccessCreate) createSpec() (*Access, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.AccessUpsert) {
-//			SetAccessTime(v+v).
+//			SetStartTime(v+v).
 //		}).
 //		Exec(ctx)
 func (ac *AccessCreate) OnConflict(opts ...sql.ConflictOption) *AccessUpsertOne {
@@ -330,6 +380,24 @@ func (u *AccessUpsert) ClearRollbackTime() *AccessUpsert {
 	return u
 }
 
+// SetRollbackReason sets the "rollback_reason" field.
+func (u *AccessUpsert) SetRollbackReason(v string) *AccessUpsert {
+	u.Set(access.FieldRollbackReason, v)
+	return u
+}
+
+// UpdateRollbackReason sets the "rollback_reason" field to the value that was provided on create.
+func (u *AccessUpsert) UpdateRollbackReason() *AccessUpsert {
+	u.SetExcluded(access.FieldRollbackReason)
+	return u
+}
+
+// ClearRollbackReason clears the value of the "rollback_reason" field.
+func (u *AccessUpsert) ClearRollbackReason() *AccessUpsert {
+	u.SetNull(access.FieldRollbackReason)
+	return u
+}
+
 // SetRequestID sets the "request_id" field.
 func (u *AccessUpsert) SetRequestID(v uuid.UUID) *AccessUpsert {
 	u.Set(access.FieldRequestID, v)
@@ -359,8 +427,8 @@ func (u *AccessUpsertOne) UpdateNewValues() *AccessUpsertOne {
 		if _, exists := u.create.mutation.ID(); exists {
 			s.SetIgnore(access.FieldID)
 		}
-		if _, exists := u.create.mutation.AccessTime(); exists {
-			s.SetIgnore(access.FieldAccessTime)
+		if _, exists := u.create.mutation.StartTime(); exists {
+			s.SetIgnore(access.FieldStartTime)
 		}
 		if _, exists := u.create.mutation.Approved(); exists {
 			s.SetIgnore(access.FieldApproved)
@@ -431,6 +499,27 @@ func (u *AccessUpsertOne) UpdateRollbackTime() *AccessUpsertOne {
 func (u *AccessUpsertOne) ClearRollbackTime() *AccessUpsertOne {
 	return u.Update(func(s *AccessUpsert) {
 		s.ClearRollbackTime()
+	})
+}
+
+// SetRollbackReason sets the "rollback_reason" field.
+func (u *AccessUpsertOne) SetRollbackReason(v string) *AccessUpsertOne {
+	return u.Update(func(s *AccessUpsert) {
+		s.SetRollbackReason(v)
+	})
+}
+
+// UpdateRollbackReason sets the "rollback_reason" field to the value that was provided on create.
+func (u *AccessUpsertOne) UpdateRollbackReason() *AccessUpsertOne {
+	return u.Update(func(s *AccessUpsert) {
+		s.UpdateRollbackReason()
+	})
+}
+
+// ClearRollbackReason clears the value of the "rollback_reason" field.
+func (u *AccessUpsertOne) ClearRollbackReason() *AccessUpsertOne {
+	return u.Update(func(s *AccessUpsert) {
+		s.ClearRollbackReason()
 	})
 }
 
@@ -584,7 +673,7 @@ func (acb *AccessCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.AccessUpsert) {
-//			SetAccessTime(v+v).
+//			SetStartTime(v+v).
 //		}).
 //		Exec(ctx)
 func (acb *AccessCreateBulk) OnConflict(opts ...sql.ConflictOption) *AccessUpsertBulk {
@@ -631,8 +720,8 @@ func (u *AccessUpsertBulk) UpdateNewValues() *AccessUpsertBulk {
 			if _, exists := b.mutation.ID(); exists {
 				s.SetIgnore(access.FieldID)
 			}
-			if _, exists := b.mutation.AccessTime(); exists {
-				s.SetIgnore(access.FieldAccessTime)
+			if _, exists := b.mutation.StartTime(); exists {
+				s.SetIgnore(access.FieldStartTime)
 			}
 			if _, exists := b.mutation.Approved(); exists {
 				s.SetIgnore(access.FieldApproved)
@@ -704,6 +793,27 @@ func (u *AccessUpsertBulk) UpdateRollbackTime() *AccessUpsertBulk {
 func (u *AccessUpsertBulk) ClearRollbackTime() *AccessUpsertBulk {
 	return u.Update(func(s *AccessUpsert) {
 		s.ClearRollbackTime()
+	})
+}
+
+// SetRollbackReason sets the "rollback_reason" field.
+func (u *AccessUpsertBulk) SetRollbackReason(v string) *AccessUpsertBulk {
+	return u.Update(func(s *AccessUpsert) {
+		s.SetRollbackReason(v)
+	})
+}
+
+// UpdateRollbackReason sets the "rollback_reason" field to the value that was provided on create.
+func (u *AccessUpsertBulk) UpdateRollbackReason() *AccessUpsertBulk {
+	return u.Update(func(s *AccessUpsert) {
+		s.UpdateRollbackReason()
+	})
+}
+
+// ClearRollbackReason clears the value of the "rollback_reason" field.
+func (u *AccessUpsertBulk) ClearRollbackReason() *AccessUpsertBulk {
+	return u.Update(func(s *AccessUpsert) {
+		s.ClearRollbackReason()
 	})
 }
 

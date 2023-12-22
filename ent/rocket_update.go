@@ -10,9 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/predicate"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // RocketUpdate is the builder for updating Rocket entities.
@@ -59,6 +59,32 @@ func (ru *RocketUpdate) SetNillableImage(s *string) *RocketUpdate {
 	if s != nil {
 		ru.SetImage(*s)
 	}
+	return ru
+}
+
+// ClearImage clears the value of the "image" field.
+func (ru *RocketUpdate) ClearImage() *RocketUpdate {
+	ru.mutation.ClearImage()
+	return ru
+}
+
+// SetZip sets the "zip" field.
+func (ru *RocketUpdate) SetZip(s string) *RocketUpdate {
+	ru.mutation.SetZip(s)
+	return ru
+}
+
+// SetNillableZip sets the "zip" field if the given value is not nil.
+func (ru *RocketUpdate) SetNillableZip(s *string) *RocketUpdate {
+	if s != nil {
+		ru.SetZip(*s)
+	}
+	return ru
+}
+
+// ClearZip clears the value of the "zip" field.
+func (ru *RocketUpdate) ClearZip() *RocketUpdate {
+	ru.mutation.ClearZip()
 	return ru
 }
 
@@ -167,15 +193,24 @@ func (ru *RocketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.Image(); ok {
 		_spec.SetField(rocket.FieldImage, field.TypeString, value)
 	}
+	if ru.mutation.ImageCleared() {
+		_spec.ClearField(rocket.FieldImage, field.TypeString)
+	}
+	if value, ok := ru.mutation.Zip(); ok {
+		_spec.SetField(rocket.FieldZip, field.TypeString, value)
+	}
+	if ru.mutation.ZipCleared() {
+		_spec.ClearField(rocket.FieldZip, field.TypeString)
+	}
 	if value, ok := ru.mutation.Config(); ok {
 		_spec.SetField(rocket.FieldConfig, field.TypeJSON, value)
 	}
 	if ru.mutation.MissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   rocket.MissionsTable,
-			Columns: []string{rocket.MissionsColumn},
+			Columns: rocket.MissionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
@@ -185,10 +220,10 @@ func (ru *RocketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := ru.mutation.RemovedMissionsIDs(); len(nodes) > 0 && !ru.mutation.MissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   rocket.MissionsTable,
-			Columns: []string{rocket.MissionsColumn},
+			Columns: rocket.MissionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
@@ -201,10 +236,10 @@ func (ru *RocketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := ru.mutation.MissionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   rocket.MissionsTable,
-			Columns: []string{rocket.MissionsColumn},
+			Columns: rocket.MissionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
@@ -266,6 +301,32 @@ func (ruo *RocketUpdateOne) SetNillableImage(s *string) *RocketUpdateOne {
 	if s != nil {
 		ruo.SetImage(*s)
 	}
+	return ruo
+}
+
+// ClearImage clears the value of the "image" field.
+func (ruo *RocketUpdateOne) ClearImage() *RocketUpdateOne {
+	ruo.mutation.ClearImage()
+	return ruo
+}
+
+// SetZip sets the "zip" field.
+func (ruo *RocketUpdateOne) SetZip(s string) *RocketUpdateOne {
+	ruo.mutation.SetZip(s)
+	return ruo
+}
+
+// SetNillableZip sets the "zip" field if the given value is not nil.
+func (ruo *RocketUpdateOne) SetNillableZip(s *string) *RocketUpdateOne {
+	if s != nil {
+		ruo.SetZip(*s)
+	}
+	return ruo
+}
+
+// ClearZip clears the value of the "zip" field.
+func (ruo *RocketUpdateOne) ClearZip() *RocketUpdateOne {
+	ruo.mutation.ClearZip()
 	return ruo
 }
 
@@ -404,15 +465,24 @@ func (ruo *RocketUpdateOne) sqlSave(ctx context.Context) (_node *Rocket, err err
 	if value, ok := ruo.mutation.Image(); ok {
 		_spec.SetField(rocket.FieldImage, field.TypeString, value)
 	}
+	if ruo.mutation.ImageCleared() {
+		_spec.ClearField(rocket.FieldImage, field.TypeString)
+	}
+	if value, ok := ruo.mutation.Zip(); ok {
+		_spec.SetField(rocket.FieldZip, field.TypeString, value)
+	}
+	if ruo.mutation.ZipCleared() {
+		_spec.ClearField(rocket.FieldZip, field.TypeString)
+	}
 	if value, ok := ruo.mutation.Config(); ok {
 		_spec.SetField(rocket.FieldConfig, field.TypeJSON, value)
 	}
 	if ruo.mutation.MissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   rocket.MissionsTable,
-			Columns: []string{rocket.MissionsColumn},
+			Columns: rocket.MissionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
@@ -422,10 +492,10 @@ func (ruo *RocketUpdateOne) sqlSave(ctx context.Context) (_node *Rocket, err err
 	}
 	if nodes := ruo.mutation.RemovedMissionsIDs(); len(nodes) > 0 && !ruo.mutation.MissionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   rocket.MissionsTable,
-			Columns: []string{rocket.MissionsColumn},
+			Columns: rocket.MissionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
@@ -438,10 +508,10 @@ func (ruo *RocketUpdateOne) sqlSave(ctx context.Context) (_node *Rocket, err err
 	}
 	if nodes := ruo.mutation.MissionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   rocket.MissionsTable,
-			Columns: []string{rocket.MissionsColumn},
+			Columns: rocket.MissionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),

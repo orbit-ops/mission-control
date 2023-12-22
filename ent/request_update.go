@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/predicate"
-	"github.com/orbit-ops/mission-control/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/predicate"
+	"github.com/orbit-ops/launchpad-core/ent/request"
 )
 
 // RequestUpdate is the builder for updating Request entities.
@@ -38,6 +38,12 @@ func (ru *RequestUpdate) SetNillableReason(s *string) *RequestUpdate {
 	if s != nil {
 		ru.SetReason(*s)
 	}
+	return ru
+}
+
+// SetRocketConfig sets the "rocket_config" field.
+func (ru *RequestUpdate) SetRocketConfig(m map[string]string) *RequestUpdate {
+	ru.mutation.SetRocketConfig(m)
 	return ru
 }
 
@@ -96,6 +102,9 @@ func (ru *RequestUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.Reason(); ok {
 		_spec.SetField(request.FieldReason, field.TypeString, value)
 	}
+	if value, ok := ru.mutation.RocketConfig(); ok {
+		_spec.SetField(request.FieldRocketConfig, field.TypeJSON, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{request.Label}
@@ -127,6 +136,12 @@ func (ruo *RequestUpdateOne) SetNillableReason(s *string) *RequestUpdateOne {
 	if s != nil {
 		ruo.SetReason(*s)
 	}
+	return ruo
+}
+
+// SetRocketConfig sets the "rocket_config" field.
+func (ruo *RequestUpdateOne) SetRocketConfig(m map[string]string) *RequestUpdateOne {
+	ruo.mutation.SetRocketConfig(m)
 	return ruo
 }
 
@@ -214,6 +229,9 @@ func (ruo *RequestUpdateOne) sqlSave(ctx context.Context) (_node *Request, err e
 	}
 	if value, ok := ruo.mutation.Reason(); ok {
 		_spec.SetField(request.FieldReason, field.TypeString, value)
+	}
+	if value, ok := ruo.mutation.RocketConfig(); ok {
+		_spec.SetField(request.FieldRocketConfig, field.TypeJSON, value)
 	}
 	_node = &Request{config: ruo.config}
 	_spec.Assign = _node.assignValues

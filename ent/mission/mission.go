@@ -14,25 +14,21 @@ const (
 	FieldID = "id"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldImage holds the string denoting the image field in the database.
-	FieldImage = "image"
 	// FieldMinApprovers holds the string denoting the min_approvers field in the database.
 	FieldMinApprovers = "min_approvers"
-	// FieldRocketID holds the string denoting the rocket_id field in the database.
-	FieldRocketID = "rocket_id"
-	// EdgeRocket holds the string denoting the rocket edge name in mutations.
-	EdgeRocket = "rocket"
+	// FieldPossibleApprovers holds the string denoting the possible_approvers field in the database.
+	FieldPossibleApprovers = "possible_approvers"
+	// EdgeRockets holds the string denoting the rockets edge name in mutations.
+	EdgeRockets = "rockets"
 	// EdgeRequests holds the string denoting the requests edge name in mutations.
 	EdgeRequests = "requests"
 	// Table holds the table name of the mission in the database.
 	Table = "missions"
-	// RocketTable is the table that holds the rocket relation/edge.
-	RocketTable = "missions"
-	// RocketInverseTable is the table name for the Rocket entity.
+	// RocketsTable is the table that holds the rockets relation/edge. The primary key declared below.
+	RocketsTable = "rocket_missions"
+	// RocketsInverseTable is the table name for the Rocket entity.
 	// It exists in this package in order to avoid circular dependency with the "rocket" package.
-	RocketInverseTable = "rockets"
-	// RocketColumn is the table column denoting the rocket relation/edge.
-	RocketColumn = "rocket_id"
+	RocketsInverseTable = "rockets"
 	// RequestsTable is the table that holds the requests relation/edge.
 	RequestsTable = "requests"
 	// RequestsInverseTable is the table name for the Request entity.
@@ -46,10 +42,15 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldDescription,
-	FieldImage,
 	FieldMinApprovers,
-	FieldRocketID,
+	FieldPossibleApprovers,
 }
+
+var (
+	// RocketsPrimaryKey and RocketsColumn2 are the table columns denoting the
+	// primary key for the rockets relation (M2M).
+	RocketsPrimaryKey = []string{"rocket_id", "mission_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -60,6 +61,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// MinApproversValidator is a validator for the "min_approvers" field. It is called by the builders before save.
+	MinApproversValidator func(int) error
+)
 
 // OrderOption defines the ordering options for the Mission queries.
 type OrderOption func(*sql.Selector)
@@ -74,25 +80,22 @@ func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByImage orders the results by the image field.
-func ByImage(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldImage, opts...).ToFunc()
-}
-
 // ByMinApprovers orders the results by the min_approvers field.
 func ByMinApprovers(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMinApprovers, opts...).ToFunc()
 }
 
-// ByRocketID orders the results by the rocket_id field.
-func ByRocketID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRocketID, opts...).ToFunc()
+// ByRocketsCount orders the results by rockets count.
+func ByRocketsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRocketsStep(), opts...)
+	}
 }
 
-// ByRocketField orders the results by rocket field.
-func ByRocketField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByRockets orders the results by rockets terms.
+func ByRockets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRocketStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newRocketsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -109,11 +112,11 @@ func ByRequests(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRequestsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newRocketStep() *sqlgraph.Step {
+func newRocketsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RocketInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, RocketTable, RocketColumn),
+		sqlgraph.To(RocketsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, RocketsTable, RocketsPrimaryKey...),
 	)
 }
 func newRequestsStep() *sqlgraph.Step {

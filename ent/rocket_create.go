@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // RocketCreate is the builder for creating a Rocket entity.
@@ -40,6 +40,28 @@ func (rc *RocketCreate) SetNillableDescription(s *string) *RocketCreate {
 // SetImage sets the "image" field.
 func (rc *RocketCreate) SetImage(s string) *RocketCreate {
 	rc.mutation.SetImage(s)
+	return rc
+}
+
+// SetNillableImage sets the "image" field if the given value is not nil.
+func (rc *RocketCreate) SetNillableImage(s *string) *RocketCreate {
+	if s != nil {
+		rc.SetImage(*s)
+	}
+	return rc
+}
+
+// SetZip sets the "zip" field.
+func (rc *RocketCreate) SetZip(s string) *RocketCreate {
+	rc.mutation.SetZip(s)
+	return rc
+}
+
+// SetNillableZip sets the "zip" field if the given value is not nil.
+func (rc *RocketCreate) SetNillableZip(s *string) *RocketCreate {
+	if s != nil {
+		rc.SetZip(*s)
+	}
 	return rc
 }
 
@@ -104,9 +126,6 @@ func (rc *RocketCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (rc *RocketCreate) check() error {
-	if _, ok := rc.mutation.Image(); !ok {
-		return &ValidationError{Name: "image", err: errors.New(`ent: missing required field "Rocket.image"`)}
-	}
 	if v, ok := rc.mutation.Image(); ok {
 		if err := rocket.ImageValidator(v); err != nil {
 			return &ValidationError{Name: "image", err: fmt.Errorf(`ent: validator failed for field "Rocket.image": %w`, err)}
@@ -159,16 +178,20 @@ func (rc *RocketCreate) createSpec() (*Rocket, *sqlgraph.CreateSpec) {
 		_spec.SetField(rocket.FieldImage, field.TypeString, value)
 		_node.Image = value
 	}
+	if value, ok := rc.mutation.Zip(); ok {
+		_spec.SetField(rocket.FieldZip, field.TypeString, value)
+		_node.Zip = value
+	}
 	if value, ok := rc.mutation.Config(); ok {
 		_spec.SetField(rocket.FieldConfig, field.TypeJSON, value)
 		_node.Config = value
 	}
 	if nodes := rc.mutation.MissionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   rocket.MissionsTable,
-			Columns: []string{rocket.MissionsColumn},
+			Columns: rocket.MissionsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
@@ -258,6 +281,30 @@ func (u *RocketUpsert) SetImage(v string) *RocketUpsert {
 // UpdateImage sets the "image" field to the value that was provided on create.
 func (u *RocketUpsert) UpdateImage() *RocketUpsert {
 	u.SetExcluded(rocket.FieldImage)
+	return u
+}
+
+// ClearImage clears the value of the "image" field.
+func (u *RocketUpsert) ClearImage() *RocketUpsert {
+	u.SetNull(rocket.FieldImage)
+	return u
+}
+
+// SetZip sets the "zip" field.
+func (u *RocketUpsert) SetZip(v string) *RocketUpsert {
+	u.Set(rocket.FieldZip, v)
+	return u
+}
+
+// UpdateZip sets the "zip" field to the value that was provided on create.
+func (u *RocketUpsert) UpdateZip() *RocketUpsert {
+	u.SetExcluded(rocket.FieldZip)
+	return u
+}
+
+// ClearZip clears the value of the "zip" field.
+func (u *RocketUpsert) ClearZip() *RocketUpsert {
+	u.SetNull(rocket.FieldZip)
 	return u
 }
 
@@ -353,6 +400,34 @@ func (u *RocketUpsertOne) SetImage(v string) *RocketUpsertOne {
 func (u *RocketUpsertOne) UpdateImage() *RocketUpsertOne {
 	return u.Update(func(s *RocketUpsert) {
 		s.UpdateImage()
+	})
+}
+
+// ClearImage clears the value of the "image" field.
+func (u *RocketUpsertOne) ClearImage() *RocketUpsertOne {
+	return u.Update(func(s *RocketUpsert) {
+		s.ClearImage()
+	})
+}
+
+// SetZip sets the "zip" field.
+func (u *RocketUpsertOne) SetZip(v string) *RocketUpsertOne {
+	return u.Update(func(s *RocketUpsert) {
+		s.SetZip(v)
+	})
+}
+
+// UpdateZip sets the "zip" field to the value that was provided on create.
+func (u *RocketUpsertOne) UpdateZip() *RocketUpsertOne {
+	return u.Update(func(s *RocketUpsert) {
+		s.UpdateZip()
+	})
+}
+
+// ClearZip clears the value of the "zip" field.
+func (u *RocketUpsertOne) ClearZip() *RocketUpsertOne {
+	return u.Update(func(s *RocketUpsert) {
+		s.ClearZip()
 	})
 }
 
@@ -616,6 +691,34 @@ func (u *RocketUpsertBulk) SetImage(v string) *RocketUpsertBulk {
 func (u *RocketUpsertBulk) UpdateImage() *RocketUpsertBulk {
 	return u.Update(func(s *RocketUpsert) {
 		s.UpdateImage()
+	})
+}
+
+// ClearImage clears the value of the "image" field.
+func (u *RocketUpsertBulk) ClearImage() *RocketUpsertBulk {
+	return u.Update(func(s *RocketUpsert) {
+		s.ClearImage()
+	})
+}
+
+// SetZip sets the "zip" field.
+func (u *RocketUpsertBulk) SetZip(v string) *RocketUpsertBulk {
+	return u.Update(func(s *RocketUpsert) {
+		s.SetZip(v)
+	})
+}
+
+// UpdateZip sets the "zip" field to the value that was provided on create.
+func (u *RocketUpsertBulk) UpdateZip() *RocketUpsertBulk {
+	return u.Update(func(s *RocketUpsert) {
+		s.UpdateZip()
+	})
+}
+
+// ClearZip clears the value of the "zip" field.
+func (u *RocketUpsertBulk) ClearZip() *RocketUpsertBulk {
+	return u.Update(func(s *RocketUpsert) {
+		s.ClearZip()
 	})
 }
 

@@ -10,26 +10,33 @@ import (
 	"github.com/ogen-go/ogen/uri"
 )
 
+func (s *Server) cutPrefix(path string) (string, bool) {
+	prefix := s.cfg.Prefix
+	if prefix == "" {
+		return path, true
+	}
+	if !strings.HasPrefix(path, prefix) {
+		// Prefix doesn't match.
+		return "", false
+	}
+	// Cut prefix from the path.
+	return strings.TrimPrefix(path, prefix), true
+}
+
 // ServeHTTP serves http request as defined by OpenAPI v3 specification,
 // calling handler that matches the path or returning not found error.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	elem := r.URL.Path
+	elemIsEscaped := false
 	if rawPath := r.URL.RawPath; rawPath != "" {
 		if normalized, ok := uri.NormalizeEscapedPath(rawPath); ok {
 			elem = normalized
+			elemIsEscaped = strings.ContainsRune(elem, '%')
 		}
 	}
-	if prefix := s.cfg.Prefix; len(prefix) > 0 {
-		if strings.HasPrefix(elem, prefix) {
-			// Cut prefix from the path.
-			elem = strings.TrimPrefix(elem, prefix)
-		} else {
-			// Prefix doesn't match.
-			s.notFound(w, r)
-			return
-		}
-	}
-	if len(elem) == 0 {
+
+	elem, ok := s.cutPrefix(elem)
+	if !ok || len(elem) == 0 {
 		s.notFound(w, r)
 		return
 	}
@@ -64,158 +71,157 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
-				case 'c': // Prefix: "ccesses"
-					if l := len("ccesses"); len(elem) >= l && elem[0:l] == "ccesses" {
+				case 'c': // Prefix: "ccesses/"
+					if l := len("ccesses/"); len(elem) >= l && elem[0:l] == "ccesses/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "id"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/access-tokens"
+						if l := len("/access-tokens"); len(elem) >= l && elem[0:l] == "/access-tokens" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "GET":
+								s.handleListAccessAccessTokensRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "GET")
+							}
+
+							return
+						}
+					}
+				case 'p': // Prefix: "p"
+					if l := len("p"); len(elem) >= l && elem[0:l] == "p" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
 					if len(elem) == 0 {
-						switch r.Method {
-						case "GET":
-							s.handleListAccessRequest([0]string{}, w, r)
-						case "POST":
-							s.handleCreateAccessRequest([0]string{}, w, r)
-						default:
-							s.notAllowed(w, r, "GET,POST")
-						}
-
-						return
+						break
 					}
 					switch elem[0] {
-					case '/': // Prefix: "/"
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+					case 'i': // Prefix: "i-keys"
+						if l := len("i-keys"); len(elem) >= l && elem[0:l] == "i-keys" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
-						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
-
 						if len(elem) == 0 {
 							switch r.Method {
-							case "DELETE":
-								s.handleDeleteAccessRequest([1]string{
-									args[0],
-								}, w, r)
 							case "GET":
-								s.handleReadAccessRequest([1]string{
-									args[0],
-								}, w, r)
-							case "PATCH":
-								s.handleUpdateAccessRequest([1]string{
-									args[0],
-								}, w, r)
+								s.handleListApiKeyRequest([0]string{}, elemIsEscaped, w, r)
+							case "POST":
+								s.handleCreateApiKeyRequest([0]string{}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET,PATCH")
+								s.notAllowed(w, r, "GET,POST")
 							}
 
 							return
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/approvals"
-							if l := len("/approvals"); len(elem) >= l && elem[0:l] == "/approvals" {
+						case '/': // Prefix: "/"
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
+							// Param: "id"
+							// Leaf parameter
+							args[0] = elem
+							elem = ""
+
 							if len(elem) == 0 {
 								// Leaf node.
 								switch r.Method {
-								case "GET":
-									s.handleReadAccessApprovalsRequest([1]string{
+								case "DELETE":
+									s.handleDeleteApiKeyRequest([1]string{
 										args[0],
-									}, w, r)
+									}, elemIsEscaped, w, r)
+								case "GET":
+									s.handleReadApiKeyRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
 								default:
-									s.notAllowed(w, r, "GET")
+									s.notAllowed(w, r, "DELETE,GET")
 								}
 
 								return
 							}
 						}
-					}
-				case 'p': // Prefix: "pprovals"
-					if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
-						elem = elem[l:]
-					} else {
-						break
-					}
-
-					if len(elem) == 0 {
-						switch r.Method {
-						case "GET":
-							s.handleListApprovalRequest([0]string{}, w, r)
-						case "POST":
-							s.handleCreateApprovalRequest([0]string{}, w, r)
-						default:
-							s.notAllowed(w, r, "GET,POST")
-						}
-
-						return
-					}
-					switch elem[0] {
-					case '/': // Prefix: "/"
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+					case 'p': // Prefix: "provals"
+						if l := len("provals"); len(elem) >= l && elem[0:l] == "provals" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
-						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
-
 						if len(elem) == 0 {
 							switch r.Method {
-							case "DELETE":
-								s.handleDeleteApprovalRequest([1]string{
-									args[0],
-								}, w, r)
 							case "GET":
-								s.handleReadApprovalRequest([1]string{
-									args[0],
-								}, w, r)
-							case "PATCH":
-								s.handleUpdateApprovalRequest([1]string{
-									args[0],
-								}, w, r)
+								s.handleListApprovalRequest([0]string{}, elemIsEscaped, w, r)
+							case "POST":
+								s.handleCreateApprovalRequest([0]string{}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET,PATCH")
+								s.notAllowed(w, r, "GET,POST")
 							}
 
 							return
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/requests"
-							if l := len("/requests"); len(elem) >= l && elem[0:l] == "/requests" {
+						case '/': // Prefix: "/"
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
+							// Param: "id"
+							// Leaf parameter
+							args[0] = elem
+							elem = ""
+
 							if len(elem) == 0 {
 								// Leaf node.
 								switch r.Method {
-								case "GET":
-									s.handleReadApprovalRequestsRequest([1]string{
+								case "DELETE":
+									s.handleDeleteApprovalRequest([1]string{
 										args[0],
-									}, w, r)
+									}, elemIsEscaped, w, r)
+								case "GET":
+									s.handleReadApprovalRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								case "PATCH":
+									s.handleUpdateApprovalRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
 								default:
-									s.notAllowed(w, r, "GET")
+									s.notAllowed(w, r, "DELETE,GET,PATCH")
 								}
 
 								return
@@ -232,11 +238,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					if len(elem) == 0 {
 						switch r.Method {
 						case "GET":
-							s.handleListAuditRequest([0]string{}, w, r)
-						case "POST":
-							s.handleCreateAuditRequest([0]string{}, w, r)
+							s.handleListAuditRequest([0]string{}, elemIsEscaped, w, r)
 						default:
-							s.notAllowed(w, r, "GET,POST")
+							s.notAllowed(w, r, "GET")
 						}
 
 						return
@@ -257,20 +261,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						if len(elem) == 0 {
 							// Leaf node.
 							switch r.Method {
-							case "DELETE":
-								s.handleDeleteAuditRequest([1]string{
-									args[0],
-								}, w, r)
 							case "GET":
 								s.handleReadAuditRequest([1]string{
 									args[0],
-								}, w, r)
-							case "PATCH":
-								s.handleUpdateAuditRequest([1]string{
-									args[0],
-								}, w, r)
+								}, elemIsEscaped, w, r)
 							default:
-								s.notAllowed(w, r, "DELETE,GET,PATCH")
+								s.notAllowed(w, r, "GET")
 							}
 
 							return
@@ -287,9 +283,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				if len(elem) == 0 {
 					switch r.Method {
 					case "GET":
-						s.handleListMissionRequest([0]string{}, w, r)
+						s.handleListMissionRequest([0]string{}, elemIsEscaped, w, r)
 					case "POST":
-						s.handleCreateMissionRequest([0]string{}, w, r)
+						s.handleCreateMissionRequest([0]string{}, elemIsEscaped, w, r)
 					default:
 						s.notAllowed(w, r, "GET,POST")
 					}
@@ -318,15 +314,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						case "DELETE":
 							s.handleDeleteMissionRequest([1]string{
 								args[0],
-							}, w, r)
+							}, elemIsEscaped, w, r)
 						case "GET":
 							s.handleReadMissionRequest([1]string{
 								args[0],
-							}, w, r)
+							}, elemIsEscaped, w, r)
 						case "PATCH":
 							s.handleUpdateMissionRequest([1]string{
 								args[0],
-							}, w, r)
+							}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "DELETE,GET,PATCH")
 						}
@@ -358,15 +354,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								case "GET":
 									s.handleListMissionRequestsRequest([1]string{
 										args[0],
-									}, w, r)
+									}, elemIsEscaped, w, r)
 								default:
 									s.notAllowed(w, r, "GET")
 								}
 
 								return
 							}
-						case 'o': // Prefix: "ocket"
-							if l := len("ocket"); len(elem) >= l && elem[0:l] == "ocket" {
+						case 'o': // Prefix: "ockets"
+							if l := len("ockets"); len(elem) >= l && elem[0:l] == "ockets" {
 								elem = elem[l:]
 							} else {
 								break
@@ -376,9 +372,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								// Leaf node.
 								switch r.Method {
 								case "GET":
-									s.handleReadMissionRocketRequest([1]string{
+									s.handleListMissionRocketsRequest([1]string{
 										args[0],
-									}, w, r)
+									}, elemIsEscaped, w, r)
 								default:
 									s.notAllowed(w, r, "GET")
 								}
@@ -409,9 +405,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					if len(elem) == 0 {
 						switch r.Method {
 						case "GET":
-							s.handleListRequestRequest([0]string{}, w, r)
+							s.handleListRequestRequest([0]string{}, elemIsEscaped, w, r)
 						case "POST":
-							s.handleCreateRequestRequest([0]string{}, w, r)
+							s.handleCreateRequestRequest([0]string{}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "GET,POST")
 						}
@@ -440,15 +436,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							case "DELETE":
 								s.handleDeleteRequestRequest([1]string{
 									args[0],
-								}, w, r)
+								}, elemIsEscaped, w, r)
 							case "GET":
 								s.handleReadRequestRequest([1]string{
 									args[0],
-								}, w, r)
+								}, elemIsEscaped, w, r)
 							case "PATCH":
 								s.handleUpdateRequestRequest([1]string{
 									args[0],
-								}, w, r)
+								}, elemIsEscaped, w, r)
 							default:
 								s.notAllowed(w, r, "DELETE,GET,PATCH")
 							}
@@ -469,7 +465,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								case "GET":
 									s.handleReadRequestMissionRequest([1]string{
 										args[0],
-									}, w, r)
+									}, elemIsEscaped, w, r)
 								default:
 									s.notAllowed(w, r, "GET")
 								}
@@ -488,9 +484,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					if len(elem) == 0 {
 						switch r.Method {
 						case "GET":
-							s.handleListRocketRequest([0]string{}, w, r)
+							s.handleListRocketRequest([0]string{}, elemIsEscaped, w, r)
 						case "POST":
-							s.handleCreateRocketRequest([0]string{}, w, r)
+							s.handleCreateRocketRequest([0]string{}, elemIsEscaped, w, r)
 						default:
 							s.notAllowed(w, r, "GET,POST")
 						}
@@ -519,15 +515,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							case "DELETE":
 								s.handleDeleteRocketRequest([1]string{
 									args[0],
-								}, w, r)
+								}, elemIsEscaped, w, r)
 							case "GET":
 								s.handleReadRocketRequest([1]string{
 									args[0],
-								}, w, r)
+								}, elemIsEscaped, w, r)
 							case "PATCH":
 								s.handleUpdateRocketRequest([1]string{
 									args[0],
-								}, w, r)
+								}, elemIsEscaped, w, r)
 							default:
 								s.notAllowed(w, r, "DELETE,GET,PATCH")
 							}
@@ -548,7 +544,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								case "GET":
 									s.handleListRocketMissionsRequest([1]string{
 										args[0],
-									}, w, r)
+									}, elemIsEscaped, w, r)
 								default:
 									s.notAllowed(w, r, "GET")
 								}
@@ -567,6 +563,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Route is route object.
 type Route struct {
 	name        string
+	summary     string
 	operationID string
 	pathPattern string
 	count       int
@@ -578,6 +575,11 @@ type Route struct {
 // It is guaranteed to be unique and not empty.
 func (r Route) Name() string {
 	return r.name
+}
+
+// Summary returns OpenAPI summary.
+func (r Route) Summary() string {
+	return r.summary
 }
 
 // OperationID returns OpenAPI operationId.
@@ -621,6 +623,11 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 		}()
 	}
 
+	elem, ok := s.cutPrefix(elem)
+	if !ok {
+		return r, false
+	}
+
 	// Static code generated router with unwrapped path search.
 	switch {
 	default:
@@ -650,70 +657,41 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
-				case 'c': // Prefix: "ccesses"
-					if l := len("ccesses"); len(elem) >= l && elem[0:l] == "ccesses" {
+				case 'c': // Prefix: "ccesses/"
+					if l := len("ccesses/"); len(elem) >= l && elem[0:l] == "ccesses/" {
 						elem = elem[l:]
 					} else {
 						break
 					}
 
+					// Param: "id"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
 					if len(elem) == 0 {
-						switch method {
-						case "GET":
-							r.name = "ListAccess"
-							r.operationID = "listAccess"
-							r.pathPattern = "/accesses"
-							r.args = args
-							r.count = 0
-							return r, true
-						case "POST":
-							r.name = "CreateAccess"
-							r.operationID = "createAccess"
-							r.pathPattern = "/accesses"
-							r.args = args
-							r.count = 0
-							return r, true
-						default:
-							return
-						}
+						break
 					}
 					switch elem[0] {
-					case '/': // Prefix: "/"
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+					case '/': // Prefix: "/access-tokens"
+						if l := len("/access-tokens"); len(elem) >= l && elem[0:l] == "/access-tokens" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
-						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
-
 						if len(elem) == 0 {
 							switch method {
-							case "DELETE":
-								r.name = "DeleteAccess"
-								r.operationID = "deleteAccess"
-								r.pathPattern = "/accesses/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
 							case "GET":
-								r.name = "ReadAccess"
-								r.operationID = "readAccess"
-								r.pathPattern = "/accesses/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
-							case "PATCH":
-								r.name = "UpdateAccess"
-								r.operationID = "updateAccess"
-								r.pathPattern = "/accesses/{id}"
+								// Leaf: ListAccessAccessTokens
+								r.name = "ListAccessAccessTokens"
+								r.summary = "List attached AccessTokens"
+								r.operationID = "listAccessAccessTokens"
+								r.pathPattern = "/accesses/{id}/access-tokens"
 								r.args = args
 								r.count = 1
 								return r, true
@@ -721,21 +699,77 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								return
 							}
 						}
+					}
+				case 'p': // Prefix: "p"
+					if l := len("p"); len(elem) >= l && elem[0:l] == "p" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					if len(elem) == 0 {
+						break
+					}
+					switch elem[0] {
+					case 'i': // Prefix: "i-keys"
+						if l := len("i-keys"); len(elem) >= l && elem[0:l] == "i-keys" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							switch method {
+							case "GET":
+								r.name = "ListApiKey"
+								r.summary = "List ApiKeys"
+								r.operationID = "listApiKey"
+								r.pathPattern = "/api-keys"
+								r.args = args
+								r.count = 0
+								return r, true
+							case "POST":
+								r.name = "CreateApiKey"
+								r.summary = "Create a new ApiKey"
+								r.operationID = "createApiKey"
+								r.pathPattern = "/api-keys"
+								r.args = args
+								r.count = 0
+								return r, true
+							default:
+								return
+							}
+						}
 						switch elem[0] {
-						case '/': // Prefix: "/approvals"
-							if l := len("/approvals"); len(elem) >= l && elem[0:l] == "/approvals" {
+						case '/': // Prefix: "/"
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
+							// Param: "id"
+							// Leaf parameter
+							args[0] = elem
+							elem = ""
+
 							if len(elem) == 0 {
 								switch method {
+								case "DELETE":
+									// Leaf: DeleteApiKey
+									r.name = "DeleteApiKey"
+									r.summary = "Deletes a ApiKey by ID"
+									r.operationID = "deleteApiKey"
+									r.pathPattern = "/api-keys/{id}"
+									r.args = args
+									r.count = 1
+									return r, true
 								case "GET":
-									// Leaf: ReadAccessApprovals
-									r.name = "ReadAccessApprovals"
-									r.operationID = "readAccessApprovals"
-									r.pathPattern = "/accesses/{id}/approvals"
+									// Leaf: ReadApiKey
+									r.name = "ReadApiKey"
+									r.summary = "Find a ApiKey by ID"
+									r.operationID = "readApiKey"
+									r.pathPattern = "/api-keys/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -744,93 +778,74 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								}
 							}
 						}
-					}
-				case 'p': // Prefix: "pprovals"
-					if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
-						elem = elem[l:]
-					} else {
-						break
-					}
-
-					if len(elem) == 0 {
-						switch method {
-						case "GET":
-							r.name = "ListApproval"
-							r.operationID = "listApproval"
-							r.pathPattern = "/approvals"
-							r.args = args
-							r.count = 0
-							return r, true
-						case "POST":
-							r.name = "CreateApproval"
-							r.operationID = "createApproval"
-							r.pathPattern = "/approvals"
-							r.args = args
-							r.count = 0
-							return r, true
-						default:
-							return
-						}
-					}
-					switch elem[0] {
-					case '/': // Prefix: "/"
-						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
+					case 'p': // Prefix: "provals"
+						if l := len("provals"); len(elem) >= l && elem[0:l] == "provals" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
-						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
-
 						if len(elem) == 0 {
 							switch method {
-							case "DELETE":
-								r.name = "DeleteApproval"
-								r.operationID = "deleteApproval"
-								r.pathPattern = "/approvals/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
 							case "GET":
-								r.name = "ReadApproval"
-								r.operationID = "readApproval"
-								r.pathPattern = "/approvals/{id}"
+								r.name = "ListApproval"
+								r.summary = "List Approvals"
+								r.operationID = "listApproval"
+								r.pathPattern = "/approvals"
 								r.args = args
-								r.count = 1
+								r.count = 0
 								return r, true
-							case "PATCH":
-								r.name = "UpdateApproval"
-								r.operationID = "updateApproval"
-								r.pathPattern = "/approvals/{id}"
+							case "POST":
+								r.name = "CreateApproval"
+								r.summary = "Create a new Approval"
+								r.operationID = "createApproval"
+								r.pathPattern = "/approvals"
 								r.args = args
-								r.count = 1
+								r.count = 0
 								return r, true
 							default:
 								return
 							}
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/requests"
-							if l := len("/requests"); len(elem) >= l && elem[0:l] == "/requests" {
+						case '/': // Prefix: "/"
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
+							// Param: "id"
+							// Leaf parameter
+							args[0] = elem
+							elem = ""
+
 							if len(elem) == 0 {
 								switch method {
+								case "DELETE":
+									// Leaf: DeleteApproval
+									r.name = "DeleteApproval"
+									r.summary = "Deletes a Approval by ID"
+									r.operationID = "deleteApproval"
+									r.pathPattern = "/approvals/{id}"
+									r.args = args
+									r.count = 1
+									return r, true
 								case "GET":
-									// Leaf: ReadApprovalRequests
-									r.name = "ReadApprovalRequests"
-									r.operationID = "readApprovalRequests"
-									r.pathPattern = "/approvals/{id}/requests"
+									// Leaf: ReadApproval
+									r.name = "ReadApproval"
+									r.summary = "Find a Approval by ID"
+									r.operationID = "readApproval"
+									r.pathPattern = "/approvals/{id}"
+									r.args = args
+									r.count = 1
+									return r, true
+								case "PATCH":
+									// Leaf: UpdateApproval
+									r.name = "UpdateApproval"
+									r.summary = "Updates a Approval"
+									r.operationID = "updateApproval"
+									r.pathPattern = "/approvals/{id}"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -851,14 +866,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						switch method {
 						case "GET":
 							r.name = "ListAudit"
+							r.summary = "List Audits"
 							r.operationID = "listAudit"
-							r.pathPattern = "/audits"
-							r.args = args
-							r.count = 0
-							return r, true
-						case "POST":
-							r.name = "CreateAudit"
-							r.operationID = "createAudit"
 							r.pathPattern = "/audits"
 							r.args = args
 							r.count = 0
@@ -882,26 +891,11 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 
 						if len(elem) == 0 {
 							switch method {
-							case "DELETE":
-								// Leaf: DeleteAudit
-								r.name = "DeleteAudit"
-								r.operationID = "deleteAudit"
-								r.pathPattern = "/audits/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
 							case "GET":
 								// Leaf: ReadAudit
 								r.name = "ReadAudit"
+								r.summary = "Find a Audit by ID"
 								r.operationID = "readAudit"
-								r.pathPattern = "/audits/{id}"
-								r.args = args
-								r.count = 1
-								return r, true
-							case "PATCH":
-								// Leaf: UpdateAudit
-								r.name = "UpdateAudit"
-								r.operationID = "updateAudit"
 								r.pathPattern = "/audits/{id}"
 								r.args = args
 								r.count = 1
@@ -923,6 +917,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					switch method {
 					case "GET":
 						r.name = "ListMission"
+						r.summary = "List Missions"
 						r.operationID = "listMission"
 						r.pathPattern = "/missions"
 						r.args = args
@@ -930,6 +925,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						return r, true
 					case "POST":
 						r.name = "CreateMission"
+						r.summary = "Create a new Mission"
 						r.operationID = "createMission"
 						r.pathPattern = "/missions"
 						r.args = args
@@ -960,6 +956,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						switch method {
 						case "DELETE":
 							r.name = "DeleteMission"
+							r.summary = "Deletes a Mission by ID"
 							r.operationID = "deleteMission"
 							r.pathPattern = "/missions/{id}"
 							r.args = args
@@ -967,6 +964,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							return r, true
 						case "GET":
 							r.name = "ReadMission"
+							r.summary = "Find a Mission by ID"
 							r.operationID = "readMission"
 							r.pathPattern = "/missions/{id}"
 							r.args = args
@@ -974,6 +972,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							return r, true
 						case "PATCH":
 							r.name = "UpdateMission"
+							r.summary = "Updates a Mission"
 							r.operationID = "updateMission"
 							r.pathPattern = "/missions/{id}"
 							r.args = args
@@ -1007,6 +1006,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								case "GET":
 									// Leaf: ListMissionRequests
 									r.name = "ListMissionRequests"
+									r.summary = "List attached Requests"
 									r.operationID = "listMissionRequests"
 									r.pathPattern = "/missions/{id}/requests"
 									r.args = args
@@ -1016,8 +1016,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									return
 								}
 							}
-						case 'o': // Prefix: "ocket"
-							if l := len("ocket"); len(elem) >= l && elem[0:l] == "ocket" {
+						case 'o': // Prefix: "ockets"
+							if l := len("ockets"); len(elem) >= l && elem[0:l] == "ockets" {
 								elem = elem[l:]
 							} else {
 								break
@@ -1026,10 +1026,11 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							if len(elem) == 0 {
 								switch method {
 								case "GET":
-									// Leaf: ReadMissionRocket
-									r.name = "ReadMissionRocket"
-									r.operationID = "readMissionRocket"
-									r.pathPattern = "/missions/{id}/rocket"
+									// Leaf: ListMissionRockets
+									r.name = "ListMissionRockets"
+									r.summary = "List attached Rockets"
+									r.operationID = "listMissionRockets"
+									r.pathPattern = "/missions/{id}/rockets"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -1062,6 +1063,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						switch method {
 						case "GET":
 							r.name = "ListRequest"
+							r.summary = "List Requests"
 							r.operationID = "listRequest"
 							r.pathPattern = "/requests"
 							r.args = args
@@ -1069,6 +1071,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							return r, true
 						case "POST":
 							r.name = "CreateRequest"
+							r.summary = "Create a new Request"
 							r.operationID = "createRequest"
 							r.pathPattern = "/requests"
 							r.args = args
@@ -1099,6 +1102,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							switch method {
 							case "DELETE":
 								r.name = "DeleteRequest"
+								r.summary = "Deletes a Request by ID"
 								r.operationID = "deleteRequest"
 								r.pathPattern = "/requests/{id}"
 								r.args = args
@@ -1106,6 +1110,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								return r, true
 							case "GET":
 								r.name = "ReadRequest"
+								r.summary = "Find a Request by ID"
 								r.operationID = "readRequest"
 								r.pathPattern = "/requests/{id}"
 								r.args = args
@@ -1113,6 +1118,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								return r, true
 							case "PATCH":
 								r.name = "UpdateRequest"
+								r.summary = "Updates a Request"
 								r.operationID = "updateRequest"
 								r.pathPattern = "/requests/{id}"
 								r.args = args
@@ -1135,6 +1141,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								case "GET":
 									// Leaf: ReadRequestMission
 									r.name = "ReadRequestMission"
+									r.summary = "Find the attached Mission"
 									r.operationID = "readRequestMission"
 									r.pathPattern = "/requests/{id}/mission"
 									r.args = args
@@ -1157,6 +1164,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						switch method {
 						case "GET":
 							r.name = "ListRocket"
+							r.summary = "List Rockets"
 							r.operationID = "listRocket"
 							r.pathPattern = "/rockets"
 							r.args = args
@@ -1164,6 +1172,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							return r, true
 						case "POST":
 							r.name = "CreateRocket"
+							r.summary = "Create a new Rocket"
 							r.operationID = "createRocket"
 							r.pathPattern = "/rockets"
 							r.args = args
@@ -1194,6 +1203,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							switch method {
 							case "DELETE":
 								r.name = "DeleteRocket"
+								r.summary = "Deletes a Rocket by ID"
 								r.operationID = "deleteRocket"
 								r.pathPattern = "/rockets/{id}"
 								r.args = args
@@ -1201,6 +1211,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								return r, true
 							case "GET":
 								r.name = "ReadRocket"
+								r.summary = "Find a Rocket by ID"
 								r.operationID = "readRocket"
 								r.pathPattern = "/rockets/{id}"
 								r.args = args
@@ -1208,6 +1219,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								return r, true
 							case "PATCH":
 								r.name = "UpdateRocket"
+								r.summary = "Updates a Rocket"
 								r.operationID = "updateRocket"
 								r.pathPattern = "/rockets/{id}"
 								r.args = args
@@ -1230,6 +1242,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								case "GET":
 									// Leaf: ListRocketMissions
 									r.name = "ListRocketMissions"
+									r.summary = "List attached Missions"
 									r.operationID = "listRocketMissions"
 									r.pathPattern = "/rockets/{id}/missions"
 									r.args = args

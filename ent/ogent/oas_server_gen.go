@@ -4,30 +4,22 @@ package ogent
 
 import (
 	"context"
-
-	"github.com/go-faster/jx"
 )
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
-	// CreateAccess implements createAccess operation.
+	// CreateApiKey implements createApiKey operation.
 	//
-	// Creates a new Access and persists it to storage.
+	// Creates a new ApiKey and persists it to storage.
 	//
-	// POST /accesses
-	CreateAccess(ctx context.Context, req *CreateAccessReq) (CreateAccessRes, error)
+	// POST /api-keys
+	CreateApiKey(ctx context.Context, req *CreateApiKeyReq) (CreateApiKeyRes, error)
 	// CreateApproval implements createApproval operation.
 	//
 	// Creates a new Approval and persists it to storage.
 	//
 	// POST /approvals
 	CreateApproval(ctx context.Context, req *CreateApprovalReq) (CreateApprovalRes, error)
-	// CreateAudit implements createAudit operation.
-	//
-	// Creates a new Audit and persists it to storage.
-	//
-	// POST /audits
-	CreateAudit(ctx context.Context, req *CreateAuditReq) (CreateAuditRes, error)
 	// CreateMission implements createMission operation.
 	//
 	// Creates a new Mission and persists it to storage.
@@ -46,24 +38,18 @@ type Handler interface {
 	//
 	// POST /rockets
 	CreateRocket(ctx context.Context, req *CreateRocketReq) (CreateRocketRes, error)
-	// DeleteAccess implements deleteAccess operation.
+	// DeleteApiKey implements deleteApiKey operation.
 	//
-	// Deletes the Access with the requested ID.
+	// Deletes the ApiKey with the requested ID.
 	//
-	// DELETE /accesses/{id}
-	DeleteAccess(ctx context.Context, params DeleteAccessParams) (DeleteAccessRes, error)
+	// DELETE /api-keys/{id}
+	DeleteApiKey(ctx context.Context, params DeleteApiKeyParams) (DeleteApiKeyRes, error)
 	// DeleteApproval implements deleteApproval operation.
 	//
 	// Deletes the Approval with the requested ID.
 	//
 	// DELETE /approvals/{id}
 	DeleteApproval(ctx context.Context, params DeleteApprovalParams) (DeleteApprovalRes, error)
-	// DeleteAudit implements deleteAudit operation.
-	//
-	// Deletes the Audit with the requested ID.
-	//
-	// DELETE /audits/{id}
-	DeleteAudit(ctx context.Context, params DeleteAuditParams) (DeleteAuditRes, error)
 	// DeleteMission implements deleteMission operation.
 	//
 	// Deletes the Mission with the requested ID.
@@ -82,12 +68,18 @@ type Handler interface {
 	//
 	// DELETE /rockets/{id}
 	DeleteRocket(ctx context.Context, params DeleteRocketParams) (DeleteRocketRes, error)
-	// ListAccess implements listAccess operation.
+	// ListAccessAccessTokens implements listAccessAccessTokens operation.
 	//
-	// List Accesses.
+	// List attached AccessTokens.
 	//
-	// GET /accesses
-	ListAccess(ctx context.Context, params ListAccessParams) (ListAccessRes, error)
+	// GET /accesses/{id}/access-tokens
+	ListAccessAccessTokens(ctx context.Context, params ListAccessAccessTokensParams) (ListAccessAccessTokensRes, error)
+	// ListApiKey implements listApiKey operation.
+	//
+	// List ApiKeys.
+	//
+	// GET /api-keys
+	ListApiKey(ctx context.Context, params ListApiKeyParams) (ListApiKeyRes, error)
 	// ListApproval implements listApproval operation.
 	//
 	// List Approvals.
@@ -112,6 +104,12 @@ type Handler interface {
 	//
 	// GET /missions/{id}/requests
 	ListMissionRequests(ctx context.Context, params ListMissionRequestsParams) (ListMissionRequestsRes, error)
+	// ListMissionRockets implements listMissionRockets operation.
+	//
+	// List attached Rockets.
+	//
+	// GET /missions/{id}/rockets
+	ListMissionRockets(ctx context.Context, params ListMissionRocketsParams) (ListMissionRocketsRes, error)
 	// ListRequest implements listRequest operation.
 	//
 	// List Requests.
@@ -130,30 +128,18 @@ type Handler interface {
 	//
 	// GET /rockets/{id}/missions
 	ListRocketMissions(ctx context.Context, params ListRocketMissionsParams) (ListRocketMissionsRes, error)
-	// ReadAccess implements readAccess operation.
+	// ReadApiKey implements readApiKey operation.
 	//
-	// Finds the Access with the requested ID and returns it.
+	// Finds the ApiKey with the requested ID and returns it.
 	//
-	// GET /accesses/{id}
-	ReadAccess(ctx context.Context, params ReadAccessParams) (ReadAccessRes, error)
-	// ReadAccessApprovals implements readAccessApprovals operation.
-	//
-	// Find the attached Access of the Access with the given ID.
-	//
-	// GET /accesses/{id}/approvals
-	ReadAccessApprovals(ctx context.Context, params ReadAccessApprovalsParams) (ReadAccessApprovalsRes, error)
+	// GET /api-keys/{id}
+	ReadApiKey(ctx context.Context, params ReadApiKeyParams) (ReadApiKeyRes, error)
 	// ReadApproval implements readApproval operation.
 	//
 	// Finds the Approval with the requested ID and returns it.
 	//
 	// GET /approvals/{id}
 	ReadApproval(ctx context.Context, params ReadApprovalParams) (ReadApprovalRes, error)
-	// ReadApprovalRequests implements readApprovalRequests operation.
-	//
-	// Find the attached Request of the Approval with the given ID.
-	//
-	// GET /approvals/{id}/requests
-	ReadApprovalRequests(ctx context.Context, params ReadApprovalRequestsParams) (ReadApprovalRequestsRes, error)
 	// ReadAudit implements readAudit operation.
 	//
 	// Finds the Audit with the requested ID and returns it.
@@ -166,12 +152,6 @@ type Handler interface {
 	//
 	// GET /missions/{id}
 	ReadMission(ctx context.Context, params ReadMissionParams) (ReadMissionRes, error)
-	// ReadMissionRocket implements readMissionRocket operation.
-	//
-	// Find the attached Rocket of the Mission with the given ID.
-	//
-	// GET /missions/{id}/rocket
-	ReadMissionRocket(ctx context.Context, params ReadMissionRocketParams) (ReadMissionRocketRes, error)
 	// ReadRequest implements readRequest operation.
 	//
 	// Finds the Request with the requested ID and returns it.
@@ -190,24 +170,12 @@ type Handler interface {
 	//
 	// GET /rockets/{id}
 	ReadRocket(ctx context.Context, params ReadRocketParams) (ReadRocketRes, error)
-	// UpdateAccess implements updateAccess operation.
-	//
-	// Updates a Access and persists changes to storage.
-	//
-	// PATCH /accesses/{id}
-	UpdateAccess(ctx context.Context, req *UpdateAccessReq, params UpdateAccessParams) (UpdateAccessRes, error)
 	// UpdateApproval implements updateApproval operation.
 	//
 	// Updates a Approval and persists changes to storage.
 	//
 	// PATCH /approvals/{id}
 	UpdateApproval(ctx context.Context, req *UpdateApprovalReq, params UpdateApprovalParams) (UpdateApprovalRes, error)
-	// UpdateAudit implements updateAudit operation.
-	//
-	// Updates a Audit and persists changes to storage.
-	//
-	// PATCH /audits/{id}
-	UpdateAudit(ctx context.Context, req jx.Raw, params UpdateAuditParams) (UpdateAuditRes, error)
 	// UpdateMission implements updateMission operation.
 	//
 	// Updates a Mission and persists changes to storage.
@@ -231,18 +199,20 @@ type Handler interface {
 // Server implements http server based on OpenAPI v3 specification and
 // calls Handler to handle requests.
 type Server struct {
-	h Handler
+	h   Handler
+	sec SecurityHandler
 	baseServer
 }
 
 // NewServer creates new Server.
-func NewServer(h Handler, opts ...ServerOption) (*Server, error) {
+func NewServer(h Handler, sec SecurityHandler, opts ...ServerOption) (*Server, error) {
 	s, err := newServerConfig(opts...).baseServer()
 	if err != nil {
 		return nil, err
 	}
 	return &Server{
 		h:          h,
+		sec:        sec,
 		baseServer: s,
 	}, nil
 }

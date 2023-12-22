@@ -12,12 +12,14 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/orbit-ops/mission-control/ent/access"
-	"github.com/orbit-ops/mission-control/ent/approval"
-	"github.com/orbit-ops/mission-control/ent/audit"
-	"github.com/orbit-ops/mission-control/ent/mission"
-	"github.com/orbit-ops/mission-control/ent/request"
-	"github.com/orbit-ops/mission-control/ent/rocket"
+	"github.com/orbit-ops/launchpad-core/ent/access"
+	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
+	"github.com/orbit-ops/launchpad-core/ent/apikey"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
+	"github.com/orbit-ops/launchpad-core/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/orbit-ops/launchpad-core/ent/request"
+	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,12 +80,14 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			access.Table:   access.ValidColumn,
-			approval.Table: approval.ValidColumn,
-			audit.Table:    audit.ValidColumn,
-			mission.Table:  mission.ValidColumn,
-			request.Table:  request.ValidColumn,
-			rocket.Table:   rocket.ValidColumn,
+			access.Table:       access.ValidColumn,
+			actiontokens.Table: actiontokens.ValidColumn,
+			apikey.Table:       apikey.ValidColumn,
+			approval.Table:     approval.ValidColumn,
+			audit.Table:        audit.ValidColumn,
+			mission.Table:      mission.ValidColumn,
+			request.Table:      request.ValidColumn,
+			rocket.Table:       rocket.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

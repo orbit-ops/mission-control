@@ -3,6 +3,8 @@
 package audit
 
 import (
+	"fmt"
+
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -40,13 +42,37 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// ActionValidator is a validator for the "action" field. It is called by the builders before save.
-	ActionValidator func(string) error
 	// AuthorValidator is a validator for the "author" field. It is called by the builders before save.
 	AuthorValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() string
 )
+
+// Action defines the type for the "action" enum field.
+type Action string
+
+// Action values.
+const (
+	ActionApproveRequest        Action = "ApproveRequest"
+	ActionRevokeApprovalRequest Action = "RevokeApprovalRequest"
+	ActionRejectRequest         Action = "RejectRequest"
+	ActionCreateAccess          Action = "CreateAccess"
+	ActionRemoveAccess          Action = "RemoveAccess"
+)
+
+func (a Action) String() string {
+	return string(a)
+}
+
+// ActionValidator is a validator for the "action" field enum values. It is called by the builders before save.
+func ActionValidator(a Action) error {
+	switch a {
+	case ActionApproveRequest, ActionRevokeApprovalRequest, ActionRejectRequest, ActionCreateAccess, ActionRemoveAccess:
+		return nil
+	default:
+		return fmt.Errorf("audit: invalid enum value for action field: %q", a)
+	}
+}
 
 // OrderOption defines the ordering options for the Audit queries.
 type OrderOption func(*sql.Selector)

@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/orbit-ops/mission-control/ent"
+	"github.com/orbit-ops/launchpad-core/ent"
 )
 
 // The AccessFunc type is an adapter to allow the use of ordinary
@@ -19,6 +19,30 @@ func (f AccessFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccessMutation", m)
+}
+
+// The ActionTokensFunc type is an adapter to allow the use of ordinary
+// function as ActionTokens mutator.
+type ActionTokensFunc func(context.Context, *ent.ActionTokensMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ActionTokensFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ActionTokensMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ActionTokensMutation", m)
+}
+
+// The ApiKeyFunc type is an adapter to allow the use of ordinary
+// function as ApiKey mutator.
+type ApiKeyFunc func(context.Context, *ent.ApiKeyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ApiKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ApiKeyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ApiKeyMutation", m)
 }
 
 // The ApprovalFunc type is an adapter to allow the use of ordinary

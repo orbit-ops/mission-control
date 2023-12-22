@@ -5,422 +5,206 @@ package ogent
 import (
 	"time"
 
+	"github.com/go-faster/errors"
 	"github.com/go-faster/jx"
 	"github.com/google/uuid"
 )
 
-// Ref: #/components/schemas/Access_ApprovalsRead
-type AccessApprovalsRead struct {
-	ID           uuid.UUID   `json:"id"`
-	AccessTime   time.Time   `json:"access_time"`
-	Approved     bool        `json:"approved"`
-	RolledBack   bool        `json:"rolled_back"`
-	RollbackTime OptDateTime `json:"rollback_time"`
-	EndTime      time.Time   `json:"end_time"`
-	RequestID    uuid.UUID   `json:"request_id"`
+// Ref: #/components/schemas/Access_AccessTokensList
+type AccessAccessTokensList struct {
+	ID         uuid.UUID                    `json:"id"`
+	Action     AccessAccessTokensListAction `json:"action"`
+	Token      string                       `json:"token"`
+	AccessID   uuid.UUID                    `json:"access_id"`
+	Expiration time.Time                    `json:"expiration"`
 }
 
 // GetID returns the value of ID.
-func (s *AccessApprovalsRead) GetID() uuid.UUID {
+func (s *AccessAccessTokensList) GetID() uuid.UUID {
 	return s.ID
 }
 
-// GetAccessTime returns the value of AccessTime.
-func (s *AccessApprovalsRead) GetAccessTime() time.Time {
-	return s.AccessTime
+// GetAction returns the value of Action.
+func (s *AccessAccessTokensList) GetAction() AccessAccessTokensListAction {
+	return s.Action
 }
 
-// GetApproved returns the value of Approved.
-func (s *AccessApprovalsRead) GetApproved() bool {
-	return s.Approved
+// GetToken returns the value of Token.
+func (s *AccessAccessTokensList) GetToken() string {
+	return s.Token
 }
 
-// GetRolledBack returns the value of RolledBack.
-func (s *AccessApprovalsRead) GetRolledBack() bool {
-	return s.RolledBack
+// GetAccessID returns the value of AccessID.
+func (s *AccessAccessTokensList) GetAccessID() uuid.UUID {
+	return s.AccessID
 }
 
-// GetRollbackTime returns the value of RollbackTime.
-func (s *AccessApprovalsRead) GetRollbackTime() OptDateTime {
-	return s.RollbackTime
-}
-
-// GetEndTime returns the value of EndTime.
-func (s *AccessApprovalsRead) GetEndTime() time.Time {
-	return s.EndTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *AccessApprovalsRead) GetRequestID() uuid.UUID {
-	return s.RequestID
+// GetExpiration returns the value of Expiration.
+func (s *AccessAccessTokensList) GetExpiration() time.Time {
+	return s.Expiration
 }
 
 // SetID sets the value of ID.
-func (s *AccessApprovalsRead) SetID(val uuid.UUID) {
+func (s *AccessAccessTokensList) SetID(val uuid.UUID) {
 	s.ID = val
 }
 
-// SetAccessTime sets the value of AccessTime.
-func (s *AccessApprovalsRead) SetAccessTime(val time.Time) {
-	s.AccessTime = val
+// SetAction sets the value of Action.
+func (s *AccessAccessTokensList) SetAction(val AccessAccessTokensListAction) {
+	s.Action = val
 }
 
-// SetApproved sets the value of Approved.
-func (s *AccessApprovalsRead) SetApproved(val bool) {
-	s.Approved = val
+// SetToken sets the value of Token.
+func (s *AccessAccessTokensList) SetToken(val string) {
+	s.Token = val
 }
 
-// SetRolledBack sets the value of RolledBack.
-func (s *AccessApprovalsRead) SetRolledBack(val bool) {
-	s.RolledBack = val
+// SetAccessID sets the value of AccessID.
+func (s *AccessAccessTokensList) SetAccessID(val uuid.UUID) {
+	s.AccessID = val
 }
 
-// SetRollbackTime sets the value of RollbackTime.
-func (s *AccessApprovalsRead) SetRollbackTime(val OptDateTime) {
-	s.RollbackTime = val
+// SetExpiration sets the value of Expiration.
+func (s *AccessAccessTokensList) SetExpiration(val time.Time) {
+	s.Expiration = val
 }
 
-// SetEndTime sets the value of EndTime.
-func (s *AccessApprovalsRead) SetEndTime(val time.Time) {
-	s.EndTime = val
+type AccessAccessTokensListAction string
+
+const (
+	AccessAccessTokensListActionCreate AccessAccessTokensListAction = "create"
+	AccessAccessTokensListActionRemove AccessAccessTokensListAction = "remove"
+)
+
+// AllValues returns all AccessAccessTokensListAction values.
+func (AccessAccessTokensListAction) AllValues() []AccessAccessTokensListAction {
+	return []AccessAccessTokensListAction{
+		AccessAccessTokensListActionCreate,
+		AccessAccessTokensListActionRemove,
+	}
 }
 
-// SetRequestID sets the value of RequestID.
-func (s *AccessApprovalsRead) SetRequestID(val uuid.UUID) {
-	s.RequestID = val
+// MarshalText implements encoding.TextMarshaler.
+func (s AccessAccessTokensListAction) MarshalText() ([]byte, error) {
+	switch s {
+	case AccessAccessTokensListActionCreate:
+		return []byte(s), nil
+	case AccessAccessTokensListActionRemove:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
 }
 
-func (*AccessApprovalsRead) readAccessApprovalsRes() {}
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AccessAccessTokensListAction) UnmarshalText(data []byte) error {
+	switch AccessAccessTokensListAction(data) {
+	case AccessAccessTokensListActionCreate:
+		*s = AccessAccessTokensListActionCreate
+		return nil
+	case AccessAccessTokensListActionRemove:
+		*s = AccessAccessTokensListActionRemove
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
-// Ref: #/components/schemas/AccessCreate
-type AccessCreate struct {
-	ID           uuid.UUID   `json:"id"`
-	AccessTime   time.Time   `json:"access_time"`
-	Approved     bool        `json:"approved"`
-	RolledBack   bool        `json:"rolled_back"`
-	RollbackTime OptDateTime `json:"rollback_time"`
-	EndTime      time.Time   `json:"end_time"`
-	RequestID    uuid.UUID   `json:"request_id"`
+type ApiKeyAuth struct {
+	APIKey string
+}
+
+// GetAPIKey returns the value of APIKey.
+func (s *ApiKeyAuth) GetAPIKey() string {
+	return s.APIKey
+}
+
+// SetAPIKey sets the value of APIKey.
+func (s *ApiKeyAuth) SetAPIKey(val string) {
+	s.APIKey = val
+}
+
+// Ref: #/components/schemas/ApiKeyCreate
+type ApiKeyCreate struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 // GetID returns the value of ID.
-func (s *AccessCreate) GetID() uuid.UUID {
+func (s *ApiKeyCreate) GetID() int {
 	return s.ID
 }
 
-// GetAccessTime returns the value of AccessTime.
-func (s *AccessCreate) GetAccessTime() time.Time {
-	return s.AccessTime
-}
-
-// GetApproved returns the value of Approved.
-func (s *AccessCreate) GetApproved() bool {
-	return s.Approved
-}
-
-// GetRolledBack returns the value of RolledBack.
-func (s *AccessCreate) GetRolledBack() bool {
-	return s.RolledBack
-}
-
-// GetRollbackTime returns the value of RollbackTime.
-func (s *AccessCreate) GetRollbackTime() OptDateTime {
-	return s.RollbackTime
-}
-
-// GetEndTime returns the value of EndTime.
-func (s *AccessCreate) GetEndTime() time.Time {
-	return s.EndTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *AccessCreate) GetRequestID() uuid.UUID {
-	return s.RequestID
+// GetName returns the value of Name.
+func (s *ApiKeyCreate) GetName() string {
+	return s.Name
 }
 
 // SetID sets the value of ID.
-func (s *AccessCreate) SetID(val uuid.UUID) {
+func (s *ApiKeyCreate) SetID(val int) {
 	s.ID = val
 }
 
-// SetAccessTime sets the value of AccessTime.
-func (s *AccessCreate) SetAccessTime(val time.Time) {
-	s.AccessTime = val
+// SetName sets the value of Name.
+func (s *ApiKeyCreate) SetName(val string) {
+	s.Name = val
 }
 
-// SetApproved sets the value of Approved.
-func (s *AccessCreate) SetApproved(val bool) {
-	s.Approved = val
-}
+func (*ApiKeyCreate) createApiKeyRes() {}
 
-// SetRolledBack sets the value of RolledBack.
-func (s *AccessCreate) SetRolledBack(val bool) {
-	s.RolledBack = val
-}
-
-// SetRollbackTime sets the value of RollbackTime.
-func (s *AccessCreate) SetRollbackTime(val OptDateTime) {
-	s.RollbackTime = val
-}
-
-// SetEndTime sets the value of EndTime.
-func (s *AccessCreate) SetEndTime(val time.Time) {
-	s.EndTime = val
-}
-
-// SetRequestID sets the value of RequestID.
-func (s *AccessCreate) SetRequestID(val uuid.UUID) {
-	s.RequestID = val
-}
-
-func (*AccessCreate) createAccessRes() {}
-
-// Ref: #/components/schemas/AccessList
-type AccessList struct {
-	ID           uuid.UUID   `json:"id"`
-	AccessTime   time.Time   `json:"access_time"`
-	Approved     bool        `json:"approved"`
-	RolledBack   bool        `json:"rolled_back"`
-	RollbackTime OptDateTime `json:"rollback_time"`
-	EndTime      time.Time   `json:"end_time"`
-	RequestID    uuid.UUID   `json:"request_id"`
+// Ref: #/components/schemas/ApiKeyList
+type ApiKeyList struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 // GetID returns the value of ID.
-func (s *AccessList) GetID() uuid.UUID {
+func (s *ApiKeyList) GetID() int {
 	return s.ID
 }
 
-// GetAccessTime returns the value of AccessTime.
-func (s *AccessList) GetAccessTime() time.Time {
-	return s.AccessTime
-}
-
-// GetApproved returns the value of Approved.
-func (s *AccessList) GetApproved() bool {
-	return s.Approved
-}
-
-// GetRolledBack returns the value of RolledBack.
-func (s *AccessList) GetRolledBack() bool {
-	return s.RolledBack
-}
-
-// GetRollbackTime returns the value of RollbackTime.
-func (s *AccessList) GetRollbackTime() OptDateTime {
-	return s.RollbackTime
-}
-
-// GetEndTime returns the value of EndTime.
-func (s *AccessList) GetEndTime() time.Time {
-	return s.EndTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *AccessList) GetRequestID() uuid.UUID {
-	return s.RequestID
+// GetName returns the value of Name.
+func (s *ApiKeyList) GetName() string {
+	return s.Name
 }
 
 // SetID sets the value of ID.
-func (s *AccessList) SetID(val uuid.UUID) {
+func (s *ApiKeyList) SetID(val int) {
 	s.ID = val
 }
 
-// SetAccessTime sets the value of AccessTime.
-func (s *AccessList) SetAccessTime(val time.Time) {
-	s.AccessTime = val
+// SetName sets the value of Name.
+func (s *ApiKeyList) SetName(val string) {
+	s.Name = val
 }
 
-// SetApproved sets the value of Approved.
-func (s *AccessList) SetApproved(val bool) {
-	s.Approved = val
-}
-
-// SetRolledBack sets the value of RolledBack.
-func (s *AccessList) SetRolledBack(val bool) {
-	s.RolledBack = val
-}
-
-// SetRollbackTime sets the value of RollbackTime.
-func (s *AccessList) SetRollbackTime(val OptDateTime) {
-	s.RollbackTime = val
-}
-
-// SetEndTime sets the value of EndTime.
-func (s *AccessList) SetEndTime(val time.Time) {
-	s.EndTime = val
-}
-
-// SetRequestID sets the value of RequestID.
-func (s *AccessList) SetRequestID(val uuid.UUID) {
-	s.RequestID = val
-}
-
-// Ref: #/components/schemas/AccessRead
-type AccessRead struct {
-	ID           uuid.UUID   `json:"id"`
-	AccessTime   time.Time   `json:"access_time"`
-	Approved     bool        `json:"approved"`
-	RolledBack   bool        `json:"rolled_back"`
-	RollbackTime OptDateTime `json:"rollback_time"`
-	EndTime      time.Time   `json:"end_time"`
-	RequestID    uuid.UUID   `json:"request_id"`
+// Ref: #/components/schemas/ApiKeyRead
+type ApiKeyRead struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 // GetID returns the value of ID.
-func (s *AccessRead) GetID() uuid.UUID {
+func (s *ApiKeyRead) GetID() int {
 	return s.ID
 }
 
-// GetAccessTime returns the value of AccessTime.
-func (s *AccessRead) GetAccessTime() time.Time {
-	return s.AccessTime
-}
-
-// GetApproved returns the value of Approved.
-func (s *AccessRead) GetApproved() bool {
-	return s.Approved
-}
-
-// GetRolledBack returns the value of RolledBack.
-func (s *AccessRead) GetRolledBack() bool {
-	return s.RolledBack
-}
-
-// GetRollbackTime returns the value of RollbackTime.
-func (s *AccessRead) GetRollbackTime() OptDateTime {
-	return s.RollbackTime
-}
-
-// GetEndTime returns the value of EndTime.
-func (s *AccessRead) GetEndTime() time.Time {
-	return s.EndTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *AccessRead) GetRequestID() uuid.UUID {
-	return s.RequestID
+// GetName returns the value of Name.
+func (s *ApiKeyRead) GetName() string {
+	return s.Name
 }
 
 // SetID sets the value of ID.
-func (s *AccessRead) SetID(val uuid.UUID) {
+func (s *ApiKeyRead) SetID(val int) {
 	s.ID = val
 }
 
-// SetAccessTime sets the value of AccessTime.
-func (s *AccessRead) SetAccessTime(val time.Time) {
-	s.AccessTime = val
+// SetName sets the value of Name.
+func (s *ApiKeyRead) SetName(val string) {
+	s.Name = val
 }
 
-// SetApproved sets the value of Approved.
-func (s *AccessRead) SetApproved(val bool) {
-	s.Approved = val
-}
-
-// SetRolledBack sets the value of RolledBack.
-func (s *AccessRead) SetRolledBack(val bool) {
-	s.RolledBack = val
-}
-
-// SetRollbackTime sets the value of RollbackTime.
-func (s *AccessRead) SetRollbackTime(val OptDateTime) {
-	s.RollbackTime = val
-}
-
-// SetEndTime sets the value of EndTime.
-func (s *AccessRead) SetEndTime(val time.Time) {
-	s.EndTime = val
-}
-
-// SetRequestID sets the value of RequestID.
-func (s *AccessRead) SetRequestID(val uuid.UUID) {
-	s.RequestID = val
-}
-
-func (*AccessRead) readAccessRes() {}
-
-// Ref: #/components/schemas/AccessUpdate
-type AccessUpdate struct {
-	ID           uuid.UUID   `json:"id"`
-	AccessTime   time.Time   `json:"access_time"`
-	Approved     bool        `json:"approved"`
-	RolledBack   bool        `json:"rolled_back"`
-	RollbackTime OptDateTime `json:"rollback_time"`
-	EndTime      time.Time   `json:"end_time"`
-	RequestID    uuid.UUID   `json:"request_id"`
-}
-
-// GetID returns the value of ID.
-func (s *AccessUpdate) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetAccessTime returns the value of AccessTime.
-func (s *AccessUpdate) GetAccessTime() time.Time {
-	return s.AccessTime
-}
-
-// GetApproved returns the value of Approved.
-func (s *AccessUpdate) GetApproved() bool {
-	return s.Approved
-}
-
-// GetRolledBack returns the value of RolledBack.
-func (s *AccessUpdate) GetRolledBack() bool {
-	return s.RolledBack
-}
-
-// GetRollbackTime returns the value of RollbackTime.
-func (s *AccessUpdate) GetRollbackTime() OptDateTime {
-	return s.RollbackTime
-}
-
-// GetEndTime returns the value of EndTime.
-func (s *AccessUpdate) GetEndTime() time.Time {
-	return s.EndTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *AccessUpdate) GetRequestID() uuid.UUID {
-	return s.RequestID
-}
-
-// SetID sets the value of ID.
-func (s *AccessUpdate) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetAccessTime sets the value of AccessTime.
-func (s *AccessUpdate) SetAccessTime(val time.Time) {
-	s.AccessTime = val
-}
-
-// SetApproved sets the value of Approved.
-func (s *AccessUpdate) SetApproved(val bool) {
-	s.Approved = val
-}
-
-// SetRolledBack sets the value of RolledBack.
-func (s *AccessUpdate) SetRolledBack(val bool) {
-	s.RolledBack = val
-}
-
-// SetRollbackTime sets the value of RollbackTime.
-func (s *AccessUpdate) SetRollbackTime(val OptDateTime) {
-	s.RollbackTime = val
-}
-
-// SetEndTime sets the value of EndTime.
-func (s *AccessUpdate) SetEndTime(val time.Time) {
-	s.EndTime = val
-}
-
-// SetRequestID sets the value of RequestID.
-func (s *AccessUpdate) SetRequestID(val uuid.UUID) {
-	s.RequestID = val
-}
-
-func (*AccessUpdate) updateAccessRes() {}
+func (*ApiKeyRead) readApiKeyRes() {}
 
 // Ref: #/components/schemas/ApprovalCreate
 type ApprovalCreate struct {
@@ -669,56 +453,6 @@ func (s *ApprovalRead) SetRequestID(val uuid.UUID) {
 
 func (*ApprovalRead) readApprovalRes() {}
 
-// Ref: #/components/schemas/Approval_RequestsRead
-type ApprovalRequestsRead struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
-	MissionID string    `json:"mission_id"`
-}
-
-// GetID returns the value of ID.
-func (s *ApprovalRequestsRead) GetID() uuid.UUID {
-	return s.ID
-}
-
-// GetReason returns the value of Reason.
-func (s *ApprovalRequestsRead) GetReason() string {
-	return s.Reason
-}
-
-// GetRequester returns the value of Requester.
-func (s *ApprovalRequestsRead) GetRequester() string {
-	return s.Requester
-}
-
-// GetMissionID returns the value of MissionID.
-func (s *ApprovalRequestsRead) GetMissionID() string {
-	return s.MissionID
-}
-
-// SetID sets the value of ID.
-func (s *ApprovalRequestsRead) SetID(val uuid.UUID) {
-	s.ID = val
-}
-
-// SetReason sets the value of Reason.
-func (s *ApprovalRequestsRead) SetReason(val string) {
-	s.Reason = val
-}
-
-// SetRequester sets the value of Requester.
-func (s *ApprovalRequestsRead) SetRequester(val string) {
-	s.Requester = val
-}
-
-// SetMissionID sets the value of MissionID.
-func (s *ApprovalRequestsRead) SetMissionID(val string) {
-	s.MissionID = val
-}
-
-func (*ApprovalRequestsRead) readApprovalRequestsRes() {}
-
 // Ref: #/components/schemas/ApprovalUpdate
 type ApprovalUpdate struct {
 	ID           uuid.UUID   `json:"id"`
@@ -802,62 +536,12 @@ func (s *ApprovalUpdate) SetRequestID(val uuid.UUID) {
 
 func (*ApprovalUpdate) updateApprovalRes() {}
 
-// Ref: #/components/schemas/AuditCreate
-type AuditCreate struct {
-	ID        string    `json:"id"`
-	Action    string    `json:"action"`
-	Author    string    `json:"author"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
-// GetID returns the value of ID.
-func (s *AuditCreate) GetID() string {
-	return s.ID
-}
-
-// GetAction returns the value of Action.
-func (s *AuditCreate) GetAction() string {
-	return s.Action
-}
-
-// GetAuthor returns the value of Author.
-func (s *AuditCreate) GetAuthor() string {
-	return s.Author
-}
-
-// GetTimestamp returns the value of Timestamp.
-func (s *AuditCreate) GetTimestamp() time.Time {
-	return s.Timestamp
-}
-
-// SetID sets the value of ID.
-func (s *AuditCreate) SetID(val string) {
-	s.ID = val
-}
-
-// SetAction sets the value of Action.
-func (s *AuditCreate) SetAction(val string) {
-	s.Action = val
-}
-
-// SetAuthor sets the value of Author.
-func (s *AuditCreate) SetAuthor(val string) {
-	s.Author = val
-}
-
-// SetTimestamp sets the value of Timestamp.
-func (s *AuditCreate) SetTimestamp(val time.Time) {
-	s.Timestamp = val
-}
-
-func (*AuditCreate) createAuditRes() {}
-
 // Ref: #/components/schemas/AuditList
 type AuditList struct {
-	ID        string    `json:"id"`
-	Action    string    `json:"action"`
-	Author    string    `json:"author"`
-	Timestamp time.Time `json:"timestamp"`
+	ID        string          `json:"id"`
+	Action    AuditListAction `json:"action"`
+	Author    string          `json:"author"`
+	Timestamp time.Time       `json:"timestamp"`
 }
 
 // GetID returns the value of ID.
@@ -866,7 +550,7 @@ func (s *AuditList) GetID() string {
 }
 
 // GetAction returns the value of Action.
-func (s *AuditList) GetAction() string {
+func (s *AuditList) GetAction() AuditListAction {
 	return s.Action
 }
 
@@ -886,7 +570,7 @@ func (s *AuditList) SetID(val string) {
 }
 
 // SetAction sets the value of Action.
-func (s *AuditList) SetAction(val string) {
+func (s *AuditList) SetAction(val AuditListAction) {
 	s.Action = val
 }
 
@@ -900,12 +584,74 @@ func (s *AuditList) SetTimestamp(val time.Time) {
 	s.Timestamp = val
 }
 
+type AuditListAction string
+
+const (
+	AuditListActionApproveRequest        AuditListAction = "ApproveRequest"
+	AuditListActionRevokeApprovalRequest AuditListAction = "RevokeApprovalRequest"
+	AuditListActionRejectRequest         AuditListAction = "RejectRequest"
+	AuditListActionCreateAccess          AuditListAction = "CreateAccess"
+	AuditListActionRemoveAccess          AuditListAction = "RemoveAccess"
+)
+
+// AllValues returns all AuditListAction values.
+func (AuditListAction) AllValues() []AuditListAction {
+	return []AuditListAction{
+		AuditListActionApproveRequest,
+		AuditListActionRevokeApprovalRequest,
+		AuditListActionRejectRequest,
+		AuditListActionCreateAccess,
+		AuditListActionRemoveAccess,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AuditListAction) MarshalText() ([]byte, error) {
+	switch s {
+	case AuditListActionApproveRequest:
+		return []byte(s), nil
+	case AuditListActionRevokeApprovalRequest:
+		return []byte(s), nil
+	case AuditListActionRejectRequest:
+		return []byte(s), nil
+	case AuditListActionCreateAccess:
+		return []byte(s), nil
+	case AuditListActionRemoveAccess:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AuditListAction) UnmarshalText(data []byte) error {
+	switch AuditListAction(data) {
+	case AuditListActionApproveRequest:
+		*s = AuditListActionApproveRequest
+		return nil
+	case AuditListActionRevokeApprovalRequest:
+		*s = AuditListActionRevokeApprovalRequest
+		return nil
+	case AuditListActionRejectRequest:
+		*s = AuditListActionRejectRequest
+		return nil
+	case AuditListActionCreateAccess:
+		*s = AuditListActionCreateAccess
+		return nil
+	case AuditListActionRemoveAccess:
+		*s = AuditListActionRemoveAccess
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/AuditRead
 type AuditRead struct {
-	ID        string    `json:"id"`
-	Action    string    `json:"action"`
-	Author    string    `json:"author"`
-	Timestamp time.Time `json:"timestamp"`
+	ID        string          `json:"id"`
+	Action    AuditReadAction `json:"action"`
+	Author    string          `json:"author"`
+	Timestamp time.Time       `json:"timestamp"`
 }
 
 // GetID returns the value of ID.
@@ -914,7 +660,7 @@ func (s *AuditRead) GetID() string {
 }
 
 // GetAction returns the value of Action.
-func (s *AuditRead) GetAction() string {
+func (s *AuditRead) GetAction() AuditReadAction {
 	return s.Action
 }
 
@@ -934,7 +680,7 @@ func (s *AuditRead) SetID(val string) {
 }
 
 // SetAction sets the value of Action.
-func (s *AuditRead) SetAction(val string) {
+func (s *AuditRead) SetAction(val AuditReadAction) {
 	s.Action = val
 }
 
@@ -950,134 +696,105 @@ func (s *AuditRead) SetTimestamp(val time.Time) {
 
 func (*AuditRead) readAuditRes() {}
 
-// Ref: #/components/schemas/AuditUpdate
-type AuditUpdate struct {
-	ID        string    `json:"id"`
-	Action    string    `json:"action"`
-	Author    string    `json:"author"`
-	Timestamp time.Time `json:"timestamp"`
+type AuditReadAction string
+
+const (
+	AuditReadActionApproveRequest        AuditReadAction = "ApproveRequest"
+	AuditReadActionRevokeApprovalRequest AuditReadAction = "RevokeApprovalRequest"
+	AuditReadActionRejectRequest         AuditReadAction = "RejectRequest"
+	AuditReadActionCreateAccess          AuditReadAction = "CreateAccess"
+	AuditReadActionRemoveAccess          AuditReadAction = "RemoveAccess"
+)
+
+// AllValues returns all AuditReadAction values.
+func (AuditReadAction) AllValues() []AuditReadAction {
+	return []AuditReadAction{
+		AuditReadActionApproveRequest,
+		AuditReadActionRevokeApprovalRequest,
+		AuditReadActionRejectRequest,
+		AuditReadActionCreateAccess,
+		AuditReadActionRemoveAccess,
+	}
 }
 
-// GetID returns the value of ID.
-func (s *AuditUpdate) GetID() string {
-	return s.ID
+// MarshalText implements encoding.TextMarshaler.
+func (s AuditReadAction) MarshalText() ([]byte, error) {
+	switch s {
+	case AuditReadActionApproveRequest:
+		return []byte(s), nil
+	case AuditReadActionRevokeApprovalRequest:
+		return []byte(s), nil
+	case AuditReadActionRejectRequest:
+		return []byte(s), nil
+	case AuditReadActionCreateAccess:
+		return []byte(s), nil
+	case AuditReadActionRemoveAccess:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
 }
 
-// GetAction returns the value of Action.
-func (s *AuditUpdate) GetAction() string {
-	return s.Action
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AuditReadAction) UnmarshalText(data []byte) error {
+	switch AuditReadAction(data) {
+	case AuditReadActionApproveRequest:
+		*s = AuditReadActionApproveRequest
+		return nil
+	case AuditReadActionRevokeApprovalRequest:
+		*s = AuditReadActionRevokeApprovalRequest
+		return nil
+	case AuditReadActionRejectRequest:
+		*s = AuditReadActionRejectRequest
+		return nil
+	case AuditReadActionCreateAccess:
+		*s = AuditReadActionCreateAccess
+		return nil
+	case AuditReadActionRemoveAccess:
+		*s = AuditReadActionRemoveAccess
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
-// GetAuthor returns the value of Author.
-func (s *AuditUpdate) GetAuthor() string {
-	return s.Author
+type CookieAuth struct {
+	APIKey string
 }
 
-// GetTimestamp returns the value of Timestamp.
-func (s *AuditUpdate) GetTimestamp() time.Time {
-	return s.Timestamp
+// GetAPIKey returns the value of APIKey.
+func (s *CookieAuth) GetAPIKey() string {
+	return s.APIKey
 }
 
-// SetID sets the value of ID.
-func (s *AuditUpdate) SetID(val string) {
-	s.ID = val
+// SetAPIKey sets the value of APIKey.
+func (s *CookieAuth) SetAPIKey(val string) {
+	s.APIKey = val
 }
 
-// SetAction sets the value of Action.
-func (s *AuditUpdate) SetAction(val string) {
-	s.Action = val
+type CreateApiKeyReq struct {
+	Name string `json:"name"`
+	Key  string `json:"key"`
 }
 
-// SetAuthor sets the value of Author.
-func (s *AuditUpdate) SetAuthor(val string) {
-	s.Author = val
+// GetName returns the value of Name.
+func (s *CreateApiKeyReq) GetName() string {
+	return s.Name
 }
 
-// SetTimestamp sets the value of Timestamp.
-func (s *AuditUpdate) SetTimestamp(val time.Time) {
-	s.Timestamp = val
+// GetKey returns the value of Key.
+func (s *CreateApiKeyReq) GetKey() string {
+	return s.Key
 }
 
-func (*AuditUpdate) updateAuditRes() {}
-
-type CreateAccessReq struct {
-	AccessTime   time.Time   `json:"access_time"`
-	Approved     bool        `json:"approved"`
-	RolledBack   bool        `json:"rolled_back"`
-	RollbackTime OptDateTime `json:"rollback_time"`
-	EndTime      time.Time   `json:"end_time"`
-	RequestID    uuid.UUID   `json:"request_id"`
-	Approvals    OptUUID     `json:"approvals"`
+// SetName sets the value of Name.
+func (s *CreateApiKeyReq) SetName(val string) {
+	s.Name = val
 }
 
-// GetAccessTime returns the value of AccessTime.
-func (s *CreateAccessReq) GetAccessTime() time.Time {
-	return s.AccessTime
-}
-
-// GetApproved returns the value of Approved.
-func (s *CreateAccessReq) GetApproved() bool {
-	return s.Approved
-}
-
-// GetRolledBack returns the value of RolledBack.
-func (s *CreateAccessReq) GetRolledBack() bool {
-	return s.RolledBack
-}
-
-// GetRollbackTime returns the value of RollbackTime.
-func (s *CreateAccessReq) GetRollbackTime() OptDateTime {
-	return s.RollbackTime
-}
-
-// GetEndTime returns the value of EndTime.
-func (s *CreateAccessReq) GetEndTime() time.Time {
-	return s.EndTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *CreateAccessReq) GetRequestID() uuid.UUID {
-	return s.RequestID
-}
-
-// GetApprovals returns the value of Approvals.
-func (s *CreateAccessReq) GetApprovals() OptUUID {
-	return s.Approvals
-}
-
-// SetAccessTime sets the value of AccessTime.
-func (s *CreateAccessReq) SetAccessTime(val time.Time) {
-	s.AccessTime = val
-}
-
-// SetApproved sets the value of Approved.
-func (s *CreateAccessReq) SetApproved(val bool) {
-	s.Approved = val
-}
-
-// SetRolledBack sets the value of RolledBack.
-func (s *CreateAccessReq) SetRolledBack(val bool) {
-	s.RolledBack = val
-}
-
-// SetRollbackTime sets the value of RollbackTime.
-func (s *CreateAccessReq) SetRollbackTime(val OptDateTime) {
-	s.RollbackTime = val
-}
-
-// SetEndTime sets the value of EndTime.
-func (s *CreateAccessReq) SetEndTime(val time.Time) {
-	s.EndTime = val
-}
-
-// SetRequestID sets the value of RequestID.
-func (s *CreateAccessReq) SetRequestID(val uuid.UUID) {
-	s.RequestID = val
-}
-
-// SetApprovals sets the value of Approvals.
-func (s *CreateAccessReq) SetApprovals(val OptUUID) {
-	s.Approvals = val
+// SetKey sets the value of Key.
+func (s *CreateApiKeyReq) SetKey(val string) {
+	s.Key = val
 }
 
 type CreateApprovalReq struct {
@@ -1160,49 +877,12 @@ func (s *CreateApprovalReq) SetRequests(val uuid.UUID) {
 	s.Requests = val
 }
 
-type CreateAuditReq struct {
-	Action    string    `json:"action"`
-	Author    string    `json:"author"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
-// GetAction returns the value of Action.
-func (s *CreateAuditReq) GetAction() string {
-	return s.Action
-}
-
-// GetAuthor returns the value of Author.
-func (s *CreateAuditReq) GetAuthor() string {
-	return s.Author
-}
-
-// GetTimestamp returns the value of Timestamp.
-func (s *CreateAuditReq) GetTimestamp() time.Time {
-	return s.Timestamp
-}
-
-// SetAction sets the value of Action.
-func (s *CreateAuditReq) SetAction(val string) {
-	s.Action = val
-}
-
-// SetAuthor sets the value of Author.
-func (s *CreateAuditReq) SetAuthor(val string) {
-	s.Author = val
-}
-
-// SetTimestamp sets the value of Timestamp.
-func (s *CreateAuditReq) SetTimestamp(val time.Time) {
-	s.Timestamp = val
-}
-
 type CreateMissionReq struct {
-	Description  OptString   `json:"description"`
-	Image        string      `json:"image"`
-	MinApprovers int         `json:"min_approvers"`
-	RocketID     string      `json:"rocket_id"`
-	Rocket       string      `json:"rocket"`
-	Requests     []uuid.UUID `json:"requests"`
+	Description       OptString   `json:"description"`
+	MinApprovers      int         `json:"min_approvers"`
+	PossibleApprovers []string    `json:"possible_approvers"`
+	Rockets           []string    `json:"rockets"`
+	Requests          []uuid.UUID `json:"requests"`
 }
 
 // GetDescription returns the value of Description.
@@ -1210,24 +890,19 @@ func (s *CreateMissionReq) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *CreateMissionReq) GetImage() string {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *CreateMissionReq) GetMinApprovers() int {
 	return s.MinApprovers
 }
 
-// GetRocketID returns the value of RocketID.
-func (s *CreateMissionReq) GetRocketID() string {
-	return s.RocketID
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *CreateMissionReq) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
 }
 
-// GetRocket returns the value of Rocket.
-func (s *CreateMissionReq) GetRocket() string {
-	return s.Rocket
+// GetRockets returns the value of Rockets.
+func (s *CreateMissionReq) GetRockets() []string {
+	return s.Rockets
 }
 
 // GetRequests returns the value of Requests.
@@ -1240,24 +915,19 @@ func (s *CreateMissionReq) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *CreateMissionReq) SetImage(val string) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *CreateMissionReq) SetMinApprovers(val int) {
 	s.MinApprovers = val
 }
 
-// SetRocketID sets the value of RocketID.
-func (s *CreateMissionReq) SetRocketID(val string) {
-	s.RocketID = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *CreateMissionReq) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
 }
 
-// SetRocket sets the value of Rocket.
-func (s *CreateMissionReq) SetRocket(val string) {
-	s.Rocket = val
+// SetRockets sets the value of Rockets.
+func (s *CreateMissionReq) SetRockets(val []string) {
+	s.Rockets = val
 }
 
 // SetRequests sets the value of Requests.
@@ -1266,10 +936,10 @@ func (s *CreateMissionReq) SetRequests(val []uuid.UUID) {
 }
 
 type CreateRequestReq struct {
-	Reason    string `json:"reason"`
-	Requester string `json:"requester"`
-	MissionID string `json:"mission_id"`
-	Mission   string `json:"mission"`
+	Reason       string                       `json:"reason"`
+	Requester    string                       `json:"requester"`
+	RocketConfig CreateRequestReqRocketConfig `json:"rocket_config"`
+	Mission      string                       `json:"mission"`
 }
 
 // GetReason returns the value of Reason.
@@ -1282,9 +952,9 @@ func (s *CreateRequestReq) GetRequester() string {
 	return s.Requester
 }
 
-// GetMissionID returns the value of MissionID.
-func (s *CreateRequestReq) GetMissionID() string {
-	return s.MissionID
+// GetRocketConfig returns the value of RocketConfig.
+func (s *CreateRequestReq) GetRocketConfig() CreateRequestReqRocketConfig {
+	return s.RocketConfig
 }
 
 // GetMission returns the value of Mission.
@@ -1302,9 +972,9 @@ func (s *CreateRequestReq) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetMissionID sets the value of MissionID.
-func (s *CreateRequestReq) SetMissionID(val string) {
-	s.MissionID = val
+// SetRocketConfig sets the value of RocketConfig.
+func (s *CreateRequestReq) SetRocketConfig(val CreateRequestReqRocketConfig) {
+	s.RocketConfig = val
 }
 
 // SetMission sets the value of Mission.
@@ -1312,9 +982,21 @@ func (s *CreateRequestReq) SetMission(val string) {
 	s.Mission = val
 }
 
+type CreateRequestReqRocketConfig map[string]string
+
+func (s *CreateRequestReqRocketConfig) init() CreateRequestReqRocketConfig {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
 type CreateRocketReq struct {
 	Description OptString             `json:"description"`
-	Image       string                `json:"image"`
+	Image       OptString             `json:"image"`
+	Zip         OptString             `json:"zip"`
 	Config      CreateRocketReqConfig `json:"config"`
 	Missions    []string              `json:"missions"`
 }
@@ -1325,8 +1007,13 @@ func (s *CreateRocketReq) GetDescription() OptString {
 }
 
 // GetImage returns the value of Image.
-func (s *CreateRocketReq) GetImage() string {
+func (s *CreateRocketReq) GetImage() OptString {
 	return s.Image
+}
+
+// GetZip returns the value of Zip.
+func (s *CreateRocketReq) GetZip() OptString {
+	return s.Zip
 }
 
 // GetConfig returns the value of Config.
@@ -1345,8 +1032,13 @@ func (s *CreateRocketReq) SetDescription(val OptString) {
 }
 
 // SetImage sets the value of Image.
-func (s *CreateRocketReq) SetImage(val string) {
+func (s *CreateRocketReq) SetImage(val OptString) {
 	s.Image = val
+}
+
+// SetZip sets the value of Zip.
+func (s *CreateRocketReq) SetZip(val OptString) {
+	s.Zip = val
 }
 
 // SetConfig sets the value of Config.
@@ -1370,20 +1062,15 @@ func (s *CreateRocketReqConfig) init() CreateRocketReqConfig {
 	return m
 }
 
-// DeleteAccessNoContent is response for DeleteAccess operation.
-type DeleteAccessNoContent struct{}
+// DeleteApiKeyNoContent is response for DeleteApiKey operation.
+type DeleteApiKeyNoContent struct{}
 
-func (*DeleteAccessNoContent) deleteAccessRes() {}
+func (*DeleteApiKeyNoContent) deleteApiKeyRes() {}
 
 // DeleteApprovalNoContent is response for DeleteApproval operation.
 type DeleteApprovalNoContent struct{}
 
 func (*DeleteApprovalNoContent) deleteApprovalRes() {}
-
-// DeleteAuditNoContent is response for DeleteAudit operation.
-type DeleteAuditNoContent struct{}
-
-func (*DeleteAuditNoContent) deleteAuditRes() {}
 
 // DeleteMissionNoContent is response for DeleteMission operation.
 type DeleteMissionNoContent struct{}
@@ -1400,9 +1087,13 @@ type DeleteRocketNoContent struct{}
 
 func (*DeleteRocketNoContent) deleteRocketRes() {}
 
-type ListAccessOKApplicationJSON []AccessList
+type ListAccessAccessTokensOKApplicationJSON []AccessAccessTokensList
 
-func (*ListAccessOKApplicationJSON) listAccessRes() {}
+func (*ListAccessAccessTokensOKApplicationJSON) listAccessAccessTokensRes() {}
+
+type ListApiKeyOKApplicationJSON []ApiKeyList
+
+func (*ListApiKeyOKApplicationJSON) listApiKeyRes() {}
 
 type ListApprovalOKApplicationJSON []ApprovalList
 
@@ -1420,6 +1111,10 @@ type ListMissionRequestsOKApplicationJSON []MissionRequestsList
 
 func (*ListMissionRequestsOKApplicationJSON) listMissionRequestsRes() {}
 
+type ListMissionRocketsOKApplicationJSON []MissionRocketsList
+
+func (*ListMissionRocketsOKApplicationJSON) listMissionRocketsRes() {}
+
 type ListRequestOKApplicationJSON []RequestList
 
 func (*ListRequestOKApplicationJSON) listRequestRes() {}
@@ -1434,11 +1129,10 @@ func (*ListRocketOKApplicationJSON) listRocketRes() {}
 
 // Ref: #/components/schemas/MissionCreate
 type MissionCreate struct {
-	ID           string    `json:"id"`
-	Description  OptString `json:"description"`
-	Image        string    `json:"image"`
-	MinApprovers int       `json:"min_approvers"`
-	RocketID     string    `json:"rocket_id"`
+	ID                string    `json:"id"`
+	Description       OptString `json:"description"`
+	MinApprovers      int       `json:"min_approvers"`
+	PossibleApprovers []string  `json:"possible_approvers"`
 }
 
 // GetID returns the value of ID.
@@ -1451,19 +1145,14 @@ func (s *MissionCreate) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *MissionCreate) GetImage() string {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *MissionCreate) GetMinApprovers() int {
 	return s.MinApprovers
 }
 
-// GetRocketID returns the value of RocketID.
-func (s *MissionCreate) GetRocketID() string {
-	return s.RocketID
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *MissionCreate) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
 }
 
 // SetID sets the value of ID.
@@ -1476,30 +1165,24 @@ func (s *MissionCreate) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *MissionCreate) SetImage(val string) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *MissionCreate) SetMinApprovers(val int) {
 	s.MinApprovers = val
 }
 
-// SetRocketID sets the value of RocketID.
-func (s *MissionCreate) SetRocketID(val string) {
-	s.RocketID = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *MissionCreate) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
 }
 
 func (*MissionCreate) createMissionRes() {}
 
 // Ref: #/components/schemas/MissionList
 type MissionList struct {
-	ID           string    `json:"id"`
-	Description  OptString `json:"description"`
-	Image        string    `json:"image"`
-	MinApprovers int       `json:"min_approvers"`
-	RocketID     string    `json:"rocket_id"`
+	ID                string    `json:"id"`
+	Description       OptString `json:"description"`
+	MinApprovers      int       `json:"min_approvers"`
+	PossibleApprovers []string  `json:"possible_approvers"`
 }
 
 // GetID returns the value of ID.
@@ -1512,19 +1195,14 @@ func (s *MissionList) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *MissionList) GetImage() string {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *MissionList) GetMinApprovers() int {
 	return s.MinApprovers
 }
 
-// GetRocketID returns the value of RocketID.
-func (s *MissionList) GetRocketID() string {
-	return s.RocketID
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *MissionList) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
 }
 
 // SetID sets the value of ID.
@@ -1537,28 +1215,22 @@ func (s *MissionList) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *MissionList) SetImage(val string) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *MissionList) SetMinApprovers(val int) {
 	s.MinApprovers = val
 }
 
-// SetRocketID sets the value of RocketID.
-func (s *MissionList) SetRocketID(val string) {
-	s.RocketID = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *MissionList) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
 }
 
 // Ref: #/components/schemas/MissionRead
 type MissionRead struct {
-	ID           string    `json:"id"`
-	Description  OptString `json:"description"`
-	Image        string    `json:"image"`
-	MinApprovers int       `json:"min_approvers"`
-	RocketID     string    `json:"rocket_id"`
+	ID                string    `json:"id"`
+	Description       OptString `json:"description"`
+	MinApprovers      int       `json:"min_approvers"`
+	PossibleApprovers []string  `json:"possible_approvers"`
 }
 
 // GetID returns the value of ID.
@@ -1571,19 +1243,14 @@ func (s *MissionRead) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *MissionRead) GetImage() string {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *MissionRead) GetMinApprovers() int {
 	return s.MinApprovers
 }
 
-// GetRocketID returns the value of RocketID.
-func (s *MissionRead) GetRocketID() string {
-	return s.RocketID
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *MissionRead) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
 }
 
 // SetID sets the value of ID.
@@ -1596,29 +1263,24 @@ func (s *MissionRead) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *MissionRead) SetImage(val string) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *MissionRead) SetMinApprovers(val int) {
 	s.MinApprovers = val
 }
 
-// SetRocketID sets the value of RocketID.
-func (s *MissionRead) SetRocketID(val string) {
-	s.RocketID = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *MissionRead) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
 }
 
 func (*MissionRead) readMissionRes() {}
 
 // Ref: #/components/schemas/Mission_RequestsList
 type MissionRequestsList struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
-	MissionID string    `json:"mission_id"`
+	ID           uuid.UUID                       `json:"id"`
+	Reason       string                          `json:"reason"`
+	Requester    string                          `json:"requester"`
+	RocketConfig MissionRequestsListRocketConfig `json:"rocket_config"`
 }
 
 // GetID returns the value of ID.
@@ -1636,9 +1298,9 @@ func (s *MissionRequestsList) GetRequester() string {
 	return s.Requester
 }
 
-// GetMissionID returns the value of MissionID.
-func (s *MissionRequestsList) GetMissionID() string {
-	return s.MissionID
+// GetRocketConfig returns the value of RocketConfig.
+func (s *MissionRequestsList) GetRocketConfig() MissionRequestsListRocketConfig {
+	return s.RocketConfig
 }
 
 // SetID sets the value of ID.
@@ -1656,64 +1318,84 @@ func (s *MissionRequestsList) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetMissionID sets the value of MissionID.
-func (s *MissionRequestsList) SetMissionID(val string) {
-	s.MissionID = val
+// SetRocketConfig sets the value of RocketConfig.
+func (s *MissionRequestsList) SetRocketConfig(val MissionRequestsListRocketConfig) {
+	s.RocketConfig = val
 }
 
-// Ref: #/components/schemas/Mission_RocketRead
-type MissionRocketRead struct {
-	ID          string                  `json:"id"`
-	Description OptString               `json:"description"`
-	Image       string                  `json:"image"`
-	Config      MissionRocketReadConfig `json:"config"`
+type MissionRequestsListRocketConfig map[string]string
+
+func (s *MissionRequestsListRocketConfig) init() MissionRequestsListRocketConfig {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
+// Ref: #/components/schemas/Mission_RocketsList
+type MissionRocketsList struct {
+	ID          string                   `json:"id"`
+	Description OptString                `json:"description"`
+	Image       OptString                `json:"image"`
+	Zip         OptString                `json:"zip"`
+	Config      MissionRocketsListConfig `json:"config"`
 }
 
 // GetID returns the value of ID.
-func (s *MissionRocketRead) GetID() string {
+func (s *MissionRocketsList) GetID() string {
 	return s.ID
 }
 
 // GetDescription returns the value of Description.
-func (s *MissionRocketRead) GetDescription() OptString {
+func (s *MissionRocketsList) GetDescription() OptString {
 	return s.Description
 }
 
 // GetImage returns the value of Image.
-func (s *MissionRocketRead) GetImage() string {
+func (s *MissionRocketsList) GetImage() OptString {
 	return s.Image
 }
 
+// GetZip returns the value of Zip.
+func (s *MissionRocketsList) GetZip() OptString {
+	return s.Zip
+}
+
 // GetConfig returns the value of Config.
-func (s *MissionRocketRead) GetConfig() MissionRocketReadConfig {
+func (s *MissionRocketsList) GetConfig() MissionRocketsListConfig {
 	return s.Config
 }
 
 // SetID sets the value of ID.
-func (s *MissionRocketRead) SetID(val string) {
+func (s *MissionRocketsList) SetID(val string) {
 	s.ID = val
 }
 
 // SetDescription sets the value of Description.
-func (s *MissionRocketRead) SetDescription(val OptString) {
+func (s *MissionRocketsList) SetDescription(val OptString) {
 	s.Description = val
 }
 
 // SetImage sets the value of Image.
-func (s *MissionRocketRead) SetImage(val string) {
+func (s *MissionRocketsList) SetImage(val OptString) {
 	s.Image = val
 }
 
+// SetZip sets the value of Zip.
+func (s *MissionRocketsList) SetZip(val OptString) {
+	s.Zip = val
+}
+
 // SetConfig sets the value of Config.
-func (s *MissionRocketRead) SetConfig(val MissionRocketReadConfig) {
+func (s *MissionRocketsList) SetConfig(val MissionRocketsListConfig) {
 	s.Config = val
 }
 
-func (*MissionRocketRead) readMissionRocketRes() {}
+type MissionRocketsListConfig map[string]string
 
-type MissionRocketReadConfig map[string]string
-
-func (s *MissionRocketReadConfig) init() MissionRocketReadConfig {
+func (s *MissionRocketsListConfig) init() MissionRocketsListConfig {
 	m := *s
 	if m == nil {
 		m = map[string]string{}
@@ -1724,11 +1406,10 @@ func (s *MissionRocketReadConfig) init() MissionRocketReadConfig {
 
 // Ref: #/components/schemas/MissionUpdate
 type MissionUpdate struct {
-	ID           string    `json:"id"`
-	Description  OptString `json:"description"`
-	Image        string    `json:"image"`
-	MinApprovers int       `json:"min_approvers"`
-	RocketID     string    `json:"rocket_id"`
+	ID                string    `json:"id"`
+	Description       OptString `json:"description"`
+	MinApprovers      int       `json:"min_approvers"`
+	PossibleApprovers []string  `json:"possible_approvers"`
 }
 
 // GetID returns the value of ID.
@@ -1741,19 +1422,14 @@ func (s *MissionUpdate) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *MissionUpdate) GetImage() string {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *MissionUpdate) GetMinApprovers() int {
 	return s.MinApprovers
 }
 
-// GetRocketID returns the value of RocketID.
-func (s *MissionUpdate) GetRocketID() string {
-	return s.RocketID
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *MissionUpdate) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
 }
 
 // SetID sets the value of ID.
@@ -1766,19 +1442,14 @@ func (s *MissionUpdate) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *MissionUpdate) SetImage(val string) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *MissionUpdate) SetMinApprovers(val int) {
 	s.MinApprovers = val
 }
 
-// SetRocketID sets the value of RocketID.
-func (s *MissionUpdate) SetRocketID(val string) {
-	s.RocketID = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *MissionUpdate) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
 }
 
 func (*MissionUpdate) updateMissionRes() {}
@@ -2013,6 +1684,52 @@ func (o OptUUID) Or(d uuid.UUID) uuid.UUID {
 	return d
 }
 
+// NewOptUpdateRequestReqRocketConfig returns new OptUpdateRequestReqRocketConfig with value set to v.
+func NewOptUpdateRequestReqRocketConfig(v UpdateRequestReqRocketConfig) OptUpdateRequestReqRocketConfig {
+	return OptUpdateRequestReqRocketConfig{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptUpdateRequestReqRocketConfig is optional UpdateRequestReqRocketConfig.
+type OptUpdateRequestReqRocketConfig struct {
+	Value UpdateRequestReqRocketConfig
+	Set   bool
+}
+
+// IsSet returns true if OptUpdateRequestReqRocketConfig was set.
+func (o OptUpdateRequestReqRocketConfig) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptUpdateRequestReqRocketConfig) Reset() {
+	var v UpdateRequestReqRocketConfig
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptUpdateRequestReqRocketConfig) SetTo(v UpdateRequestReqRocketConfig) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptUpdateRequestReqRocketConfig) Get() (v UpdateRequestReqRocketConfig, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptUpdateRequestReqRocketConfig) Or(d UpdateRequestReqRocketConfig) UpdateRequestReqRocketConfig {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptUpdateRocketReqConfig returns new OptUpdateRocketReqConfig with value set to v.
 func NewOptUpdateRocketReqConfig(v UpdateRocketReqConfig) OptUpdateRocketReqConfig {
 	return OptUpdateRocketReqConfig{
@@ -2095,42 +1812,37 @@ func (s *R400) SetErrors(val jx.Raw) {
 	s.Errors = val
 }
 
-func (*R400) createAccessRes()         {}
-func (*R400) createApprovalRes()       {}
-func (*R400) createAuditRes()          {}
-func (*R400) createMissionRes()        {}
-func (*R400) createRequestRes()        {}
-func (*R400) createRocketRes()         {}
-func (*R400) deleteAccessRes()         {}
-func (*R400) deleteApprovalRes()       {}
-func (*R400) deleteAuditRes()          {}
-func (*R400) deleteMissionRes()        {}
-func (*R400) deleteRequestRes()        {}
-func (*R400) deleteRocketRes()         {}
-func (*R400) listAccessRes()           {}
-func (*R400) listApprovalRes()         {}
-func (*R400) listAuditRes()            {}
-func (*R400) listMissionRequestsRes()  {}
-func (*R400) listMissionRes()          {}
-func (*R400) listRequestRes()          {}
-func (*R400) listRocketMissionsRes()   {}
-func (*R400) listRocketRes()           {}
-func (*R400) readAccessApprovalsRes()  {}
-func (*R400) readAccessRes()           {}
-func (*R400) readApprovalRequestsRes() {}
-func (*R400) readApprovalRes()         {}
-func (*R400) readAuditRes()            {}
-func (*R400) readMissionRes()          {}
-func (*R400) readMissionRocketRes()    {}
-func (*R400) readRequestMissionRes()   {}
-func (*R400) readRequestRes()          {}
-func (*R400) readRocketRes()           {}
-func (*R400) updateAccessRes()         {}
-func (*R400) updateApprovalRes()       {}
-func (*R400) updateAuditRes()          {}
-func (*R400) updateMissionRes()        {}
-func (*R400) updateRequestRes()        {}
-func (*R400) updateRocketRes()         {}
+func (*R400) createApiKeyRes()           {}
+func (*R400) createApprovalRes()         {}
+func (*R400) createMissionRes()          {}
+func (*R400) createRequestRes()          {}
+func (*R400) createRocketRes()           {}
+func (*R400) deleteApiKeyRes()           {}
+func (*R400) deleteApprovalRes()         {}
+func (*R400) deleteMissionRes()          {}
+func (*R400) deleteRequestRes()          {}
+func (*R400) deleteRocketRes()           {}
+func (*R400) listAccessAccessTokensRes() {}
+func (*R400) listApiKeyRes()             {}
+func (*R400) listApprovalRes()           {}
+func (*R400) listAuditRes()              {}
+func (*R400) listMissionRequestsRes()    {}
+func (*R400) listMissionRes()            {}
+func (*R400) listMissionRocketsRes()     {}
+func (*R400) listRequestRes()            {}
+func (*R400) listRocketMissionsRes()     {}
+func (*R400) listRocketRes()             {}
+func (*R400) readApiKeyRes()             {}
+func (*R400) readApprovalRes()           {}
+func (*R400) readAuditRes()              {}
+func (*R400) readMissionRes()            {}
+func (*R400) readRequestMissionRes()     {}
+func (*R400) readRequestRes()            {}
+func (*R400) readRocketRes()             {}
+func (*R400) updateApprovalRes()         {}
+func (*R400) updateMissionRes()          {}
+func (*R400) updateRequestRes()          {}
+func (*R400) updateRocketRes()           {}
 
 type R404 struct {
 	Code   int    `json:"code"`
@@ -2168,36 +1880,32 @@ func (s *R404) SetErrors(val jx.Raw) {
 	s.Errors = val
 }
 
-func (*R404) deleteAccessRes()         {}
-func (*R404) deleteApprovalRes()       {}
-func (*R404) deleteAuditRes()          {}
-func (*R404) deleteMissionRes()        {}
-func (*R404) deleteRequestRes()        {}
-func (*R404) deleteRocketRes()         {}
-func (*R404) listAccessRes()           {}
-func (*R404) listApprovalRes()         {}
-func (*R404) listAuditRes()            {}
-func (*R404) listMissionRequestsRes()  {}
-func (*R404) listMissionRes()          {}
-func (*R404) listRequestRes()          {}
-func (*R404) listRocketMissionsRes()   {}
-func (*R404) listRocketRes()           {}
-func (*R404) readAccessApprovalsRes()  {}
-func (*R404) readAccessRes()           {}
-func (*R404) readApprovalRequestsRes() {}
-func (*R404) readApprovalRes()         {}
-func (*R404) readAuditRes()            {}
-func (*R404) readMissionRes()          {}
-func (*R404) readMissionRocketRes()    {}
-func (*R404) readRequestMissionRes()   {}
-func (*R404) readRequestRes()          {}
-func (*R404) readRocketRes()           {}
-func (*R404) updateAccessRes()         {}
-func (*R404) updateApprovalRes()       {}
-func (*R404) updateAuditRes()          {}
-func (*R404) updateMissionRes()        {}
-func (*R404) updateRequestRes()        {}
-func (*R404) updateRocketRes()         {}
+func (*R404) deleteApiKeyRes()           {}
+func (*R404) deleteApprovalRes()         {}
+func (*R404) deleteMissionRes()          {}
+func (*R404) deleteRequestRes()          {}
+func (*R404) deleteRocketRes()           {}
+func (*R404) listAccessAccessTokensRes() {}
+func (*R404) listApiKeyRes()             {}
+func (*R404) listApprovalRes()           {}
+func (*R404) listAuditRes()              {}
+func (*R404) listMissionRequestsRes()    {}
+func (*R404) listMissionRes()            {}
+func (*R404) listMissionRocketsRes()     {}
+func (*R404) listRequestRes()            {}
+func (*R404) listRocketMissionsRes()     {}
+func (*R404) listRocketRes()             {}
+func (*R404) readApiKeyRes()             {}
+func (*R404) readApprovalRes()           {}
+func (*R404) readAuditRes()              {}
+func (*R404) readMissionRes()            {}
+func (*R404) readRequestMissionRes()     {}
+func (*R404) readRequestRes()            {}
+func (*R404) readRocketRes()             {}
+func (*R404) updateApprovalRes()         {}
+func (*R404) updateMissionRes()          {}
+func (*R404) updateRequestRes()          {}
+func (*R404) updateRocketRes()           {}
 
 type R409 struct {
 	Code   int    `json:"code"`
@@ -2235,42 +1943,37 @@ func (s *R409) SetErrors(val jx.Raw) {
 	s.Errors = val
 }
 
-func (*R409) createAccessRes()         {}
-func (*R409) createApprovalRes()       {}
-func (*R409) createAuditRes()          {}
-func (*R409) createMissionRes()        {}
-func (*R409) createRequestRes()        {}
-func (*R409) createRocketRes()         {}
-func (*R409) deleteAccessRes()         {}
-func (*R409) deleteApprovalRes()       {}
-func (*R409) deleteAuditRes()          {}
-func (*R409) deleteMissionRes()        {}
-func (*R409) deleteRequestRes()        {}
-func (*R409) deleteRocketRes()         {}
-func (*R409) listAccessRes()           {}
-func (*R409) listApprovalRes()         {}
-func (*R409) listAuditRes()            {}
-func (*R409) listMissionRequestsRes()  {}
-func (*R409) listMissionRes()          {}
-func (*R409) listRequestRes()          {}
-func (*R409) listRocketMissionsRes()   {}
-func (*R409) listRocketRes()           {}
-func (*R409) readAccessApprovalsRes()  {}
-func (*R409) readAccessRes()           {}
-func (*R409) readApprovalRequestsRes() {}
-func (*R409) readApprovalRes()         {}
-func (*R409) readAuditRes()            {}
-func (*R409) readMissionRes()          {}
-func (*R409) readMissionRocketRes()    {}
-func (*R409) readRequestMissionRes()   {}
-func (*R409) readRequestRes()          {}
-func (*R409) readRocketRes()           {}
-func (*R409) updateAccessRes()         {}
-func (*R409) updateApprovalRes()       {}
-func (*R409) updateAuditRes()          {}
-func (*R409) updateMissionRes()        {}
-func (*R409) updateRequestRes()        {}
-func (*R409) updateRocketRes()         {}
+func (*R409) createApiKeyRes()           {}
+func (*R409) createApprovalRes()         {}
+func (*R409) createMissionRes()          {}
+func (*R409) createRequestRes()          {}
+func (*R409) createRocketRes()           {}
+func (*R409) deleteApiKeyRes()           {}
+func (*R409) deleteApprovalRes()         {}
+func (*R409) deleteMissionRes()          {}
+func (*R409) deleteRequestRes()          {}
+func (*R409) deleteRocketRes()           {}
+func (*R409) listAccessAccessTokensRes() {}
+func (*R409) listApiKeyRes()             {}
+func (*R409) listApprovalRes()           {}
+func (*R409) listAuditRes()              {}
+func (*R409) listMissionRequestsRes()    {}
+func (*R409) listMissionRes()            {}
+func (*R409) listMissionRocketsRes()     {}
+func (*R409) listRequestRes()            {}
+func (*R409) listRocketMissionsRes()     {}
+func (*R409) listRocketRes()             {}
+func (*R409) readApiKeyRes()             {}
+func (*R409) readApprovalRes()           {}
+func (*R409) readAuditRes()              {}
+func (*R409) readMissionRes()            {}
+func (*R409) readRequestMissionRes()     {}
+func (*R409) readRequestRes()            {}
+func (*R409) readRocketRes()             {}
+func (*R409) updateApprovalRes()         {}
+func (*R409) updateMissionRes()          {}
+func (*R409) updateRequestRes()          {}
+func (*R409) updateRocketRes()           {}
 
 type R500 struct {
 	Code   int    `json:"code"`
@@ -2308,49 +2011,44 @@ func (s *R500) SetErrors(val jx.Raw) {
 	s.Errors = val
 }
 
-func (*R500) createAccessRes()         {}
-func (*R500) createApprovalRes()       {}
-func (*R500) createAuditRes()          {}
-func (*R500) createMissionRes()        {}
-func (*R500) createRequestRes()        {}
-func (*R500) createRocketRes()         {}
-func (*R500) deleteAccessRes()         {}
-func (*R500) deleteApprovalRes()       {}
-func (*R500) deleteAuditRes()          {}
-func (*R500) deleteMissionRes()        {}
-func (*R500) deleteRequestRes()        {}
-func (*R500) deleteRocketRes()         {}
-func (*R500) listAccessRes()           {}
-func (*R500) listApprovalRes()         {}
-func (*R500) listAuditRes()            {}
-func (*R500) listMissionRequestsRes()  {}
-func (*R500) listMissionRes()          {}
-func (*R500) listRequestRes()          {}
-func (*R500) listRocketMissionsRes()   {}
-func (*R500) listRocketRes()           {}
-func (*R500) readAccessApprovalsRes()  {}
-func (*R500) readAccessRes()           {}
-func (*R500) readApprovalRequestsRes() {}
-func (*R500) readApprovalRes()         {}
-func (*R500) readAuditRes()            {}
-func (*R500) readMissionRes()          {}
-func (*R500) readMissionRocketRes()    {}
-func (*R500) readRequestMissionRes()   {}
-func (*R500) readRequestRes()          {}
-func (*R500) readRocketRes()           {}
-func (*R500) updateAccessRes()         {}
-func (*R500) updateApprovalRes()       {}
-func (*R500) updateAuditRes()          {}
-func (*R500) updateMissionRes()        {}
-func (*R500) updateRequestRes()        {}
-func (*R500) updateRocketRes()         {}
+func (*R500) createApiKeyRes()           {}
+func (*R500) createApprovalRes()         {}
+func (*R500) createMissionRes()          {}
+func (*R500) createRequestRes()          {}
+func (*R500) createRocketRes()           {}
+func (*R500) deleteApiKeyRes()           {}
+func (*R500) deleteApprovalRes()         {}
+func (*R500) deleteMissionRes()          {}
+func (*R500) deleteRequestRes()          {}
+func (*R500) deleteRocketRes()           {}
+func (*R500) listAccessAccessTokensRes() {}
+func (*R500) listApiKeyRes()             {}
+func (*R500) listApprovalRes()           {}
+func (*R500) listAuditRes()              {}
+func (*R500) listMissionRequestsRes()    {}
+func (*R500) listMissionRes()            {}
+func (*R500) listMissionRocketsRes()     {}
+func (*R500) listRequestRes()            {}
+func (*R500) listRocketMissionsRes()     {}
+func (*R500) listRocketRes()             {}
+func (*R500) readApiKeyRes()             {}
+func (*R500) readApprovalRes()           {}
+func (*R500) readAuditRes()              {}
+func (*R500) readMissionRes()            {}
+func (*R500) readRequestMissionRes()     {}
+func (*R500) readRequestRes()            {}
+func (*R500) readRocketRes()             {}
+func (*R500) updateApprovalRes()         {}
+func (*R500) updateMissionRes()          {}
+func (*R500) updateRequestRes()          {}
+func (*R500) updateRocketRes()           {}
 
 // Ref: #/components/schemas/RequestCreate
 type RequestCreate struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
-	MissionID string    `json:"mission_id"`
+	ID           uuid.UUID                 `json:"id"`
+	Reason       string                    `json:"reason"`
+	Requester    string                    `json:"requester"`
+	RocketConfig RequestCreateRocketConfig `json:"rocket_config"`
 }
 
 // GetID returns the value of ID.
@@ -2368,9 +2066,9 @@ func (s *RequestCreate) GetRequester() string {
 	return s.Requester
 }
 
-// GetMissionID returns the value of MissionID.
-func (s *RequestCreate) GetMissionID() string {
-	return s.MissionID
+// GetRocketConfig returns the value of RocketConfig.
+func (s *RequestCreate) GetRocketConfig() RequestCreateRocketConfig {
+	return s.RocketConfig
 }
 
 // SetID sets the value of ID.
@@ -2388,19 +2086,30 @@ func (s *RequestCreate) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetMissionID sets the value of MissionID.
-func (s *RequestCreate) SetMissionID(val string) {
-	s.MissionID = val
+// SetRocketConfig sets the value of RocketConfig.
+func (s *RequestCreate) SetRocketConfig(val RequestCreateRocketConfig) {
+	s.RocketConfig = val
 }
 
 func (*RequestCreate) createRequestRes() {}
 
+type RequestCreateRocketConfig map[string]string
+
+func (s *RequestCreateRocketConfig) init() RequestCreateRocketConfig {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
 // Ref: #/components/schemas/RequestList
 type RequestList struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
-	MissionID string    `json:"mission_id"`
+	ID           uuid.UUID               `json:"id"`
+	Reason       string                  `json:"reason"`
+	Requester    string                  `json:"requester"`
+	RocketConfig RequestListRocketConfig `json:"rocket_config"`
 }
 
 // GetID returns the value of ID.
@@ -2418,9 +2127,9 @@ func (s *RequestList) GetRequester() string {
 	return s.Requester
 }
 
-// GetMissionID returns the value of MissionID.
-func (s *RequestList) GetMissionID() string {
-	return s.MissionID
+// GetRocketConfig returns the value of RocketConfig.
+func (s *RequestList) GetRocketConfig() RequestListRocketConfig {
+	return s.RocketConfig
 }
 
 // SetID sets the value of ID.
@@ -2438,18 +2147,28 @@ func (s *RequestList) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetMissionID sets the value of MissionID.
-func (s *RequestList) SetMissionID(val string) {
-	s.MissionID = val
+// SetRocketConfig sets the value of RocketConfig.
+func (s *RequestList) SetRocketConfig(val RequestListRocketConfig) {
+	s.RocketConfig = val
+}
+
+type RequestListRocketConfig map[string]string
+
+func (s *RequestListRocketConfig) init() RequestListRocketConfig {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
 }
 
 // Ref: #/components/schemas/Request_MissionRead
 type RequestMissionRead struct {
-	ID           string    `json:"id"`
-	Description  OptString `json:"description"`
-	Image        string    `json:"image"`
-	MinApprovers int       `json:"min_approvers"`
-	RocketID     string    `json:"rocket_id"`
+	ID                string    `json:"id"`
+	Description       OptString `json:"description"`
+	MinApprovers      int       `json:"min_approvers"`
+	PossibleApprovers []string  `json:"possible_approvers"`
 }
 
 // GetID returns the value of ID.
@@ -2462,19 +2181,14 @@ func (s *RequestMissionRead) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *RequestMissionRead) GetImage() string {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *RequestMissionRead) GetMinApprovers() int {
 	return s.MinApprovers
 }
 
-// GetRocketID returns the value of RocketID.
-func (s *RequestMissionRead) GetRocketID() string {
-	return s.RocketID
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *RequestMissionRead) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
 }
 
 // SetID sets the value of ID.
@@ -2487,29 +2201,24 @@ func (s *RequestMissionRead) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *RequestMissionRead) SetImage(val string) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *RequestMissionRead) SetMinApprovers(val int) {
 	s.MinApprovers = val
 }
 
-// SetRocketID sets the value of RocketID.
-func (s *RequestMissionRead) SetRocketID(val string) {
-	s.RocketID = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *RequestMissionRead) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
 }
 
 func (*RequestMissionRead) readRequestMissionRes() {}
 
 // Ref: #/components/schemas/RequestRead
 type RequestRead struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
-	MissionID string    `json:"mission_id"`
+	ID           uuid.UUID               `json:"id"`
+	Reason       string                  `json:"reason"`
+	Requester    string                  `json:"requester"`
+	RocketConfig RequestReadRocketConfig `json:"rocket_config"`
 }
 
 // GetID returns the value of ID.
@@ -2527,9 +2236,9 @@ func (s *RequestRead) GetRequester() string {
 	return s.Requester
 }
 
-// GetMissionID returns the value of MissionID.
-func (s *RequestRead) GetMissionID() string {
-	return s.MissionID
+// GetRocketConfig returns the value of RocketConfig.
+func (s *RequestRead) GetRocketConfig() RequestReadRocketConfig {
+	return s.RocketConfig
 }
 
 // SetID sets the value of ID.
@@ -2547,19 +2256,30 @@ func (s *RequestRead) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetMissionID sets the value of MissionID.
-func (s *RequestRead) SetMissionID(val string) {
-	s.MissionID = val
+// SetRocketConfig sets the value of RocketConfig.
+func (s *RequestRead) SetRocketConfig(val RequestReadRocketConfig) {
+	s.RocketConfig = val
 }
 
 func (*RequestRead) readRequestRes() {}
 
+type RequestReadRocketConfig map[string]string
+
+func (s *RequestReadRocketConfig) init() RequestReadRocketConfig {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
 // Ref: #/components/schemas/RequestUpdate
 type RequestUpdate struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
-	MissionID string    `json:"mission_id"`
+	ID           uuid.UUID                 `json:"id"`
+	Reason       string                    `json:"reason"`
+	Requester    string                    `json:"requester"`
+	RocketConfig RequestUpdateRocketConfig `json:"rocket_config"`
 }
 
 // GetID returns the value of ID.
@@ -2577,9 +2297,9 @@ func (s *RequestUpdate) GetRequester() string {
 	return s.Requester
 }
 
-// GetMissionID returns the value of MissionID.
-func (s *RequestUpdate) GetMissionID() string {
-	return s.MissionID
+// GetRocketConfig returns the value of RocketConfig.
+func (s *RequestUpdate) GetRocketConfig() RequestUpdateRocketConfig {
+	return s.RocketConfig
 }
 
 // SetID sets the value of ID.
@@ -2597,18 +2317,30 @@ func (s *RequestUpdate) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetMissionID sets the value of MissionID.
-func (s *RequestUpdate) SetMissionID(val string) {
-	s.MissionID = val
+// SetRocketConfig sets the value of RocketConfig.
+func (s *RequestUpdate) SetRocketConfig(val RequestUpdateRocketConfig) {
+	s.RocketConfig = val
 }
 
 func (*RequestUpdate) updateRequestRes() {}
+
+type RequestUpdateRocketConfig map[string]string
+
+func (s *RequestUpdateRocketConfig) init() RequestUpdateRocketConfig {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
 
 // Ref: #/components/schemas/RocketCreate
 type RocketCreate struct {
 	ID          string             `json:"id"`
 	Description OptString          `json:"description"`
-	Image       string             `json:"image"`
+	Image       OptString          `json:"image"`
+	Zip         OptString          `json:"zip"`
 	Config      RocketCreateConfig `json:"config"`
 }
 
@@ -2623,8 +2355,13 @@ func (s *RocketCreate) GetDescription() OptString {
 }
 
 // GetImage returns the value of Image.
-func (s *RocketCreate) GetImage() string {
+func (s *RocketCreate) GetImage() OptString {
 	return s.Image
+}
+
+// GetZip returns the value of Zip.
+func (s *RocketCreate) GetZip() OptString {
+	return s.Zip
 }
 
 // GetConfig returns the value of Config.
@@ -2643,8 +2380,13 @@ func (s *RocketCreate) SetDescription(val OptString) {
 }
 
 // SetImage sets the value of Image.
-func (s *RocketCreate) SetImage(val string) {
+func (s *RocketCreate) SetImage(val OptString) {
 	s.Image = val
+}
+
+// SetZip sets the value of Zip.
+func (s *RocketCreate) SetZip(val OptString) {
+	s.Zip = val
 }
 
 // SetConfig sets the value of Config.
@@ -2669,7 +2411,8 @@ func (s *RocketCreateConfig) init() RocketCreateConfig {
 type RocketList struct {
 	ID          string           `json:"id"`
 	Description OptString        `json:"description"`
-	Image       string           `json:"image"`
+	Image       OptString        `json:"image"`
+	Zip         OptString        `json:"zip"`
 	Config      RocketListConfig `json:"config"`
 }
 
@@ -2684,8 +2427,13 @@ func (s *RocketList) GetDescription() OptString {
 }
 
 // GetImage returns the value of Image.
-func (s *RocketList) GetImage() string {
+func (s *RocketList) GetImage() OptString {
 	return s.Image
+}
+
+// GetZip returns the value of Zip.
+func (s *RocketList) GetZip() OptString {
+	return s.Zip
 }
 
 // GetConfig returns the value of Config.
@@ -2704,8 +2452,13 @@ func (s *RocketList) SetDescription(val OptString) {
 }
 
 // SetImage sets the value of Image.
-func (s *RocketList) SetImage(val string) {
+func (s *RocketList) SetImage(val OptString) {
 	s.Image = val
+}
+
+// SetZip sets the value of Zip.
+func (s *RocketList) SetZip(val OptString) {
+	s.Zip = val
 }
 
 // SetConfig sets the value of Config.
@@ -2726,11 +2479,10 @@ func (s *RocketListConfig) init() RocketListConfig {
 
 // Ref: #/components/schemas/Rocket_MissionsList
 type RocketMissionsList struct {
-	ID           string    `json:"id"`
-	Description  OptString `json:"description"`
-	Image        string    `json:"image"`
-	MinApprovers int       `json:"min_approvers"`
-	RocketID     string    `json:"rocket_id"`
+	ID                string    `json:"id"`
+	Description       OptString `json:"description"`
+	MinApprovers      int       `json:"min_approvers"`
+	PossibleApprovers []string  `json:"possible_approvers"`
 }
 
 // GetID returns the value of ID.
@@ -2743,19 +2495,14 @@ func (s *RocketMissionsList) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *RocketMissionsList) GetImage() string {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *RocketMissionsList) GetMinApprovers() int {
 	return s.MinApprovers
 }
 
-// GetRocketID returns the value of RocketID.
-func (s *RocketMissionsList) GetRocketID() string {
-	return s.RocketID
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *RocketMissionsList) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
 }
 
 // SetID sets the value of ID.
@@ -2768,26 +2515,22 @@ func (s *RocketMissionsList) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *RocketMissionsList) SetImage(val string) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *RocketMissionsList) SetMinApprovers(val int) {
 	s.MinApprovers = val
 }
 
-// SetRocketID sets the value of RocketID.
-func (s *RocketMissionsList) SetRocketID(val string) {
-	s.RocketID = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *RocketMissionsList) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
 }
 
 // Ref: #/components/schemas/RocketRead
 type RocketRead struct {
 	ID          string           `json:"id"`
 	Description OptString        `json:"description"`
-	Image       string           `json:"image"`
+	Image       OptString        `json:"image"`
+	Zip         OptString        `json:"zip"`
 	Config      RocketReadConfig `json:"config"`
 }
 
@@ -2802,8 +2545,13 @@ func (s *RocketRead) GetDescription() OptString {
 }
 
 // GetImage returns the value of Image.
-func (s *RocketRead) GetImage() string {
+func (s *RocketRead) GetImage() OptString {
 	return s.Image
+}
+
+// GetZip returns the value of Zip.
+func (s *RocketRead) GetZip() OptString {
+	return s.Zip
 }
 
 // GetConfig returns the value of Config.
@@ -2822,8 +2570,13 @@ func (s *RocketRead) SetDescription(val OptString) {
 }
 
 // SetImage sets the value of Image.
-func (s *RocketRead) SetImage(val string) {
+func (s *RocketRead) SetImage(val OptString) {
 	s.Image = val
+}
+
+// SetZip sets the value of Zip.
+func (s *RocketRead) SetZip(val OptString) {
+	s.Zip = val
 }
 
 // SetConfig sets the value of Config.
@@ -2848,7 +2601,8 @@ func (s *RocketReadConfig) init() RocketReadConfig {
 type RocketUpdate struct {
 	ID          string             `json:"id"`
 	Description OptString          `json:"description"`
-	Image       string             `json:"image"`
+	Image       OptString          `json:"image"`
+	Zip         OptString          `json:"zip"`
 	Config      RocketUpdateConfig `json:"config"`
 }
 
@@ -2863,8 +2617,13 @@ func (s *RocketUpdate) GetDescription() OptString {
 }
 
 // GetImage returns the value of Image.
-func (s *RocketUpdate) GetImage() string {
+func (s *RocketUpdate) GetImage() OptString {
 	return s.Image
+}
+
+// GetZip returns the value of Zip.
+func (s *RocketUpdate) GetZip() OptString {
+	return s.Zip
 }
 
 // GetConfig returns the value of Config.
@@ -2883,8 +2642,13 @@ func (s *RocketUpdate) SetDescription(val OptString) {
 }
 
 // SetImage sets the value of Image.
-func (s *RocketUpdate) SetImage(val string) {
+func (s *RocketUpdate) SetImage(val OptString) {
 	s.Image = val
+}
+
+// SetZip sets the value of Zip.
+func (s *RocketUpdate) SetZip(val OptString) {
+	s.Zip = val
 }
 
 // SetConfig sets the value of Config.
@@ -2903,53 +2667,6 @@ func (s *RocketUpdateConfig) init() RocketUpdateConfig {
 		*s = m
 	}
 	return m
-}
-
-type UpdateAccessReq struct {
-	RolledBack   OptBool     `json:"rolled_back"`
-	RollbackTime OptDateTime `json:"rollback_time"`
-	RequestID    OptUUID     `json:"request_id"`
-	Approvals    OptUUID     `json:"approvals"`
-}
-
-// GetRolledBack returns the value of RolledBack.
-func (s *UpdateAccessReq) GetRolledBack() OptBool {
-	return s.RolledBack
-}
-
-// GetRollbackTime returns the value of RollbackTime.
-func (s *UpdateAccessReq) GetRollbackTime() OptDateTime {
-	return s.RollbackTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *UpdateAccessReq) GetRequestID() OptUUID {
-	return s.RequestID
-}
-
-// GetApprovals returns the value of Approvals.
-func (s *UpdateAccessReq) GetApprovals() OptUUID {
-	return s.Approvals
-}
-
-// SetRolledBack sets the value of RolledBack.
-func (s *UpdateAccessReq) SetRolledBack(val OptBool) {
-	s.RolledBack = val
-}
-
-// SetRollbackTime sets the value of RollbackTime.
-func (s *UpdateAccessReq) SetRollbackTime(val OptDateTime) {
-	s.RollbackTime = val
-}
-
-// SetRequestID sets the value of RequestID.
-func (s *UpdateAccessReq) SetRequestID(val OptUUID) {
-	s.RequestID = val
-}
-
-// SetApprovals sets the value of Approvals.
-func (s *UpdateAccessReq) SetApprovals(val OptUUID) {
-	s.Approvals = val
 }
 
 type UpdateApprovalReq struct {
@@ -3000,11 +2717,11 @@ func (s *UpdateApprovalReq) SetRequests(val OptUUID) {
 }
 
 type UpdateMissionReq struct {
-	Description  OptString   `json:"description"`
-	Image        OptString   `json:"image"`
-	MinApprovers OptInt      `json:"min_approvers"`
-	Rocket       OptString   `json:"rocket"`
-	Requests     []uuid.UUID `json:"requests"`
+	Description       OptString   `json:"description"`
+	MinApprovers      OptInt      `json:"min_approvers"`
+	PossibleApprovers []string    `json:"possible_approvers"`
+	Rockets           []string    `json:"rockets"`
+	Requests          []uuid.UUID `json:"requests"`
 }
 
 // GetDescription returns the value of Description.
@@ -3012,19 +2729,19 @@ func (s *UpdateMissionReq) GetDescription() OptString {
 	return s.Description
 }
 
-// GetImage returns the value of Image.
-func (s *UpdateMissionReq) GetImage() OptString {
-	return s.Image
-}
-
 // GetMinApprovers returns the value of MinApprovers.
 func (s *UpdateMissionReq) GetMinApprovers() OptInt {
 	return s.MinApprovers
 }
 
-// GetRocket returns the value of Rocket.
-func (s *UpdateMissionReq) GetRocket() OptString {
-	return s.Rocket
+// GetPossibleApprovers returns the value of PossibleApprovers.
+func (s *UpdateMissionReq) GetPossibleApprovers() []string {
+	return s.PossibleApprovers
+}
+
+// GetRockets returns the value of Rockets.
+func (s *UpdateMissionReq) GetRockets() []string {
+	return s.Rockets
 }
 
 // GetRequests returns the value of Requests.
@@ -3037,19 +2754,19 @@ func (s *UpdateMissionReq) SetDescription(val OptString) {
 	s.Description = val
 }
 
-// SetImage sets the value of Image.
-func (s *UpdateMissionReq) SetImage(val OptString) {
-	s.Image = val
-}
-
 // SetMinApprovers sets the value of MinApprovers.
 func (s *UpdateMissionReq) SetMinApprovers(val OptInt) {
 	s.MinApprovers = val
 }
 
-// SetRocket sets the value of Rocket.
-func (s *UpdateMissionReq) SetRocket(val OptString) {
-	s.Rocket = val
+// SetPossibleApprovers sets the value of PossibleApprovers.
+func (s *UpdateMissionReq) SetPossibleApprovers(val []string) {
+	s.PossibleApprovers = val
+}
+
+// SetRockets sets the value of Rockets.
+func (s *UpdateMissionReq) SetRockets(val []string) {
+	s.Rockets = val
 }
 
 // SetRequests sets the value of Requests.
@@ -3058,13 +2775,19 @@ func (s *UpdateMissionReq) SetRequests(val []uuid.UUID) {
 }
 
 type UpdateRequestReq struct {
-	Reason  OptString `json:"reason"`
-	Mission OptString `json:"mission"`
+	Reason       OptString                       `json:"reason"`
+	RocketConfig OptUpdateRequestReqRocketConfig `json:"rocket_config"`
+	Mission      OptString                       `json:"mission"`
 }
 
 // GetReason returns the value of Reason.
 func (s *UpdateRequestReq) GetReason() OptString {
 	return s.Reason
+}
+
+// GetRocketConfig returns the value of RocketConfig.
+func (s *UpdateRequestReq) GetRocketConfig() OptUpdateRequestReqRocketConfig {
+	return s.RocketConfig
 }
 
 // GetMission returns the value of Mission.
@@ -3077,14 +2800,31 @@ func (s *UpdateRequestReq) SetReason(val OptString) {
 	s.Reason = val
 }
 
+// SetRocketConfig sets the value of RocketConfig.
+func (s *UpdateRequestReq) SetRocketConfig(val OptUpdateRequestReqRocketConfig) {
+	s.RocketConfig = val
+}
+
 // SetMission sets the value of Mission.
 func (s *UpdateRequestReq) SetMission(val OptString) {
 	s.Mission = val
 }
 
+type UpdateRequestReqRocketConfig map[string]string
+
+func (s *UpdateRequestReqRocketConfig) init() UpdateRequestReqRocketConfig {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
 type UpdateRocketReq struct {
 	Description OptString                `json:"description"`
 	Image       OptString                `json:"image"`
+	Zip         OptString                `json:"zip"`
 	Config      OptUpdateRocketReqConfig `json:"config"`
 	Missions    []string                 `json:"missions"`
 }
@@ -3097,6 +2837,11 @@ func (s *UpdateRocketReq) GetDescription() OptString {
 // GetImage returns the value of Image.
 func (s *UpdateRocketReq) GetImage() OptString {
 	return s.Image
+}
+
+// GetZip returns the value of Zip.
+func (s *UpdateRocketReq) GetZip() OptString {
+	return s.Zip
 }
 
 // GetConfig returns the value of Config.
@@ -3117,6 +2862,11 @@ func (s *UpdateRocketReq) SetDescription(val OptString) {
 // SetImage sets the value of Image.
 func (s *UpdateRocketReq) SetImage(val OptString) {
 	s.Image = val
+}
+
+// SetZip sets the value of Zip.
+func (s *UpdateRocketReq) SetZip(val OptString) {
+	s.Zip = val
 }
 
 // SetConfig sets the value of Config.
