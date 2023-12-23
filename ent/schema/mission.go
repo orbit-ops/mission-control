@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/utils"
 	ogauth "github.com/tiagoposse/ogent-auth/authorization"
 )
@@ -20,7 +21,8 @@ type Mission struct {
 // Fields of the Mission.
 func (Mission) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").Unique(),
+		field.UUID("id", uuid.UUID{}).Unique(),
+		field.String("name").Unique(),
 		field.String("description").Optional(),
 		field.Int("min_approvers").Validate(func(n int) error {
 			if n < 1 {

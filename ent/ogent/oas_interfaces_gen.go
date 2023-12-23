@@ -69,6 +69,10 @@ type ListMissionRocketsRes interface {
 	listMissionRocketsRes()
 }
 
+type ListRequestApprovalsRes interface {
+	listRequestApprovalsRes()
+}
+
 type ListRequestRes interface {
 	listRequestRes()
 }

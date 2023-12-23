@@ -13,3 +13,5 @@ func RandomSeq(n int) string {
 	}
 	return string(b)
 }
+
+type ContextUserKey struct{}

@@ -1,4 +1,4 @@
-package server
+package httpserver
 
 import (
 	"crypto/tls"
@@ -12,30 +12,19 @@ import (
 	"github.com/orbit-ops/launchpad-core/ent"
 	"github.com/orbit-ops/launchpad-core/ent/ogent"
 	ogauth "github.com/orbit-ops/launchpad-core/ent/ogentauth"
+	"github.com/orbit-ops/launchpad-core/internal/handler"
 	"github.com/orbit-ops/launchpad-core/providers"
 )
 
-type handler struct {
-	*ogent.OgentHandler
-	client *ent.Client
-	ac     *controller.AccessController
-}
-
 func Start(cfg *config.Config, prov providers.Provider, client *ent.Client) error {
-	authHandler := ogauth.NewSecurityHandler(NewSecurityHandler(cfg.Sessions, client))
-
 	ac, err := controller.NewAccessController(prov, client)
 	if err != nil {
 		return err
 	}
-
-	// Start listening.
-	h := &handler{
-		ac: ac,
-	}
+	authHandler := ogauth.NewSecurityHandler(NewSecurityHandler(cfg.Sessions, client))
 
 	srv, err := ogent.NewServer(
-		h,
+		handler.NewHandler(ac, client),
 		ogauth.NewSecurityHandler(authHandler),
 		ogent.WithPathPrefix("/api/v1"),
 	)

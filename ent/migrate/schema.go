@@ -124,8 +124,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "reason", Type: field.TypeString},
 		{Name: "requester", Type: field.TypeString},
-		{Name: "rocket_config", Type: field.TypeJSON},
-		{Name: "mission_requests", Type: field.TypeString},
+		{Name: "mission_id", Type: field.TypeString},
 	}
 	// RequestsTable holds the schema information for the "requests" table.
 	RequestsTable = &schema.Table{
@@ -135,7 +134,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "requests_missions_requests",
-				Columns:    []*schema.Column{RequestsColumns[4]},
+				Columns:    []*schema.Column{RequestsColumns[3]},
 				RefColumns: []*schema.Column{MissionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

@@ -936,10 +936,11 @@ func (s *CreateMissionReq) SetRequests(val []uuid.UUID) {
 }
 
 type CreateRequestReq struct {
-	Reason       string                       `json:"reason"`
-	Requester    string                       `json:"requester"`
-	RocketConfig CreateRequestReqRocketConfig `json:"rocket_config"`
-	Mission      string                       `json:"mission"`
+	Reason    string      `json:"reason"`
+	Requester string      `json:"requester"`
+	MissionID string      `json:"mission_id"`
+	Approvals []uuid.UUID `json:"approvals"`
+	Mission   string      `json:"mission"`
 }
 
 // GetReason returns the value of Reason.
@@ -952,9 +953,14 @@ func (s *CreateRequestReq) GetRequester() string {
 	return s.Requester
 }
 
-// GetRocketConfig returns the value of RocketConfig.
-func (s *CreateRequestReq) GetRocketConfig() CreateRequestReqRocketConfig {
-	return s.RocketConfig
+// GetMissionID returns the value of MissionID.
+func (s *CreateRequestReq) GetMissionID() string {
+	return s.MissionID
+}
+
+// GetApprovals returns the value of Approvals.
+func (s *CreateRequestReq) GetApprovals() []uuid.UUID {
+	return s.Approvals
 }
 
 // GetMission returns the value of Mission.
@@ -972,25 +978,19 @@ func (s *CreateRequestReq) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetRocketConfig sets the value of RocketConfig.
-func (s *CreateRequestReq) SetRocketConfig(val CreateRequestReqRocketConfig) {
-	s.RocketConfig = val
+// SetMissionID sets the value of MissionID.
+func (s *CreateRequestReq) SetMissionID(val string) {
+	s.MissionID = val
+}
+
+// SetApprovals sets the value of Approvals.
+func (s *CreateRequestReq) SetApprovals(val []uuid.UUID) {
+	s.Approvals = val
 }
 
 // SetMission sets the value of Mission.
 func (s *CreateRequestReq) SetMission(val string) {
 	s.Mission = val
-}
-
-type CreateRequestReqRocketConfig map[string]string
-
-func (s *CreateRequestReqRocketConfig) init() CreateRequestReqRocketConfig {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
 }
 
 type CreateRocketReq struct {
@@ -1114,6 +1114,10 @@ func (*ListMissionRequestsOKApplicationJSON) listMissionRequestsRes() {}
 type ListMissionRocketsOKApplicationJSON []MissionRocketsList
 
 func (*ListMissionRocketsOKApplicationJSON) listMissionRocketsRes() {}
+
+type ListRequestApprovalsOKApplicationJSON []RequestApprovalsList
+
+func (*ListRequestApprovalsOKApplicationJSON) listRequestApprovalsRes() {}
 
 type ListRequestOKApplicationJSON []RequestList
 
@@ -1277,10 +1281,10 @@ func (*MissionRead) readMissionRes() {}
 
 // Ref: #/components/schemas/Mission_RequestsList
 type MissionRequestsList struct {
-	ID           uuid.UUID                       `json:"id"`
-	Reason       string                          `json:"reason"`
-	Requester    string                          `json:"requester"`
-	RocketConfig MissionRequestsListRocketConfig `json:"rocket_config"`
+	ID        uuid.UUID `json:"id"`
+	Reason    string    `json:"reason"`
+	Requester string    `json:"requester"`
+	MissionID string    `json:"mission_id"`
 }
 
 // GetID returns the value of ID.
@@ -1298,9 +1302,9 @@ func (s *MissionRequestsList) GetRequester() string {
 	return s.Requester
 }
 
-// GetRocketConfig returns the value of RocketConfig.
-func (s *MissionRequestsList) GetRocketConfig() MissionRequestsListRocketConfig {
-	return s.RocketConfig
+// GetMissionID returns the value of MissionID.
+func (s *MissionRequestsList) GetMissionID() string {
+	return s.MissionID
 }
 
 // SetID sets the value of ID.
@@ -1318,20 +1322,9 @@ func (s *MissionRequestsList) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetRocketConfig sets the value of RocketConfig.
-func (s *MissionRequestsList) SetRocketConfig(val MissionRequestsListRocketConfig) {
-	s.RocketConfig = val
-}
-
-type MissionRequestsListRocketConfig map[string]string
-
-func (s *MissionRequestsListRocketConfig) init() MissionRequestsListRocketConfig {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
+// SetMissionID sets the value of MissionID.
+func (s *MissionRequestsList) SetMissionID(val string) {
+	s.MissionID = val
 }
 
 // Ref: #/components/schemas/Mission_RocketsList
@@ -1684,52 +1677,6 @@ func (o OptUUID) Or(d uuid.UUID) uuid.UUID {
 	return d
 }
 
-// NewOptUpdateRequestReqRocketConfig returns new OptUpdateRequestReqRocketConfig with value set to v.
-func NewOptUpdateRequestReqRocketConfig(v UpdateRequestReqRocketConfig) OptUpdateRequestReqRocketConfig {
-	return OptUpdateRequestReqRocketConfig{
-		Value: v,
-		Set:   true,
-	}
-}
-
-// OptUpdateRequestReqRocketConfig is optional UpdateRequestReqRocketConfig.
-type OptUpdateRequestReqRocketConfig struct {
-	Value UpdateRequestReqRocketConfig
-	Set   bool
-}
-
-// IsSet returns true if OptUpdateRequestReqRocketConfig was set.
-func (o OptUpdateRequestReqRocketConfig) IsSet() bool { return o.Set }
-
-// Reset unsets value.
-func (o *OptUpdateRequestReqRocketConfig) Reset() {
-	var v UpdateRequestReqRocketConfig
-	o.Value = v
-	o.Set = false
-}
-
-// SetTo sets value to v.
-func (o *OptUpdateRequestReqRocketConfig) SetTo(v UpdateRequestReqRocketConfig) {
-	o.Set = true
-	o.Value = v
-}
-
-// Get returns value and boolean that denotes whether value was set.
-func (o OptUpdateRequestReqRocketConfig) Get() (v UpdateRequestReqRocketConfig, ok bool) {
-	if !o.Set {
-		return v, false
-	}
-	return o.Value, true
-}
-
-// Or returns value if set, or given parameter if does not.
-func (o OptUpdateRequestReqRocketConfig) Or(d UpdateRequestReqRocketConfig) UpdateRequestReqRocketConfig {
-	if v, ok := o.Get(); ok {
-		return v
-	}
-	return d
-}
-
 // NewOptUpdateRocketReqConfig returns new OptUpdateRocketReqConfig with value set to v.
 func NewOptUpdateRocketReqConfig(v UpdateRocketReqConfig) OptUpdateRocketReqConfig {
 	return OptUpdateRocketReqConfig{
@@ -1829,6 +1776,7 @@ func (*R400) listAuditRes()              {}
 func (*R400) listMissionRequestsRes()    {}
 func (*R400) listMissionRes()            {}
 func (*R400) listMissionRocketsRes()     {}
+func (*R400) listRequestApprovalsRes()   {}
 func (*R400) listRequestRes()            {}
 func (*R400) listRocketMissionsRes()     {}
 func (*R400) listRocketRes()             {}
@@ -1892,6 +1840,7 @@ func (*R404) listAuditRes()              {}
 func (*R404) listMissionRequestsRes()    {}
 func (*R404) listMissionRes()            {}
 func (*R404) listMissionRocketsRes()     {}
+func (*R404) listRequestApprovalsRes()   {}
 func (*R404) listRequestRes()            {}
 func (*R404) listRocketMissionsRes()     {}
 func (*R404) listRocketRes()             {}
@@ -1960,6 +1909,7 @@ func (*R409) listAuditRes()              {}
 func (*R409) listMissionRequestsRes()    {}
 func (*R409) listMissionRes()            {}
 func (*R409) listMissionRocketsRes()     {}
+func (*R409) listRequestApprovalsRes()   {}
 func (*R409) listRequestRes()            {}
 func (*R409) listRocketMissionsRes()     {}
 func (*R409) listRocketRes()             {}
@@ -2028,6 +1978,7 @@ func (*R500) listAuditRes()              {}
 func (*R500) listMissionRequestsRes()    {}
 func (*R500) listMissionRes()            {}
 func (*R500) listMissionRocketsRes()     {}
+func (*R500) listRequestApprovalsRes()   {}
 func (*R500) listRequestRes()            {}
 func (*R500) listRocketMissionsRes()     {}
 func (*R500) listRocketRes()             {}
@@ -2043,12 +1994,93 @@ func (*R500) updateMissionRes()          {}
 func (*R500) updateRequestRes()          {}
 func (*R500) updateRocketRes()           {}
 
+// Ref: #/components/schemas/Request_ApprovalsList
+type RequestApprovalsList struct {
+	ID           uuid.UUID   `json:"id"`
+	Person       string      `json:"person"`
+	ApprovedTime time.Time   `json:"approved_time"`
+	Approved     bool        `json:"approved"`
+	Revoked      bool        `json:"revoked"`
+	RevokedTime  OptDateTime `json:"revoked_time"`
+	RequestID    uuid.UUID   `json:"request_id"`
+}
+
+// GetID returns the value of ID.
+func (s *RequestApprovalsList) GetID() uuid.UUID {
+	return s.ID
+}
+
+// GetPerson returns the value of Person.
+func (s *RequestApprovalsList) GetPerson() string {
+	return s.Person
+}
+
+// GetApprovedTime returns the value of ApprovedTime.
+func (s *RequestApprovalsList) GetApprovedTime() time.Time {
+	return s.ApprovedTime
+}
+
+// GetApproved returns the value of Approved.
+func (s *RequestApprovalsList) GetApproved() bool {
+	return s.Approved
+}
+
+// GetRevoked returns the value of Revoked.
+func (s *RequestApprovalsList) GetRevoked() bool {
+	return s.Revoked
+}
+
+// GetRevokedTime returns the value of RevokedTime.
+func (s *RequestApprovalsList) GetRevokedTime() OptDateTime {
+	return s.RevokedTime
+}
+
+// GetRequestID returns the value of RequestID.
+func (s *RequestApprovalsList) GetRequestID() uuid.UUID {
+	return s.RequestID
+}
+
+// SetID sets the value of ID.
+func (s *RequestApprovalsList) SetID(val uuid.UUID) {
+	s.ID = val
+}
+
+// SetPerson sets the value of Person.
+func (s *RequestApprovalsList) SetPerson(val string) {
+	s.Person = val
+}
+
+// SetApprovedTime sets the value of ApprovedTime.
+func (s *RequestApprovalsList) SetApprovedTime(val time.Time) {
+	s.ApprovedTime = val
+}
+
+// SetApproved sets the value of Approved.
+func (s *RequestApprovalsList) SetApproved(val bool) {
+	s.Approved = val
+}
+
+// SetRevoked sets the value of Revoked.
+func (s *RequestApprovalsList) SetRevoked(val bool) {
+	s.Revoked = val
+}
+
+// SetRevokedTime sets the value of RevokedTime.
+func (s *RequestApprovalsList) SetRevokedTime(val OptDateTime) {
+	s.RevokedTime = val
+}
+
+// SetRequestID sets the value of RequestID.
+func (s *RequestApprovalsList) SetRequestID(val uuid.UUID) {
+	s.RequestID = val
+}
+
 // Ref: #/components/schemas/RequestCreate
 type RequestCreate struct {
-	ID           uuid.UUID                 `json:"id"`
-	Reason       string                    `json:"reason"`
-	Requester    string                    `json:"requester"`
-	RocketConfig RequestCreateRocketConfig `json:"rocket_config"`
+	ID        uuid.UUID `json:"id"`
+	Reason    string    `json:"reason"`
+	Requester string    `json:"requester"`
+	MissionID string    `json:"mission_id"`
 }
 
 // GetID returns the value of ID.
@@ -2066,9 +2098,9 @@ func (s *RequestCreate) GetRequester() string {
 	return s.Requester
 }
 
-// GetRocketConfig returns the value of RocketConfig.
-func (s *RequestCreate) GetRocketConfig() RequestCreateRocketConfig {
-	return s.RocketConfig
+// GetMissionID returns the value of MissionID.
+func (s *RequestCreate) GetMissionID() string {
+	return s.MissionID
 }
 
 // SetID sets the value of ID.
@@ -2086,30 +2118,19 @@ func (s *RequestCreate) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetRocketConfig sets the value of RocketConfig.
-func (s *RequestCreate) SetRocketConfig(val RequestCreateRocketConfig) {
-	s.RocketConfig = val
+// SetMissionID sets the value of MissionID.
+func (s *RequestCreate) SetMissionID(val string) {
+	s.MissionID = val
 }
 
 func (*RequestCreate) createRequestRes() {}
 
-type RequestCreateRocketConfig map[string]string
-
-func (s *RequestCreateRocketConfig) init() RequestCreateRocketConfig {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
-}
-
 // Ref: #/components/schemas/RequestList
 type RequestList struct {
-	ID           uuid.UUID               `json:"id"`
-	Reason       string                  `json:"reason"`
-	Requester    string                  `json:"requester"`
-	RocketConfig RequestListRocketConfig `json:"rocket_config"`
+	ID        uuid.UUID `json:"id"`
+	Reason    string    `json:"reason"`
+	Requester string    `json:"requester"`
+	MissionID string    `json:"mission_id"`
 }
 
 // GetID returns the value of ID.
@@ -2127,9 +2148,9 @@ func (s *RequestList) GetRequester() string {
 	return s.Requester
 }
 
-// GetRocketConfig returns the value of RocketConfig.
-func (s *RequestList) GetRocketConfig() RequestListRocketConfig {
-	return s.RocketConfig
+// GetMissionID returns the value of MissionID.
+func (s *RequestList) GetMissionID() string {
+	return s.MissionID
 }
 
 // SetID sets the value of ID.
@@ -2147,20 +2168,9 @@ func (s *RequestList) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetRocketConfig sets the value of RocketConfig.
-func (s *RequestList) SetRocketConfig(val RequestListRocketConfig) {
-	s.RocketConfig = val
-}
-
-type RequestListRocketConfig map[string]string
-
-func (s *RequestListRocketConfig) init() RequestListRocketConfig {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
+// SetMissionID sets the value of MissionID.
+func (s *RequestList) SetMissionID(val string) {
+	s.MissionID = val
 }
 
 // Ref: #/components/schemas/Request_MissionRead
@@ -2215,10 +2225,10 @@ func (*RequestMissionRead) readRequestMissionRes() {}
 
 // Ref: #/components/schemas/RequestRead
 type RequestRead struct {
-	ID           uuid.UUID               `json:"id"`
-	Reason       string                  `json:"reason"`
-	Requester    string                  `json:"requester"`
-	RocketConfig RequestReadRocketConfig `json:"rocket_config"`
+	ID        uuid.UUID `json:"id"`
+	Reason    string    `json:"reason"`
+	Requester string    `json:"requester"`
+	MissionID string    `json:"mission_id"`
 }
 
 // GetID returns the value of ID.
@@ -2236,9 +2246,9 @@ func (s *RequestRead) GetRequester() string {
 	return s.Requester
 }
 
-// GetRocketConfig returns the value of RocketConfig.
-func (s *RequestRead) GetRocketConfig() RequestReadRocketConfig {
-	return s.RocketConfig
+// GetMissionID returns the value of MissionID.
+func (s *RequestRead) GetMissionID() string {
+	return s.MissionID
 }
 
 // SetID sets the value of ID.
@@ -2256,30 +2266,19 @@ func (s *RequestRead) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetRocketConfig sets the value of RocketConfig.
-func (s *RequestRead) SetRocketConfig(val RequestReadRocketConfig) {
-	s.RocketConfig = val
+// SetMissionID sets the value of MissionID.
+func (s *RequestRead) SetMissionID(val string) {
+	s.MissionID = val
 }
 
 func (*RequestRead) readRequestRes() {}
 
-type RequestReadRocketConfig map[string]string
-
-func (s *RequestReadRocketConfig) init() RequestReadRocketConfig {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
-}
-
 // Ref: #/components/schemas/RequestUpdate
 type RequestUpdate struct {
-	ID           uuid.UUID                 `json:"id"`
-	Reason       string                    `json:"reason"`
-	Requester    string                    `json:"requester"`
-	RocketConfig RequestUpdateRocketConfig `json:"rocket_config"`
+	ID        uuid.UUID `json:"id"`
+	Reason    string    `json:"reason"`
+	Requester string    `json:"requester"`
+	MissionID string    `json:"mission_id"`
 }
 
 // GetID returns the value of ID.
@@ -2297,9 +2296,9 @@ func (s *RequestUpdate) GetRequester() string {
 	return s.Requester
 }
 
-// GetRocketConfig returns the value of RocketConfig.
-func (s *RequestUpdate) GetRocketConfig() RequestUpdateRocketConfig {
-	return s.RocketConfig
+// GetMissionID returns the value of MissionID.
+func (s *RequestUpdate) GetMissionID() string {
+	return s.MissionID
 }
 
 // SetID sets the value of ID.
@@ -2317,23 +2316,12 @@ func (s *RequestUpdate) SetRequester(val string) {
 	s.Requester = val
 }
 
-// SetRocketConfig sets the value of RocketConfig.
-func (s *RequestUpdate) SetRocketConfig(val RequestUpdateRocketConfig) {
-	s.RocketConfig = val
+// SetMissionID sets the value of MissionID.
+func (s *RequestUpdate) SetMissionID(val string) {
+	s.MissionID = val
 }
 
 func (*RequestUpdate) updateRequestRes() {}
-
-type RequestUpdateRocketConfig map[string]string
-
-func (s *RequestUpdateRocketConfig) init() RequestUpdateRocketConfig {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
-}
 
 // Ref: #/components/schemas/RocketCreate
 type RocketCreate struct {
@@ -2775,19 +2763,13 @@ func (s *UpdateMissionReq) SetRequests(val []uuid.UUID) {
 }
 
 type UpdateRequestReq struct {
-	Reason       OptString                       `json:"reason"`
-	RocketConfig OptUpdateRequestReqRocketConfig `json:"rocket_config"`
-	Mission      OptString                       `json:"mission"`
+	Approvals []uuid.UUID `json:"approvals"`
+	Mission   OptString   `json:"mission"`
 }
 
-// GetReason returns the value of Reason.
-func (s *UpdateRequestReq) GetReason() OptString {
-	return s.Reason
-}
-
-// GetRocketConfig returns the value of RocketConfig.
-func (s *UpdateRequestReq) GetRocketConfig() OptUpdateRequestReqRocketConfig {
-	return s.RocketConfig
+// GetApprovals returns the value of Approvals.
+func (s *UpdateRequestReq) GetApprovals() []uuid.UUID {
+	return s.Approvals
 }
 
 // GetMission returns the value of Mission.
@@ -2795,30 +2777,14 @@ func (s *UpdateRequestReq) GetMission() OptString {
 	return s.Mission
 }
 
-// SetReason sets the value of Reason.
-func (s *UpdateRequestReq) SetReason(val OptString) {
-	s.Reason = val
-}
-
-// SetRocketConfig sets the value of RocketConfig.
-func (s *UpdateRequestReq) SetRocketConfig(val OptUpdateRequestReqRocketConfig) {
-	s.RocketConfig = val
+// SetApprovals sets the value of Approvals.
+func (s *UpdateRequestReq) SetApprovals(val []uuid.UUID) {
+	s.Approvals = val
 }
 
 // SetMission sets the value of Mission.
 func (s *UpdateRequestReq) SetMission(val OptString) {
 	s.Mission = val
-}
-
-type UpdateRequestReqRocketConfig map[string]string
-
-func (s *UpdateRequestReqRocketConfig) init() UpdateRequestReqRocketConfig {
-	m := *s
-	if m == nil {
-		m = map[string]string{}
-		*s = m
-	}
-	return m
 }
 
 type UpdateRocketReq struct {

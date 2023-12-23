@@ -2,14 +2,19 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/orbit-ops/launchpad-core/ent"
 	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
 	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/audit"
+	"github.com/orbit-ops/launchpad-core/ent/hook"
+	"github.com/orbit-ops/launchpad-core/ent/ogent"
 	"github.com/orbit-ops/launchpad-core/ent/request"
 	"github.com/orbit-ops/launchpad-core/internal/notifications"
 	"github.com/orbit-ops/launchpad-core/providers"
@@ -17,6 +22,8 @@ import (
 )
 
 type AccessController struct {
+	*ogent.OgentHandler
+
 	client *ent.Client
 	// mc       *missions.MissionController
 	notifier notifications.Notifier
@@ -24,75 +31,127 @@ type AccessController struct {
 }
 
 func NewAccessController(prov providers.Provider, client *ent.Client) (*AccessController, error) {
-	return &AccessController{
+	ac := &AccessController{
 		client:   client,
 		provider: prov,
 		// mc:     missions.NewMissionController(),
-	}, nil
+	}
+
+	// logs and audits all mutation operations of all types
+	client.Use(func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (val ent.Value, err error) {
+			start := time.Now()
+
+			defer func() {
+				log.Debugf("Op=%s\tType=%s\tTime=%s\tConcreteType=%T\tError=%v\n", m.Op(), m.Type(), time.Since(start), m, err)
+			}()
+
+			val, err = next.Mutate(ctx, m)
+			if err != nil {
+				return nil, err
+			}
+
+			user := ctx.Value(utils.ContextUserKey{}).(string)
+
+			if _, err := client.Audit.Create().
+				SetAction(audit.ActionApproveRequest).
+				SetAuthor(user).
+				SetTimestamp(start).Save(ctx); err != nil {
+				return nil, fmt.Errorf("creating audit entry for approval: %w", err)
+			}
+
+			return
+		})
+	})
+
+	client.Approval.Use(hook.On(func(next ent.Mutator) ent.Mutator {
+		return hook.ApprovalFunc(func(ctx context.Context, am *ent.ApprovalMutation) (ent.Value, error) {
+			reqID, ok := am.RequestID()
+			if !ok {
+				return nil, errors.New("request ID not set")
+			}
+			person, ok := am.Person()
+			if !ok {
+				return nil, errors.New("person not set")
+			}
+			exists, err := am.Client().Approval.Query().Where(approval.RequestIDEQ(reqID), approval.PersonEQ(person)).Exist(ctx)
+			if exists {
+				return nil, fmt.Errorf("%s already approved %s", person, reqID)
+			}
+			if err != nil {
+				return nil, fmt.Errorf("checking approval exists: %w", err)
+			}
+
+			return next.Mutate(ctx, am)
+		})
+	}, ent.OpCreate))
+
+	client.Approval.Use(hook.On(func(next ent.Mutator) ent.Mutator {
+		return hook.ApprovalFunc(func(ctx context.Context, am *ent.ApprovalMutation) (ent.Value, error) {
+			reqID, ok := am.RequestID()
+			if !ok {
+				return nil, errors.New("request ID not set")
+			}
+
+			req, err := am.Client().Request.Query().
+				Where(request.IDEQ(reqID)).
+				WithMission().
+				WithApprovals().First(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("checking approval exists: %w", err)
+			}
+			if len(req.Edges.Approvals) >= req.Edges.Mission.MinApprovers {
+				go ac.CreateAccess(ctx, req.Edges.Mission, req)
+			}
+
+			return next.Mutate(ctx, am)
+		})
+	}, ent.OpCreate))
+
+	client.Approval.Use(hook.On(func(next ent.Mutator) ent.Mutator {
+		return hook.ApprovalFunc(func(ctx context.Context, am *ent.ApprovalMutation) (ent.Value, error) {
+			reqID, ok := am.RequestID()
+			if !ok {
+				return nil, errors.New("request ID not set")
+			}
+
+			exists, err := am.Client().Access.Query().
+				Where(access.RequestIDEQ(reqID)).Exist(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("checking access exists: %w", err)
+			}
+			if exists {
+				return nil, fmt.Errorf("cannot update approval once access provisioned")
+			}
+
+			return next.Mutate(ctx, am)
+		})
+	}, ent.OpUpdate))
+
+	client.Request.Use(hook.On(func(next ent.Mutator) ent.Mutator {
+		return hook.RequestFunc(func(ctx context.Context, am *ent.RequestMutation) (ent.Value, error) {
+			return nil, fmt.Errorf("requests cannot be updated")
+		})
+	}, ent.OpUpdate))
+
+	client.Access.Use(hook.On(func(next ent.Mutator) ent.Mutator {
+		return hook.AccessFunc(func(ctx context.Context, am *ent.AccessMutation) (ent.Value, error) {
+			return nil, fmt.Errorf("accesses cannot be deleted")
+		})
+	}, ent.OpDelete))
+
+	client.Audit.Use(hook.On(func(next ent.Mutator) ent.Mutator {
+		return hook.AuditFunc(func(ctx context.Context, am *ent.AuditMutation) (ent.Value, error) {
+			return nil, fmt.Errorf("audit entries cannot be deleted")
+		})
+	}, ent.OpDelete))
+	return ac, nil
 }
 
 func (c *AccessController) Shutdown() error {
 	if err := c.client.Close(); err != nil {
 		return fmt.Errorf("closing ent: %w", err)
 	}
-	return nil
-}
-
-func (c *AccessController) CreateApproval(ctx context.Context, req *ent.Request, approver string) error {
-	approved, err := c.client.Approval.Query().Where(approval.RequestIDEQ(req.ID)).Count(ctx)
-	if err != nil {
-		return fmt.Errorf("checking approvals for request: %w", err)
-	}
-
-	r, err := c.client.Request.Query().Where(request.IDEQ(req.ID)).WithMission().First(ctx)
-	if err != nil {
-		return fmt.Errorf("retrieving request for approval: %w", err)
-	}
-
-	if _, err = c.client.Approval.Create().
-		SetApproved(true).
-		SetApprovedTime(time.Now()).
-		SetPerson(approver).
-		Save(ctx); err != nil {
-
-		return fmt.Errorf("creating approval: %w", err)
-	}
-
-	if _, err := c.client.Audit.Create().
-		SetAction(audit.ActionApproveRequest).
-		SetAuthor(approver).
-		SetTimestamp(time.Now()).Save(ctx); err != nil {
-		return fmt.Errorf("creating audit entry for approval: %w", err)
-	}
-
-	if approved+1 < r.Edges.Mission.MinApprovers {
-		return nil
-	}
-
-	return c.CreateAccess(ctx, r.Edges.Mission, req)
-}
-
-func (c *AccessController) RemoveApproval(ctx context.Context, req *ent.Request, approver string) error {
-	exists, err := c.client.Access.Query().Where(access.RequestIDEQ(req.ID)).Exist(ctx)
-	if err != nil {
-		return fmt.Errorf("checking access already provisioned: %w", err)
-	}
-	if exists {
-		return fmt.Errorf("cannot revoke approval, access provisioned")
-	}
-
-	if _, err := c.client.Audit.Create().
-		SetAction(audit.ActionRevokeApprovalRequest).
-		SetAuthor(approver).
-		SetTimestamp(time.Now()).Save(ctx); err != nil {
-		return fmt.Errorf("creating audit entry for approval: %w", err)
-	}
-
-	_, err = c.client.Approval.Delete().Where(approval.PersonEQ(approver), approval.ApprovedEQ(true), approval.RequestIDEQ(req.ID)).Exec(ctx)
-	if err != nil {
-		return fmt.Errorf("executing approval removal: %w", err)
-	}
-
 	return nil
 }
 

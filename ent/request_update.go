@@ -27,26 +27,6 @@ func (ru *RequestUpdate) Where(ps ...predicate.Request) *RequestUpdate {
 	return ru
 }
 
-// SetReason sets the "reason" field.
-func (ru *RequestUpdate) SetReason(s string) *RequestUpdate {
-	ru.mutation.SetReason(s)
-	return ru
-}
-
-// SetNillableReason sets the "reason" field if the given value is not nil.
-func (ru *RequestUpdate) SetNillableReason(s *string) *RequestUpdate {
-	if s != nil {
-		ru.SetReason(*s)
-	}
-	return ru
-}
-
-// SetRocketConfig sets the "rocket_config" field.
-func (ru *RequestUpdate) SetRocketConfig(m map[string]string) *RequestUpdate {
-	ru.mutation.SetRocketConfig(m)
-	return ru
-}
-
 // Mutation returns the RequestMutation object of the builder.
 func (ru *RequestUpdate) Mutation() *RequestMutation {
 	return ru.mutation
@@ -99,12 +79,6 @@ func (ru *RequestUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := ru.mutation.Reason(); ok {
-		_spec.SetField(request.FieldReason, field.TypeString, value)
-	}
-	if value, ok := ru.mutation.RocketConfig(); ok {
-		_spec.SetField(request.FieldRocketConfig, field.TypeJSON, value)
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{request.Label}
@@ -123,26 +97,6 @@ type RequestUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *RequestMutation
-}
-
-// SetReason sets the "reason" field.
-func (ruo *RequestUpdateOne) SetReason(s string) *RequestUpdateOne {
-	ruo.mutation.SetReason(s)
-	return ruo
-}
-
-// SetNillableReason sets the "reason" field if the given value is not nil.
-func (ruo *RequestUpdateOne) SetNillableReason(s *string) *RequestUpdateOne {
-	if s != nil {
-		ruo.SetReason(*s)
-	}
-	return ruo
-}
-
-// SetRocketConfig sets the "rocket_config" field.
-func (ruo *RequestUpdateOne) SetRocketConfig(m map[string]string) *RequestUpdateOne {
-	ruo.mutation.SetRocketConfig(m)
-	return ruo
 }
 
 // Mutation returns the RequestMutation object of the builder.
@@ -226,12 +180,6 @@ func (ruo *RequestUpdateOne) sqlSave(ctx context.Context) (_node *Request, err e
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := ruo.mutation.Reason(); ok {
-		_spec.SetField(request.FieldReason, field.TypeString, value)
-	}
-	if value, ok := ruo.mutation.RocketConfig(); ok {
-		_spec.SetField(request.FieldRocketConfig, field.TypeJSON, value)
 	}
 	_node = &Request{config: ruo.config}
 	_spec.Assign = _node.assignValues

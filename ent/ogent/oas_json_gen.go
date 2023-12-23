@@ -2260,8 +2260,18 @@ func (s *CreateRequestReq) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
-		e.FieldStart("rocket_config")
-		s.RocketConfig.Encode(e)
+		e.FieldStart("mission_id")
+		e.Str(s.MissionID)
+	}
+	{
+		if s.Approvals != nil {
+			e.FieldStart("approvals")
+			e.ArrStart()
+			for _, elem := range s.Approvals {
+				json.EncodeUUID(e, elem)
+			}
+			e.ArrEnd()
+		}
 	}
 	{
 		e.FieldStart("mission")
@@ -2269,11 +2279,12 @@ func (s *CreateRequestReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCreateRequestReq = [4]string{
+var jsonFieldsNameOfCreateRequestReq = [5]string{
 	0: "reason",
 	1: "requester",
-	2: "rocket_config",
-	3: "mission",
+	2: "mission_id",
+	3: "approvals",
+	4: "mission",
 }
 
 // Decode decodes CreateRequestReq from json.
@@ -2309,18 +2320,39 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "rocket_config":
+		case "mission_id":
 			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
-				if err := s.RocketConfig.Decode(d); err != nil {
+				v, err := d.Str()
+				s.MissionID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"rocket_config\"")
+				return errors.Wrap(err, "decode field \"mission_id\"")
+			}
+		case "approvals":
+			if err := func() error {
+				s.Approvals = make([]uuid.UUID, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem uuid.UUID
+					v, err := json.DecodeUUID(d)
+					elem = v
+					if err != nil {
+						return err
+					}
+					s.Approvals = append(s.Approvals, elem)
+					return nil
+				}); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"approvals\"")
 			}
 		case "mission":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := d.Str()
 				s.Mission = string(v)
@@ -2341,7 +2373,7 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00010111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2383,62 +2415,6 @@ func (s *CreateRequestReq) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *CreateRequestReq) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s CreateRequestReqRocketConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields implements json.Marshaler.
-func (s CreateRequestReqRocketConfig) encodeFields(e *jx.Encoder) {
-	for k, elem := range s {
-		e.FieldStart(k)
-
-		e.Str(elem)
-	}
-}
-
-// Decode decodes CreateRequestReqRocketConfig from json.
-func (s *CreateRequestReqRocketConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode CreateRequestReqRocketConfig to nil")
-	}
-	m := s.init()
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem string
-		if err := func() error {
-			v, err := d.Str()
-			elem = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrapf(err, "decode field %q", k)
-		}
-		m[string(k)] = elem
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode CreateRequestReqRocketConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s CreateRequestReqRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *CreateRequestReqRocketConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -3020,6 +2996,56 @@ func (s ListMissionRocketsOKApplicationJSON) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *ListMissionRocketsOKApplicationJSON) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ListRequestApprovalsOKApplicationJSON as json.
+func (s ListRequestApprovalsOKApplicationJSON) Encode(e *jx.Encoder) {
+	unwrapped := []RequestApprovalsList(s)
+
+	e.ArrStart()
+	for _, elem := range unwrapped {
+		elem.Encode(e)
+	}
+	e.ArrEnd()
+}
+
+// Decode decodes ListRequestApprovalsOKApplicationJSON from json.
+func (s *ListRequestApprovalsOKApplicationJSON) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ListRequestApprovalsOKApplicationJSON to nil")
+	}
+	var unwrapped []RequestApprovalsList
+	if err := func() error {
+		unwrapped = make([]RequestApprovalsList, 0)
+		if err := d.Arr(func(d *jx.Decoder) error {
+			var elem RequestApprovalsList
+			if err := elem.Decode(d); err != nil {
+				return err
+			}
+			unwrapped = append(unwrapped, elem)
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ListRequestApprovalsOKApplicationJSON(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ListRequestApprovalsOKApplicationJSON) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ListRequestApprovalsOKApplicationJSON) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -3673,8 +3699,8 @@ func (s *MissionRequestsList) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
-		e.FieldStart("rocket_config")
-		s.RocketConfig.Encode(e)
+		e.FieldStart("mission_id")
+		e.Str(s.MissionID)
 	}
 }
 
@@ -3682,7 +3708,7 @@ var jsonFieldsNameOfMissionRequestsList = [4]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "rocket_config",
+	3: "mission_id",
 }
 
 // Decode decodes MissionRequestsList from json.
@@ -3730,15 +3756,17 @@ func (s *MissionRequestsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "rocket_config":
+		case "mission_id":
 			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				if err := s.RocketConfig.Decode(d); err != nil {
+				v, err := d.Str()
+				s.MissionID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"rocket_config\"")
+				return errors.Wrap(err, "decode field \"mission_id\"")
 			}
 		default:
 			return d.Skip()
@@ -3792,62 +3820,6 @@ func (s *MissionRequestsList) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *MissionRequestsList) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s MissionRequestsListRocketConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields implements json.Marshaler.
-func (s MissionRequestsListRocketConfig) encodeFields(e *jx.Encoder) {
-	for k, elem := range s {
-		e.FieldStart(k)
-
-		e.Str(elem)
-	}
-}
-
-// Decode decodes MissionRequestsListRocketConfig from json.
-func (s *MissionRequestsListRocketConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode MissionRequestsListRocketConfig to nil")
-	}
-	m := s.init()
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem string
-		if err := func() error {
-			v, err := d.Str()
-			elem = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrapf(err, "decode field %q", k)
-		}
-		m[string(k)] = elem
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode MissionRequestsListRocketConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s MissionRequestsListRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *MissionRequestsListRocketConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -4400,40 +4372,6 @@ func (s OptUUID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *OptUUID) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes UpdateRequestReqRocketConfig as json.
-func (o OptUpdateRequestReqRocketConfig) Encode(e *jx.Encoder) {
-	if !o.Set {
-		return
-	}
-	o.Value.Encode(e)
-}
-
-// Decode decodes UpdateRequestReqRocketConfig from json.
-func (o *OptUpdateRequestReqRocketConfig) Decode(d *jx.Decoder) error {
-	if o == nil {
-		return errors.New("invalid: unable to decode OptUpdateRequestReqRocketConfig to nil")
-	}
-	o.Set = true
-	o.Value = make(UpdateRequestReqRocketConfig)
-	if err := o.Value.Decode(d); err != nil {
-		return err
-	}
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s OptUpdateRequestReqRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *OptUpdateRequestReqRocketConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -4997,6 +4935,204 @@ func (s *R500) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *RequestApprovalsList) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *RequestApprovalsList) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("id")
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("person")
+		e.Str(s.Person)
+	}
+	{
+		e.FieldStart("approved_time")
+		json.EncodeDateTime(e, s.ApprovedTime)
+	}
+	{
+		e.FieldStart("approved")
+		e.Bool(s.Approved)
+	}
+	{
+		e.FieldStart("revoked")
+		e.Bool(s.Revoked)
+	}
+	{
+		if s.RevokedTime.Set {
+			e.FieldStart("revoked_time")
+			s.RevokedTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("request_id")
+		json.EncodeUUID(e, s.RequestID)
+	}
+}
+
+var jsonFieldsNameOfRequestApprovalsList = [7]string{
+	0: "id",
+	1: "person",
+	2: "approved_time",
+	3: "approved",
+	4: "revoked",
+	5: "revoked_time",
+	6: "request_id",
+}
+
+// Decode decodes RequestApprovalsList from json.
+func (s *RequestApprovalsList) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode RequestApprovalsList to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "id":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := json.DecodeUUID(d)
+				s.ID = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "person":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Person = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"person\"")
+			}
+		case "approved_time":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.ApprovedTime = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"approved_time\"")
+			}
+		case "approved":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Bool()
+				s.Approved = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"approved\"")
+			}
+		case "revoked":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Bool()
+				s.Revoked = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"revoked\"")
+			}
+		case "revoked_time":
+			if err := func() error {
+				s.RevokedTime.Reset()
+				if err := s.RevokedTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"revoked_time\"")
+			}
+		case "request_id":
+			requiredBitSet[0] |= 1 << 6
+			if err := func() error {
+				v, err := json.DecodeUUID(d)
+				s.RequestID = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"request_id\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode RequestApprovalsList")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b01011111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfRequestApprovalsList) {
+					name = jsonFieldsNameOfRequestApprovalsList[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *RequestApprovalsList) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *RequestApprovalsList) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *RequestCreate) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -5018,8 +5154,8 @@ func (s *RequestCreate) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
-		e.FieldStart("rocket_config")
-		s.RocketConfig.Encode(e)
+		e.FieldStart("mission_id")
+		e.Str(s.MissionID)
 	}
 }
 
@@ -5027,7 +5163,7 @@ var jsonFieldsNameOfRequestCreate = [4]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "rocket_config",
+	3: "mission_id",
 }
 
 // Decode decodes RequestCreate from json.
@@ -5075,15 +5211,17 @@ func (s *RequestCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "rocket_config":
+		case "mission_id":
 			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				if err := s.RocketConfig.Decode(d); err != nil {
+				v, err := d.Str()
+				s.MissionID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"rocket_config\"")
+				return errors.Wrap(err, "decode field \"mission_id\"")
 			}
 		default:
 			return d.Skip()
@@ -5142,62 +5280,6 @@ func (s *RequestCreate) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s RequestCreateRocketConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields implements json.Marshaler.
-func (s RequestCreateRocketConfig) encodeFields(e *jx.Encoder) {
-	for k, elem := range s {
-		e.FieldStart(k)
-
-		e.Str(elem)
-	}
-}
-
-// Decode decodes RequestCreateRocketConfig from json.
-func (s *RequestCreateRocketConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode RequestCreateRocketConfig to nil")
-	}
-	m := s.init()
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem string
-		if err := func() error {
-			v, err := d.Str()
-			elem = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrapf(err, "decode field %q", k)
-		}
-		m[string(k)] = elem
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode RequestCreateRocketConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s RequestCreateRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *RequestCreateRocketConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
 func (s *RequestList) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -5219,8 +5301,8 @@ func (s *RequestList) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
-		e.FieldStart("rocket_config")
-		s.RocketConfig.Encode(e)
+		e.FieldStart("mission_id")
+		e.Str(s.MissionID)
 	}
 }
 
@@ -5228,7 +5310,7 @@ var jsonFieldsNameOfRequestList = [4]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "rocket_config",
+	3: "mission_id",
 }
 
 // Decode decodes RequestList from json.
@@ -5276,15 +5358,17 @@ func (s *RequestList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "rocket_config":
+		case "mission_id":
 			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				if err := s.RocketConfig.Decode(d); err != nil {
+				v, err := d.Str()
+				s.MissionID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"rocket_config\"")
+				return errors.Wrap(err, "decode field \"mission_id\"")
 			}
 		default:
 			return d.Skip()
@@ -5338,62 +5422,6 @@ func (s *RequestList) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *RequestList) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s RequestListRocketConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields implements json.Marshaler.
-func (s RequestListRocketConfig) encodeFields(e *jx.Encoder) {
-	for k, elem := range s {
-		e.FieldStart(k)
-
-		e.Str(elem)
-	}
-}
-
-// Decode decodes RequestListRocketConfig from json.
-func (s *RequestListRocketConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode RequestListRocketConfig to nil")
-	}
-	m := s.init()
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem string
-		if err := func() error {
-			v, err := d.Str()
-			elem = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrapf(err, "decode field %q", k)
-		}
-		m[string(k)] = elem
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode RequestListRocketConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s RequestListRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *RequestListRocketConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -5579,8 +5607,8 @@ func (s *RequestRead) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
-		e.FieldStart("rocket_config")
-		s.RocketConfig.Encode(e)
+		e.FieldStart("mission_id")
+		e.Str(s.MissionID)
 	}
 }
 
@@ -5588,7 +5616,7 @@ var jsonFieldsNameOfRequestRead = [4]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "rocket_config",
+	3: "mission_id",
 }
 
 // Decode decodes RequestRead from json.
@@ -5636,15 +5664,17 @@ func (s *RequestRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "rocket_config":
+		case "mission_id":
 			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				if err := s.RocketConfig.Decode(d); err != nil {
+				v, err := d.Str()
+				s.MissionID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"rocket_config\"")
+				return errors.Wrap(err, "decode field \"mission_id\"")
 			}
 		default:
 			return d.Skip()
@@ -5703,62 +5733,6 @@ func (s *RequestRead) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s RequestReadRocketConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields implements json.Marshaler.
-func (s RequestReadRocketConfig) encodeFields(e *jx.Encoder) {
-	for k, elem := range s {
-		e.FieldStart(k)
-
-		e.Str(elem)
-	}
-}
-
-// Decode decodes RequestReadRocketConfig from json.
-func (s *RequestReadRocketConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode RequestReadRocketConfig to nil")
-	}
-	m := s.init()
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem string
-		if err := func() error {
-			v, err := d.Str()
-			elem = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrapf(err, "decode field %q", k)
-		}
-		m[string(k)] = elem
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode RequestReadRocketConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s RequestReadRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *RequestReadRocketConfig) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
 func (s *RequestUpdate) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -5780,8 +5754,8 @@ func (s *RequestUpdate) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
-		e.FieldStart("rocket_config")
-		s.RocketConfig.Encode(e)
+		e.FieldStart("mission_id")
+		e.Str(s.MissionID)
 	}
 }
 
@@ -5789,7 +5763,7 @@ var jsonFieldsNameOfRequestUpdate = [4]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "rocket_config",
+	3: "mission_id",
 }
 
 // Decode decodes RequestUpdate from json.
@@ -5837,15 +5811,17 @@ func (s *RequestUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "rocket_config":
+		case "mission_id":
 			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				if err := s.RocketConfig.Decode(d); err != nil {
+				v, err := d.Str()
+				s.MissionID = string(v)
+				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"rocket_config\"")
+				return errors.Wrap(err, "decode field \"mission_id\"")
 			}
 		default:
 			return d.Skip()
@@ -5899,62 +5875,6 @@ func (s *RequestUpdate) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *RequestUpdate) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s RequestUpdateRocketConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields implements json.Marshaler.
-func (s RequestUpdateRocketConfig) encodeFields(e *jx.Encoder) {
-	for k, elem := range s {
-		e.FieldStart(k)
-
-		e.Str(elem)
-	}
-}
-
-// Decode decodes RequestUpdateRocketConfig from json.
-func (s *RequestUpdateRocketConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode RequestUpdateRocketConfig to nil")
-	}
-	m := s.init()
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem string
-		if err := func() error {
-			v, err := d.Str()
-			elem = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrapf(err, "decode field %q", k)
-		}
-		m[string(k)] = elem
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode RequestUpdateRocketConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s RequestUpdateRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *RequestUpdateRocketConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -7284,15 +7204,13 @@ func (s *UpdateRequestReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *UpdateRequestReq) encodeFields(e *jx.Encoder) {
 	{
-		if s.Reason.Set {
-			e.FieldStart("reason")
-			s.Reason.Encode(e)
-		}
-	}
-	{
-		if s.RocketConfig.Set {
-			e.FieldStart("rocket_config")
-			s.RocketConfig.Encode(e)
+		if s.Approvals != nil {
+			e.FieldStart("approvals")
+			e.ArrStart()
+			for _, elem := range s.Approvals {
+				json.EncodeUUID(e, elem)
+			}
+			e.ArrEnd()
 		}
 	}
 	{
@@ -7303,10 +7221,9 @@ func (s *UpdateRequestReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfUpdateRequestReq = [3]string{
-	0: "reason",
-	1: "rocket_config",
-	2: "mission",
+var jsonFieldsNameOfUpdateRequestReq = [2]string{
+	0: "approvals",
+	1: "mission",
 }
 
 // Decode decodes UpdateRequestReq from json.
@@ -7317,25 +7234,24 @@ func (s *UpdateRequestReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
-		case "reason":
+		case "approvals":
 			if err := func() error {
-				s.Reason.Reset()
-				if err := s.Reason.Decode(d); err != nil {
+				s.Approvals = make([]uuid.UUID, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem uuid.UUID
+					v, err := json.DecodeUUID(d)
+					elem = v
+					if err != nil {
+						return err
+					}
+					s.Approvals = append(s.Approvals, elem)
+					return nil
+				}); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"reason\"")
-			}
-		case "rocket_config":
-			if err := func() error {
-				s.RocketConfig.Reset()
-				if err := s.RocketConfig.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"rocket_config\"")
+				return errors.Wrap(err, "decode field \"approvals\"")
 			}
 		case "mission":
 			if err := func() error {
@@ -7367,62 +7283,6 @@ func (s *UpdateRequestReq) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *UpdateRequestReq) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
-func (s UpdateRequestReqRocketConfig) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields implements json.Marshaler.
-func (s UpdateRequestReqRocketConfig) encodeFields(e *jx.Encoder) {
-	for k, elem := range s {
-		e.FieldStart(k)
-
-		e.Str(elem)
-	}
-}
-
-// Decode decodes UpdateRequestReqRocketConfig from json.
-func (s *UpdateRequestReqRocketConfig) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode UpdateRequestReqRocketConfig to nil")
-	}
-	m := s.init()
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		var elem string
-		if err := func() error {
-			v, err := d.Str()
-			elem = string(v)
-			if err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			return errors.Wrapf(err, "decode field %q", k)
-		}
-		m[string(k)] = elem
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode UpdateRequestReqRocketConfig")
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s UpdateRequestReqRocketConfig) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *UpdateRequestReqRocketConfig) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

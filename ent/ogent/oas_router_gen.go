@@ -452,25 +452,57 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							return
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/mission"
-							if l := len("/mission"); len(elem) >= l && elem[0:l] == "/mission" {
+						case '/': // Prefix: "/"
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
 							if len(elem) == 0 {
-								// Leaf node.
-								switch r.Method {
-								case "GET":
-									s.handleReadRequestMissionRequest([1]string{
-										args[0],
-									}, elemIsEscaped, w, r)
-								default:
-									s.notAllowed(w, r, "GET")
+								break
+							}
+							switch elem[0] {
+							case 'a': // Prefix: "approvals"
+								if l := len("approvals"); len(elem) >= l && elem[0:l] == "approvals" {
+									elem = elem[l:]
+								} else {
+									break
 								}
 
-								return
+								if len(elem) == 0 {
+									// Leaf node.
+									switch r.Method {
+									case "GET":
+										s.handleListRequestApprovalsRequest([1]string{
+											args[0],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
+								}
+							case 'm': // Prefix: "mission"
+								if l := len("mission"); len(elem) >= l && elem[0:l] == "mission" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									// Leaf node.
+									switch r.Method {
+									case "GET":
+										s.handleReadRequestMissionRequest([1]string{
+											args[0],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
+								}
 							}
 						}
 					}
@@ -1129,26 +1161,60 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							}
 						}
 						switch elem[0] {
-						case '/': // Prefix: "/mission"
-							if l := len("/mission"); len(elem) >= l && elem[0:l] == "/mission" {
+						case '/': // Prefix: "/"
+							if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
 							if len(elem) == 0 {
-								switch method {
-								case "GET":
-									// Leaf: ReadRequestMission
-									r.name = "ReadRequestMission"
-									r.summary = "Find the attached Mission"
-									r.operationID = "readRequestMission"
-									r.pathPattern = "/requests/{id}/mission"
-									r.args = args
-									r.count = 1
-									return r, true
-								default:
-									return
+								break
+							}
+							switch elem[0] {
+							case 'a': // Prefix: "approvals"
+								if l := len("approvals"); len(elem) >= l && elem[0:l] == "approvals" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									switch method {
+									case "GET":
+										// Leaf: ListRequestApprovals
+										r.name = "ListRequestApprovals"
+										r.summary = "List attached Approvals"
+										r.operationID = "listRequestApprovals"
+										r.pathPattern = "/requests/{id}/approvals"
+										r.args = args
+										r.count = 1
+										return r, true
+									default:
+										return
+									}
+								}
+							case 'm': // Prefix: "mission"
+								if l := len("mission"); len(elem) >= l && elem[0:l] == "mission" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									switch method {
+									case "GET":
+										// Leaf: ReadRequestMission
+										r.name = "ReadRequestMission"
+										r.summary = "Find the attached Mission"
+										r.operationID = "readRequestMission"
+										r.pathPattern = "/requests/{id}/mission"
+										r.args = args
+										r.count = 1
+										return r, true
+									default:
+										return
+									}
 								}
 							}
 						}

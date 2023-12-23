@@ -8,13 +8,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/orbit-ops/launchpad-core/config"
 	"github.com/orbit-ops/launchpad-core/ent"
+	"github.com/orbit-ops/launchpad-core/httpserver"
 	"github.com/orbit-ops/launchpad-core/providers"
 	"github.com/orbit-ops/launchpad-core/providers/local"
-	"github.com/orbit-ops/launchpad-core/server"
 )
 
 func main() {
-	cfg, err := config.LoadConfig()
+	cfg, err := config.LoadConfig(context.TODO())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,5 +38,7 @@ func main() {
 		log.Fatalf("running migrations: %v", err)
 	}
 
-	server.Start(cfg, prov, client)
+	if err := httpserver.Start(cfg, prov, client); err != nil {
+		log.Fatalf("running server: %v", err)
+	}
 }

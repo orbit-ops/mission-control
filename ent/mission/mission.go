@@ -35,7 +35,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "request" package.
 	RequestsInverseTable = "requests"
 	// RequestsColumn is the table column denoting the requests relation/edge.
-	RequestsColumn = "mission_requests"
+	RequestsColumn = "mission_id"
 )
 
 // Columns holds all SQL columns for mission fields.

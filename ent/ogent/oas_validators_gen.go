@@ -265,6 +265,14 @@ func (s ListMissionRocketsOKApplicationJSON) Validate() error {
 	return nil
 }
 
+func (s ListRequestApprovalsOKApplicationJSON) Validate() error {
+	alias := ([]RequestApprovalsList)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	return nil
+}
+
 func (s ListRequestOKApplicationJSON) Validate() error {
 	alias := ([]RequestList)(s)
 	if alias == nil {

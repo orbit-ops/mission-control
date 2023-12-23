@@ -698,8 +698,9 @@ func (h *OgentHandler) CreateRequest(ctx context.Context, req *CreateRequestReq)
 	// Add all fields.
 	b.SetReason(req.Reason)
 	b.SetRequester(req.Requester)
-	b.SetRocketConfig(req.RocketConfig)
+	b.SetMissionID(req.MissionID)
 	// Add all edges.
+	b.AddApprovalIDs(req.Approvals...)
 	b.SetMissionID(req.Mission)
 	// Persist to storage.
 	e, err := b.Save(ctx)
@@ -762,12 +763,6 @@ func (h *OgentHandler) ReadRequest(ctx context.Context, params ReadRequestParams
 func (h *OgentHandler) UpdateRequest(ctx context.Context, req *UpdateRequestReq, params UpdateRequestParams) (UpdateRequestRes, error) {
 	b := h.client.Request.UpdateOneID(params.ID)
 	// Add all fields.
-	if v, ok := req.Reason.Get(); ok {
-		b.SetReason(v)
-	}
-	if v, ok := req.RocketConfig.Get(); ok {
-		b.SetRocketConfig(v)
-	}
 	// Add all edges.
 	// Persist to storage.
 	e, err := b.Save(ctx)
@@ -861,6 +856,42 @@ func (h *OgentHandler) ListRequest(ctx context.Context, params ListRequestParams
 	}
 	r := NewRequestLists(es)
 	return (*ListRequestOKApplicationJSON)(&r), nil
+}
+
+// ListRequestApprovals handles GET /requests/{id}/approvals requests.
+func (h *OgentHandler) ListRequestApprovals(ctx context.Context, params ListRequestApprovalsParams) (ListRequestApprovalsRes, error) {
+	q := h.client.Request.Query().Where(request.IDEQ(params.ID)).QueryApprovals()
+	page := 1
+	if v, ok := params.Page.Get(); ok {
+		page = v
+	}
+	itemsPerPage := 30
+	if v, ok := params.ItemsPerPage.Get(); ok {
+		itemsPerPage = v
+	}
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+	es, err := q.All(ctx)
+	if err != nil {
+		switch {
+		case ent.IsNotFound(err):
+			return &R404{
+				Code:   http.StatusNotFound,
+				Status: http.StatusText(http.StatusNotFound),
+				Errors: rawError(err),
+			}, nil
+		case ent.IsNotSingular(err):
+			return &R409{
+				Code:   http.StatusConflict,
+				Status: http.StatusText(http.StatusConflict),
+				Errors: rawError(err),
+			}, nil
+		default:
+			// Let the server handle the error.
+			return nil, err
+		}
+	}
+	r := NewRequestApprovalsLists(es)
+	return (*ListRequestApprovalsOKApplicationJSON)(&r), nil
 }
 
 // ReadRequestMission handles GET /requests/{id}/mission requests.

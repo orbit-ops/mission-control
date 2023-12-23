@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -19,29 +20,29 @@ const (
 )
 
 type ProviderConfig struct {
-	Type       ProviderType              `yaml:"type"`
-	Executable string                    `yaml:"executable"`
-	Kubernetes *ProviderKubernetesConfig `yaml:"kubernetes"`
+	Type       ProviderType              `mapstructure:"type"`
+	Executable string                    `mapstructure:"executable"`
+	Kubernetes *ProviderKubernetesConfig `mapstructure:"kubernetes"`
 }
 
 type ProviderKubernetesConfig struct {
-	JobNamespace string `yaml:"jobNamespace"`
+	JobNamespace string `mapstructure:"jobNamespace"`
 }
 
 type SessionsConfig struct {
-	SessionKey    *resolvers.ResolverField `yaml:"key"`
-	JwtExpiration utils.Duration           `yaml:"expiration"`
+	SessionKey    *resolvers.ResolverField `mapstructure:"key"`
+	JwtExpiration utils.Duration           `mapstructure:"expiration"`
 }
 
 type Config struct {
-	DevMode  bool            `yaml:"dev"`
-	Version  string          `yaml:"version"`
-	Provider ProviderConfig  `yaml:"provider"`
-	ApiUrl   string          `yaml:"apiUrl"`
-	Sessions *SessionsConfig `yaml:"sessions"`
+	DevMode  bool            `mapstructure:"dev"`
+	Version  string          `mapstructure:"version"`
+	Provider ProviderConfig  `mapstructure:"provider"`
+	ApiUrl   string          `mapstructure:"apiUrl"`
+	Sessions *SessionsConfig `mapstructure:"sessions"`
 }
 
-func LoadConfig() (*Config, error) {
+func LoadConfig(ctx context.Context) (*Config, error) {
 	viper.SetConfigName("launchpad")        // name of config file (without extension)
 	viper.SetConfigType("yaml")             // REQUIRED if the config file does not have the extension in the name
 	viper.AddConfigPath("/etc/launchpad/")  // path to look for the config file in
@@ -54,7 +55,7 @@ func LoadConfig() (*Config, error) {
 	viper.SetEnvPrefix("launchpad")
 	viper.AutomaticEnv()
 	viper.SetDefault("provider.type", ProviderKubernetes)
-	viper.SetDefault("apiUrl", "http://localhost:9000")
+	viper.SetDefault("apiUrl", "localhost:9000")
 	viper.SetDefault("dev", false)
 
 	err := viper.ReadInConfig() // Find and read the config file
@@ -67,5 +68,9 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("unable to decode into struct, %v", err)
 	}
 
+	resolv := resolvers.NewResolver()
+	if err := resolv.Resolve(ctx, cfg.Sessions.SessionKey); err != nil {
+		return nil, fmt.Errorf("resolving session key: %w", err)
+	}
 	return cfg, nil
 }

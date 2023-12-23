@@ -17,19 +17,28 @@ const (
 	FieldReason = "reason"
 	// FieldRequester holds the string denoting the requester field in the database.
 	FieldRequester = "requester"
-	// FieldRocketConfig holds the string denoting the rocket_config field in the database.
-	FieldRocketConfig = "rocket_config"
+	// FieldMissionID holds the string denoting the mission_id field in the database.
+	FieldMissionID = "mission_id"
+	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
+	EdgeApprovals = "approvals"
 	// EdgeMission holds the string denoting the mission edge name in mutations.
 	EdgeMission = "mission"
 	// Table holds the table name of the request in the database.
 	Table = "requests"
+	// ApprovalsTable is the table that holds the approvals relation/edge.
+	ApprovalsTable = "approvals"
+	// ApprovalsInverseTable is the table name for the Approval entity.
+	// It exists in this package in order to avoid circular dependency with the "approval" package.
+	ApprovalsInverseTable = "approvals"
+	// ApprovalsColumn is the table column denoting the approvals relation/edge.
+	ApprovalsColumn = "approval_requests"
 	// MissionTable is the table that holds the mission relation/edge.
 	MissionTable = "requests"
 	// MissionInverseTable is the table name for the Mission entity.
 	// It exists in this package in order to avoid circular dependency with the "mission" package.
 	MissionInverseTable = "missions"
 	// MissionColumn is the table column denoting the mission relation/edge.
-	MissionColumn = "mission_requests"
+	MissionColumn = "mission_id"
 )
 
 // Columns holds all SQL columns for request fields.
@@ -37,24 +46,13 @@ var Columns = []string{
 	FieldID,
 	FieldReason,
 	FieldRequester,
-	FieldRocketConfig,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "requests"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"mission_requests",
+	FieldMissionID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -84,11 +82,37 @@ func ByRequester(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRequester, opts...).ToFunc()
 }
 
+// ByMissionID orders the results by the mission_id field.
+func ByMissionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMissionID, opts...).ToFunc()
+}
+
+// ByApprovalsCount orders the results by approvals count.
+func ByApprovalsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newApprovalsStep(), opts...)
+	}
+}
+
+// ByApprovals orders the results by approvals terms.
+func ByApprovals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newApprovalsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByMissionField orders the results by mission field.
 func ByMissionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newMissionStep(), sql.OrderByField(field, opts...))
 	}
+}
+func newApprovalsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ApprovalsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, ApprovalsTable, ApprovalsColumn),
+	)
 }
 func newMissionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

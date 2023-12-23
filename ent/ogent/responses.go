@@ -439,7 +439,7 @@ func NewMissionRequestsList(e *ent.Request) *MissionRequestsList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.RocketConfig = e.RocketConfig
+	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -500,7 +500,7 @@ func NewRequestCreate(e *ent.Request) *RequestCreate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.RocketConfig = e.RocketConfig
+	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -530,7 +530,7 @@ func NewRequestList(e *ent.Request) *RequestList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.RocketConfig = e.RocketConfig
+	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -560,7 +560,7 @@ func NewRequestRead(e *ent.Request) *RequestRead {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.RocketConfig = e.RocketConfig
+	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -590,7 +590,7 @@ func NewRequestUpdate(e *ent.Request) *RequestUpdate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.RocketConfig = e.RocketConfig
+	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -610,6 +610,39 @@ func (r *RequestUpdate) Elem() RequestUpdate {
 		return RequestUpdate{}
 	}
 	return *r
+}
+
+func NewRequestApprovalsList(e *ent.Approval) *RequestApprovalsList {
+	if e == nil {
+		return nil
+	}
+	var ret RequestApprovalsList
+	ret.ID = e.ID
+	ret.Person = e.Person
+	ret.ApprovedTime = e.ApprovedTime
+	ret.Approved = e.Approved
+	ret.Revoked = e.Revoked
+	ret.RevokedTime = NewOptDateTime(e.RevokedTime)
+	ret.RequestID = e.RequestID
+	return &ret
+}
+
+func NewRequestApprovalsLists(es []*ent.Approval) []RequestApprovalsList {
+	if len(es) == 0 {
+		return nil
+	}
+	r := make([]RequestApprovalsList, len(es))
+	for i, e := range es {
+		r[i] = NewRequestApprovalsList(e).Elem()
+	}
+	return r
+}
+
+func (a *RequestApprovalsList) Elem() RequestApprovalsList {
+	if a == nil {
+		return RequestApprovalsList{}
+	}
+	return *a
 }
 
 func NewRequestMissionRead(e *ent.Mission) *RequestMissionRead {

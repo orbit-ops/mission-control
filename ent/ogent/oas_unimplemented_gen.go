@@ -175,6 +175,15 @@ func (UnimplementedHandler) ListRequest(ctx context.Context, params ListRequestP
 	return r, ht.ErrNotImplemented
 }
 
+// ListRequestApprovals implements listRequestApprovals operation.
+//
+// List attached Approvals.
+//
+// GET /requests/{id}/approvals
+func (UnimplementedHandler) ListRequestApprovals(ctx context.Context, params ListRequestApprovalsParams) (r ListRequestApprovalsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListRocket implements listRocket operation.
 //
 // List Rockets.

@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"entgo.io/contrib/entoas"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -21,17 +20,16 @@ func (Request) Fields() []ent.Field {
 
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.String("reason"),
+		field.String("reason").Immutable(),
 		field.String("requester").Immutable(),
-		field.JSON("rocket_config", map[string]string{}).
-			Annotations(entoas.Schema(rocketSchema)),
+		field.String("mission_id").Immutable(),
 	}
 }
 
 // Edges of the Request.
 func (Request) Edges() []ent.Edge {
 	return []ent.Edge{
-		// edge.From("requests", Approval.Type).Ref("requests").Required().Unique().Immutable(),
-		edge.From("mission", Mission.Type).Immutable().Unique().Required().Ref("requests"),
+		edge.From("approvals", Approval.Type).Ref("requests").Immutable(),
+		edge.From("mission", Mission.Type).Immutable().Unique().Required().Ref("requests").Field("mission_id"),
 	}
 }

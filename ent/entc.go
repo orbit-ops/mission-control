@@ -47,6 +47,7 @@ func main() {
 			gen.FeatureNamedEdges,
 			gen.FeatureUpsert,
 			gen.FeatureIntercept,
+			gen.FeaturePrivacy,
 		},
 	}, entc.Extensions(ogent, authzExt, oas))
 	if err != nil {

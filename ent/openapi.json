@@ -1294,10 +1294,14 @@
                   "requester": {
                     "type": "string"
                   },
-                  "rocket_config": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
+                  "mission_id": {
+                    "type": "string"
+                  },
+                  "approvals": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
                     }
                   },
                   "mission": {
@@ -1307,7 +1311,7 @@
                 "required": [
                   "reason",
                   "requester",
-                  "rocket_config",
+                  "mission_id",
                   "mission"
                 ]
               }
@@ -1470,13 +1474,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "reason": {
-                    "type": "string"
-                  },
-                  "rocket_config": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
+                  "approvals": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
                     }
                   },
                   "mission": {
@@ -1512,6 +1514,79 @@
             "$ref": "#/components/responses/500"
           }
         }
+      }
+    },
+    "/requests/{id}/approvals": {
+      "get": {
+        "tags": [
+          "Request"
+        ],
+        "summary": "List attached Approvals",
+        "description": "List attached Approvals.",
+        "operationId": "listRequestApprovals",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Request",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "result Requests list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Request_ApprovalsList"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/requests/{id}/mission": {
@@ -2582,18 +2657,15 @@
           "requester": {
             "type": "string"
           },
-          "rocket_config": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
+          "mission_id": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "rocket_config"
+          "mission_id"
         ]
       },
       "Mission_RocketsList": {
@@ -2651,10 +2723,13 @@
           "requester": {
             "type": "string"
           },
-          "rocket_config": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
+          "mission_id": {
+            "type": "string"
+          },
+          "approvals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Approval"
             }
           },
           "mission": {
@@ -2665,7 +2740,7 @@
           "id",
           "reason",
           "requester",
-          "rocket_config",
+          "mission_id",
           "mission"
         ]
       },
@@ -2682,18 +2757,15 @@
           "requester": {
             "type": "string"
           },
-          "rocket_config": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
+          "mission_id": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "rocket_config"
+          "mission_id"
         ]
       },
       "RequestList": {
@@ -2709,18 +2781,15 @@
           "requester": {
             "type": "string"
           },
-          "rocket_config": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
+          "mission_id": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "rocket_config"
+          "mission_id"
         ]
       },
       "RequestRead": {
@@ -2736,18 +2805,15 @@
           "requester": {
             "type": "string"
           },
-          "rocket_config": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
+          "mission_id": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "rocket_config"
+          "mission_id"
         ]
       },
       "RequestUpdate": {
@@ -2763,18 +2829,53 @@
           "requester": {
             "type": "string"
           },
-          "rocket_config": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
+          "mission_id": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
           "requester",
-          "rocket_config"
+          "mission_id"
+        ]
+      },
+      "Request_ApprovalsList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "person": {
+            "type": "string"
+          },
+          "approved_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "revoked": {
+            "type": "boolean"
+          },
+          "revoked_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "person",
+          "approved_time",
+          "approved",
+          "revoked",
+          "request_id"
         ]
       },
       "Request_MissionRead": {

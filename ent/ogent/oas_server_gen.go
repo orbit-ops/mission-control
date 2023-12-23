@@ -116,6 +116,12 @@ type Handler interface {
 	//
 	// GET /requests
 	ListRequest(ctx context.Context, params ListRequestParams) (ListRequestRes, error)
+	// ListRequestApprovals implements listRequestApprovals operation.
+	//
+	// List attached Approvals.
+	//
+	// GET /requests/{id}/approvals
+	ListRequestApprovals(ctx context.Context, params ListRequestApprovalsParams) (ListRequestApprovalsRes, error)
 	// ListRocket implements listRocket operation.
 	//
 	// List Rockets.

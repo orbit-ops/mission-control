@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -11,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/mission"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 	"github.com/orbit-ops/launchpad-core/ent/request"
@@ -19,12 +21,13 @@ import (
 // RequestQuery is the builder for querying Request entities.
 type RequestQuery struct {
 	config
-	ctx         *QueryContext
-	order       []request.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Request
-	withMission *MissionQuery
-	withFKs     bool
+	ctx                *QueryContext
+	order              []request.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.Request
+	withApprovals      *ApprovalQuery
+	withMission        *MissionQuery
+	withNamedApprovals map[string]*ApprovalQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -59,6 +62,28 @@ func (rq *RequestQuery) Unique(unique bool) *RequestQuery {
 func (rq *RequestQuery) Order(o ...request.OrderOption) *RequestQuery {
 	rq.order = append(rq.order, o...)
 	return rq
+}
+
+// QueryApprovals chains the current query on the "approvals" edge.
+func (rq *RequestQuery) QueryApprovals() *ApprovalQuery {
+	query := (&ApprovalClient{config: rq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(request.Table, request.FieldID, selector),
+			sqlgraph.To(approval.Table, approval.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, request.ApprovalsTable, request.ApprovalsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryMission chains the current query on the "mission" edge.
@@ -270,16 +295,28 @@ func (rq *RequestQuery) Clone() *RequestQuery {
 		return nil
 	}
 	return &RequestQuery{
-		config:      rq.config,
-		ctx:         rq.ctx.Clone(),
-		order:       append([]request.OrderOption{}, rq.order...),
-		inters:      append([]Interceptor{}, rq.inters...),
-		predicates:  append([]predicate.Request{}, rq.predicates...),
-		withMission: rq.withMission.Clone(),
+		config:        rq.config,
+		ctx:           rq.ctx.Clone(),
+		order:         append([]request.OrderOption{}, rq.order...),
+		inters:        append([]Interceptor{}, rq.inters...),
+		predicates:    append([]predicate.Request{}, rq.predicates...),
+		withApprovals: rq.withApprovals.Clone(),
+		withMission:   rq.withMission.Clone(),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
 	}
+}
+
+// WithApprovals tells the query-builder to eager-load the nodes that are connected to
+// the "approvals" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *RequestQuery) WithApprovals(opts ...func(*ApprovalQuery)) *RequestQuery {
+	query := (&ApprovalClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withApprovals = query
+	return rq
 }
 
 // WithMission tells the query-builder to eager-load the nodes that are connected to
@@ -370,18 +407,12 @@ func (rq *RequestQuery) prepareQuery(ctx context.Context) error {
 func (rq *RequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Request, error) {
 	var (
 		nodes       = []*Request{}
-		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
+			rq.withApprovals != nil,
 			rq.withMission != nil,
 		}
 	)
-	if rq.withMission != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, request.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Request).scanValues(nil, columns)
 	}
@@ -400,23 +431,65 @@ func (rq *RequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Requ
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := rq.withApprovals; query != nil {
+		if err := rq.loadApprovals(ctx, query, nodes,
+			func(n *Request) { n.Edges.Approvals = []*Approval{} },
+			func(n *Request, e *Approval) { n.Edges.Approvals = append(n.Edges.Approvals, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := rq.withMission; query != nil {
 		if err := rq.loadMission(ctx, query, nodes, nil,
 			func(n *Request, e *Mission) { n.Edges.Mission = e }); err != nil {
 			return nil, err
 		}
 	}
+	for name, query := range rq.withNamedApprovals {
+		if err := rq.loadApprovals(ctx, query, nodes,
+			func(n *Request) { n.appendNamedApprovals(name) },
+			func(n *Request, e *Approval) { n.appendNamedApprovals(name, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
+func (rq *RequestQuery) loadApprovals(ctx context.Context, query *ApprovalQuery, nodes []*Request, init func(*Request), assign func(*Request, *Approval)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Request)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Approval(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(request.ApprovalsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.approval_requests
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "approval_requests" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "approval_requests" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
 func (rq *RequestQuery) loadMission(ctx context.Context, query *MissionQuery, nodes []*Request, init func(*Request), assign func(*Request, *Mission)) error {
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*Request)
 	for i := range nodes {
-		if nodes[i].mission_requests == nil {
-			continue
-		}
-		fk := *nodes[i].mission_requests
+		fk := nodes[i].MissionID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -433,7 +506,7 @@ func (rq *RequestQuery) loadMission(ctx context.Context, query *MissionQuery, no
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "mission_requests" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "mission_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -466,6 +539,9 @@ func (rq *RequestQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != request.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if rq.withMission != nil {
+			_spec.Node.AddColumnOnce(request.FieldMissionID)
 		}
 	}
 	if ps := rq.predicates; len(ps) > 0 {
@@ -521,6 +597,20 @@ func (rq *RequestQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// WithNamedApprovals tells the query-builder to eager-load the nodes that are connected to the "approvals"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (rq *RequestQuery) WithNamedApprovals(name string, opts ...func(*ApprovalQuery)) *RequestQuery {
+	query := (&ApprovalClient{config: rq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	if rq.withNamedApprovals == nil {
+		rq.withNamedApprovals = make(map[string]*ApprovalQuery)
+	}
+	rq.withNamedApprovals[name] = query
+	return rq
 }
 
 // RequestGroupBy is the group-by builder for Request entities.

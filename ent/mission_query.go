@@ -533,7 +533,9 @@ func (mq *MissionQuery) loadRequests(ctx context.Context, query *RequestQuery, n
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(request.FieldMissionID)
+	}
 	query.Where(predicate.Request(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(mission.RequestsColumn), fks...))
 	}))
@@ -542,13 +544,10 @@ func (mq *MissionQuery) loadRequests(ctx context.Context, query *RequestQuery, n
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.mission_requests
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "mission_requests" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.MissionID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "mission_requests" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "mission_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

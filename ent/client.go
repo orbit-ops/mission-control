@@ -1266,6 +1266,22 @@ func (c *RequestClient) GetX(ctx context.Context, id uuid.UUID) *Request {
 	return obj
 }
 
+// QueryApprovals queries the approvals edge of a Request.
+func (c *RequestClient) QueryApprovals(r *Request) *ApprovalQuery {
+	query := (&ApprovalClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(request.Table, request.FieldID, id),
+			sqlgraph.To(approval.Table, approval.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, request.ApprovalsTable, request.ApprovalsColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryMission queries the mission edge of a Request.
 func (c *RequestClient) QueryMission(r *Request) *MissionQuery {
 	query := (&MissionClient{config: c.config}).Query()

@@ -13,7 +13,6 @@ require (
 	github.com/ogen-go/ogen v0.81.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.18.2
-	github.com/tiagoposse/connect v0.0.0-20231122133316-af82169d10ce
 	github.com/tiagoposse/go-auth v0.0.0-20231122133334-b0e4038cd0ca
 	github.com/tiagoposse/go-secret-resolvers v0.0.0-20231222101559-5c70b15978e4
 	github.com/tiagoposse/ogent-auth v0.0.0-20231119153950-05ddabecd75a
@@ -89,9 +88,9 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
+	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
-	github.com/tiagoposse/entoas-fields-exclusion v0.0.0-20231018111014-2cb5449ad9a3 // indirect
-	github.com/tiagoposse/ogent v0.0.0-20231222130018-cf36271ca3be // indirect
+	github.com/tiagoposse/ogent v0.0.0-00010101000000-000000000000 // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1 // indirect

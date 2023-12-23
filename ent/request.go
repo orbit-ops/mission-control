@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -23,28 +22,39 @@ type Request struct {
 	Reason string `json:"reason,omitempty"`
 	// Requester holds the value of the "requester" field.
 	Requester string `json:"requester,omitempty"`
-	// RocketConfig holds the value of the "rocket_config" field.
-	RocketConfig map[string]string `json:"rocket_config,omitempty"`
+	// MissionID holds the value of the "mission_id" field.
+	MissionID string `json:"mission_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RequestQuery when eager-loading is set.
-	Edges            RequestEdges `json:"edges"`
-	mission_requests *string
-	selectValues     sql.SelectValues
+	Edges        RequestEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // RequestEdges holds the relations/edges for other nodes in the graph.
 type RequestEdges struct {
+	// Approvals holds the value of the approvals edge.
+	Approvals []*Approval `json:"approvals,omitempty"`
 	// Mission holds the value of the mission edge.
 	Mission *Mission `json:"mission,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes    [2]bool
+	namedApprovals map[string][]*Approval
+}
+
+// ApprovalsOrErr returns the Approvals value or an error if the edge
+// was not loaded in eager-loading.
+func (e RequestEdges) ApprovalsOrErr() ([]*Approval, error) {
+	if e.loadedTypes[0] {
+		return e.Approvals, nil
+	}
+	return nil, &NotLoadedError{edge: "approvals"}
 }
 
 // MissionOrErr returns the Mission value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e RequestEdges) MissionOrErr() (*Mission, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		if e.Mission == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: mission.Label}
@@ -59,14 +69,10 @@ func (*Request) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case request.FieldRocketConfig:
-			values[i] = new([]byte)
-		case request.FieldReason, request.FieldRequester:
+		case request.FieldReason, request.FieldRequester, request.FieldMissionID:
 			values[i] = new(sql.NullString)
 		case request.FieldID:
 			values[i] = new(uuid.UUID)
-		case request.ForeignKeys[0]: // mission_requests
-			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -100,20 +106,11 @@ func (r *Request) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Requester = value.String
 			}
-		case request.FieldRocketConfig:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field rocket_config", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &r.RocketConfig); err != nil {
-					return fmt.Errorf("unmarshal field rocket_config: %w", err)
-				}
-			}
-		case request.ForeignKeys[0]:
+		case request.FieldMissionID:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field mission_requests", values[i])
+				return fmt.Errorf("unexpected type %T for field mission_id", values[i])
 			} else if value.Valid {
-				r.mission_requests = new(string)
-				*r.mission_requests = value.String
+				r.MissionID = value.String
 			}
 		default:
 			r.selectValues.Set(columns[i], values[i])
@@ -126,6 +123,11 @@ func (r *Request) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (r *Request) Value(name string) (ent.Value, error) {
 	return r.selectValues.Get(name)
+}
+
+// QueryApprovals queries the "approvals" edge of the Request entity.
+func (r *Request) QueryApprovals() *ApprovalQuery {
+	return NewRequestClient(r.config).QueryApprovals(r)
 }
 
 // QueryMission queries the "mission" edge of the Request entity.
@@ -162,10 +164,34 @@ func (r *Request) String() string {
 	builder.WriteString("requester=")
 	builder.WriteString(r.Requester)
 	builder.WriteString(", ")
-	builder.WriteString("rocket_config=")
-	builder.WriteString(fmt.Sprintf("%v", r.RocketConfig))
+	builder.WriteString("mission_id=")
+	builder.WriteString(r.MissionID)
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedApprovals returns the Approvals named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (r *Request) NamedApprovals(name string) ([]*Approval, error) {
+	if r.Edges.namedApprovals == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := r.Edges.namedApprovals[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (r *Request) appendNamedApprovals(name string, edges ...*Approval) {
+	if r.Edges.namedApprovals == nil {
+		r.Edges.namedApprovals = make(map[string][]*Approval)
+	}
+	if len(edges) == 0 {
+		r.Edges.namedApprovals[name] = []*Approval{}
+	} else {
+		r.Edges.namedApprovals[name] = append(r.Edges.namedApprovals[name], edges...)
+	}
 }
 
 // Requests is a parsable slice of Request.
