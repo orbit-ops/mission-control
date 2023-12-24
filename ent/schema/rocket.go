@@ -1,14 +1,11 @@
 package schema
 
 import (
-	"fmt"
-	"regexp"
-
 	"entgo.io/contrib/entoas"
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
-	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/ogen-go/ogen"
 	"github.com/orbit-ops/launchpad-core/utils"
 	ogauth "github.com/tiagoposse/ogent-auth/authorization"
@@ -25,27 +22,28 @@ func (Rocket) Fields() []ent.Field {
 	rocketSchema.AdditionalProperties = &ogen.AdditionalProperties{Schema: *ogen.String()}
 
 	return []ent.Field{
-		field.String("id").Unique(),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New),
+		field.String("name").NotEmpty().Unique(),
 		field.String("description").Optional(),
-		field.String("image").Optional().Validate(func(s string) error {
-			re := regexp.MustCompile(`(?:.+\/)?([^:]+)(?::.+)?`)
-			if !re.MatchString(s) {
-				return fmt.Errorf("%s is not a valid docker image", s)
-			}
+		field.String("code").Optional().Validate(func(s string) error {
+			// re := regexp.MustCompile(`(?:.+\/)?([^:]+)(?::.+)?`)
+			// if !re.MatchString(s) {
+			// 	return fmt.Errorf("%s is not a valid docker image", s)
+			// }
 			return nil
 		}),
-		field.String("zip").Optional(),
 		field.JSON("config", map[string]string{}).
+			Default(map[string]string{}).
 			Annotations(entoas.Schema(rocketSchema)),
 	}
 }
 
 // Edges of the Rocket.
-func (Rocket) Edges() []ent.Edge {
-	return []ent.Edge{
-		edge.To("missions", Mission.Type),
-	}
-}
+// func (Rocket) Edges() []ent.Edge {
+// 	return []ent.Edge{
+// 		edge.To("missions", Mission.Type),
+// 	}
+// }
 
 // Annotations of the Rocket.
 func (Rocket) Annotations() []schema.Annotation {

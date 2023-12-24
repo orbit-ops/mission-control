@@ -30,6 +30,20 @@ func (mu *MissionUpdate) Where(ps ...predicate.Mission) *MissionUpdate {
 	return mu
 }
 
+// SetName sets the "name" field.
+func (mu *MissionUpdate) SetName(s string) *MissionUpdate {
+	mu.mutation.SetName(s)
+	return mu
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (mu *MissionUpdate) SetNillableName(s *string) *MissionUpdate {
+	if s != nil {
+		mu.SetName(*s)
+	}
+	return mu
+}
+
 // SetDescription sets the "description" field.
 func (mu *MissionUpdate) SetDescription(s string) *MissionUpdate {
 	mu.mutation.SetDescription(s)
@@ -153,6 +167,11 @@ func (mu *MissionUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (mu *MissionUpdate) check() error {
+	if v, ok := mu.mutation.Name(); ok {
+		if err := mission.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Mission.name": %w`, err)}
+		}
+	}
 	if v, ok := mu.mutation.MinApprovers(); ok {
 		if err := mission.MinApproversValidator(v); err != nil {
 			return &ValidationError{Name: "min_approvers", err: fmt.Errorf(`ent: validator failed for field "Mission.min_approvers": %w`, err)}
@@ -165,13 +184,16 @@ func (mu *MissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := mu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(mission.Table, mission.Columns, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(mission.Table, mission.Columns, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeUUID))
 	if ps := mu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := mu.mutation.Name(); ok {
+		_spec.SetField(mission.FieldName, field.TypeString, value)
 	}
 	if value, ok := mu.mutation.Description(); ok {
 		_spec.SetField(mission.FieldDescription, field.TypeString, value)
@@ -196,7 +218,7 @@ func (mu *MissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if mu.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   mission.RequestsTable,
 			Columns: []string{mission.RequestsColumn},
 			Bidi:    false,
@@ -209,7 +231,7 @@ func (mu *MissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := mu.mutation.RemovedRequestsIDs(); len(nodes) > 0 && !mu.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   mission.RequestsTable,
 			Columns: []string{mission.RequestsColumn},
 			Bidi:    false,
@@ -225,7 +247,7 @@ func (mu *MissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := mu.mutation.RequestsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   mission.RequestsTable,
 			Columns: []string{mission.RequestsColumn},
 			Bidi:    false,
@@ -256,6 +278,20 @@ type MissionUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *MissionMutation
+}
+
+// SetName sets the "name" field.
+func (muo *MissionUpdateOne) SetName(s string) *MissionUpdateOne {
+	muo.mutation.SetName(s)
+	return muo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (muo *MissionUpdateOne) SetNillableName(s *string) *MissionUpdateOne {
+	if s != nil {
+		muo.SetName(*s)
+	}
+	return muo
 }
 
 // SetDescription sets the "description" field.
@@ -394,6 +430,11 @@ func (muo *MissionUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (muo *MissionUpdateOne) check() error {
+	if v, ok := muo.mutation.Name(); ok {
+		if err := mission.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Mission.name": %w`, err)}
+		}
+	}
 	if v, ok := muo.mutation.MinApprovers(); ok {
 		if err := mission.MinApproversValidator(v); err != nil {
 			return &ValidationError{Name: "min_approvers", err: fmt.Errorf(`ent: validator failed for field "Mission.min_approvers": %w`, err)}
@@ -406,7 +447,7 @@ func (muo *MissionUpdateOne) sqlSave(ctx context.Context) (_node *Mission, err e
 	if err := muo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(mission.Table, mission.Columns, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(mission.Table, mission.Columns, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeUUID))
 	id, ok := muo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Mission.id" for update`)}
@@ -431,6 +472,9 @@ func (muo *MissionUpdateOne) sqlSave(ctx context.Context) (_node *Mission, err e
 			}
 		}
 	}
+	if value, ok := muo.mutation.Name(); ok {
+		_spec.SetField(mission.FieldName, field.TypeString, value)
+	}
 	if value, ok := muo.mutation.Description(); ok {
 		_spec.SetField(mission.FieldDescription, field.TypeString, value)
 	}
@@ -454,7 +498,7 @@ func (muo *MissionUpdateOne) sqlSave(ctx context.Context) (_node *Mission, err e
 	if muo.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   mission.RequestsTable,
 			Columns: []string{mission.RequestsColumn},
 			Bidi:    false,
@@ -467,7 +511,7 @@ func (muo *MissionUpdateOne) sqlSave(ctx context.Context) (_node *Mission, err e
 	if nodes := muo.mutation.RemovedRequestsIDs(); len(nodes) > 0 && !muo.mutation.RequestsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   mission.RequestsTable,
 			Columns: []string{mission.RequestsColumn},
 			Bidi:    false,
@@ -483,7 +527,7 @@ func (muo *MissionUpdateOne) sqlSave(ctx context.Context) (_node *Mission, err e
 	if nodes := muo.mutation.RequestsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   mission.RequestsTable,
 			Columns: []string{mission.RequestsColumn},
 			Bidi:    false,

@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/audit"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
@@ -81,8 +82,8 @@ func (aq *AuditQuery) FirstX(ctx context.Context) *Audit {
 
 // FirstID returns the first Audit ID from the query.
 // Returns a *NotFoundError when no Audit ID was found.
-func (aq *AuditQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (aq *AuditQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = aq.Limit(1).IDs(setContextOp(ctx, aq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -94,7 +95,7 @@ func (aq *AuditQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (aq *AuditQuery) FirstIDX(ctx context.Context) string {
+func (aq *AuditQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := aq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -132,8 +133,8 @@ func (aq *AuditQuery) OnlyX(ctx context.Context) *Audit {
 // OnlyID is like Only, but returns the only Audit ID in the query.
 // Returns a *NotSingularError when more than one Audit ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (aq *AuditQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (aq *AuditQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = aq.Limit(2).IDs(setContextOp(ctx, aq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -149,7 +150,7 @@ func (aq *AuditQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (aq *AuditQuery) OnlyIDX(ctx context.Context) string {
+func (aq *AuditQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := aq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -177,7 +178,7 @@ func (aq *AuditQuery) AllX(ctx context.Context) []*Audit {
 }
 
 // IDs executes the query and returns a list of Audit IDs.
-func (aq *AuditQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (aq *AuditQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if aq.ctx.Unique == nil && aq.path != nil {
 		aq.Unique(true)
 	}
@@ -189,7 +190,7 @@ func (aq *AuditQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (aq *AuditQuery) IDsX(ctx context.Context) []string {
+func (aq *AuditQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := aq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -364,7 +365,7 @@ func (aq *AuditQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (aq *AuditQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(audit.Table, audit.Columns, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(audit.Table, audit.Columns, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeUUID))
 	_spec.From = aq.sql
 	if unique := aq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

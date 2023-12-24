@@ -183,8 +183,24 @@ func (s ListAccessAccessTokensOKApplicationJSON) Validate() error {
 	return nil
 }
 
+func (s ListAccessApprovalsOKApplicationJSON) Validate() error {
+	alias := ([]AccessApprovalsList)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	return nil
+}
+
 func (s ListApiKeyOKApplicationJSON) Validate() error {
 	alias := ([]ApiKeyList)(s)
+	if alias == nil {
+		return errors.New("nil is invalid value")
+	}
+	return nil
+}
+
+func (s ListApprovalAccessOKApplicationJSON) Validate() error {
+	alias := ([]ApprovalAccessList)(s)
 	if alias == nil {
 		return errors.New("nil is invalid value")
 	}
@@ -277,31 +293,6 @@ func (s ListRequestOKApplicationJSON) Validate() error {
 	alias := ([]RequestList)(s)
 	if alias == nil {
 		return errors.New("nil is invalid value")
-	}
-	return nil
-}
-
-func (s ListRocketMissionsOKApplicationJSON) Validate() error {
-	alias := ([]RocketMissionsList)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
-	}
-	var failures []validate.FieldError
-	for i, elem := range alias {
-		if err := func() error {
-			if err := elem.Validate(); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			failures = append(failures, validate.FieldError{
-				Name:  fmt.Sprintf("[%d]", i),
-				Error: err,
-			})
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
@@ -407,29 +398,6 @@ func (s *MissionUpdate) Validate() error {
 }
 
 func (s *RequestMissionRead) Validate() error {
-	if s == nil {
-		return validate.ErrNilPointer
-	}
-
-	var failures []validate.FieldError
-	if err := func() error {
-		if s.PossibleApprovers == nil {
-			return errors.New("nil is invalid value")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "possible_approvers",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-
-func (s *RocketMissionsList) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}

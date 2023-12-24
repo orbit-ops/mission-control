@@ -74,6 +74,12 @@ type Handler interface {
 	//
 	// GET /accesses/{id}/access-tokens
 	ListAccessAccessTokens(ctx context.Context, params ListAccessAccessTokensParams) (ListAccessAccessTokensRes, error)
+	// ListAccessApprovals implements listAccessApprovals operation.
+	//
+	// List attached Approvals.
+	//
+	// GET /accesses/{id}/approvals
+	ListAccessApprovals(ctx context.Context, params ListAccessApprovalsParams) (ListAccessApprovalsRes, error)
 	// ListApiKey implements listApiKey operation.
 	//
 	// List ApiKeys.
@@ -86,6 +92,12 @@ type Handler interface {
 	//
 	// GET /approvals
 	ListApproval(ctx context.Context, params ListApprovalParams) (ListApprovalRes, error)
+	// ListApprovalAccess implements listApprovalAccess operation.
+	//
+	// List attached Accesses.
+	//
+	// GET /approvals/{id}/access
+	ListApprovalAccess(ctx context.Context, params ListApprovalAccessParams) (ListApprovalAccessRes, error)
 	// ListAudit implements listAudit operation.
 	//
 	// List Audits.
@@ -128,12 +140,6 @@ type Handler interface {
 	//
 	// GET /rockets
 	ListRocket(ctx context.Context, params ListRocketParams) (ListRocketRes, error)
-	// ListRocketMissions implements listRocketMissions operation.
-	//
-	// List attached Missions.
-	//
-	// GET /rockets/{id}/missions
-	ListRocketMissions(ctx context.Context, params ListRocketMissionsParams) (ListRocketMissionsRes, error)
 	// ReadApiKey implements readApiKey operation.
 	//
 	// Finds the ApiKey with the requested ID and returns it.

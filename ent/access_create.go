@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
 )
 
 // AccessCreate is the builder for creating a Access entity.
@@ -105,23 +106,19 @@ func (ac *AccessCreate) SetNillableID(u *uuid.UUID) *AccessCreate {
 	return ac
 }
 
-// SetApprovalsID sets the "approvals" edge to the Access entity by ID.
-func (ac *AccessCreate) SetApprovalsID(id uuid.UUID) *AccessCreate {
-	ac.mutation.SetApprovalsID(id)
+// AddApprovalIDs adds the "approvals" edge to the Approval entity by IDs.
+func (ac *AccessCreate) AddApprovalIDs(ids ...uuid.UUID) *AccessCreate {
+	ac.mutation.AddApprovalIDs(ids...)
 	return ac
 }
 
-// SetNillableApprovalsID sets the "approvals" edge to the Access entity by ID if the given value is not nil.
-func (ac *AccessCreate) SetNillableApprovalsID(id *uuid.UUID) *AccessCreate {
-	if id != nil {
-		ac = ac.SetApprovalsID(*id)
+// AddApprovals adds the "approvals" edges to the Approval entity.
+func (ac *AccessCreate) AddApprovals(a ...*Approval) *AccessCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return ac
-}
-
-// SetApprovals sets the "approvals" edge to the Access entity.
-func (ac *AccessCreate) SetApprovals(a *Access) *AccessCreate {
-	return ac.SetApprovalsID(a.ID)
+	return ac.AddApprovalIDs(ids...)
 }
 
 // AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by IDs.
@@ -267,19 +264,18 @@ func (ac *AccessCreate) createSpec() (*Access, *sqlgraph.CreateSpec) {
 	}
 	if nodes := ac.mutation.ApprovalsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: []string{access.ApprovalsColumn},
-			Bidi:    true,
+			Columns: access.ApprovalsPrimaryKey,
+			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.access_approvals = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := ac.mutation.AccessTokensIDs(); len(nodes) > 0 {

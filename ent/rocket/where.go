@@ -4,63 +4,58 @@ package rocket
 
 import (
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.Rocket {
+func ID(id uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.Rocket {
+func IDEQ(id uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.Rocket {
+func IDNEQ(id uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.Rocket {
+func IDIn(ids ...uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.Rocket {
+func IDNotIn(ids ...uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.Rocket {
+func IDGT(id uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.Rocket {
+func IDGTE(id uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.Rocket {
+func IDLT(id uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.Rocket {
+func IDLTE(id uuid.UUID) predicate.Rocket {
 	return predicate.Rocket(sql.FieldLTE(FieldID, id))
 }
 
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldContainsFold(FieldID, id))
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEQ(FieldName, v))
 }
 
 // Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
@@ -68,14 +63,74 @@ func Description(v string) predicate.Rocket {
 	return predicate.Rocket(sql.FieldEQ(FieldDescription, v))
 }
 
-// Image applies equality check predicate on the "image" field. It's identical to ImageEQ.
-func Image(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldEQ(FieldImage, v))
+// Code applies equality check predicate on the "code" field. It's identical to CodeEQ.
+func Code(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEQ(FieldCode, v))
 }
 
-// Zip applies equality check predicate on the "zip" field. It's identical to ZipEQ.
-func Zip(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldEQ(FieldZip, v))
+// NameEQ applies the EQ predicate on the "name" field.
+func NameEQ(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEQ(FieldName, v))
+}
+
+// NameNEQ applies the NEQ predicate on the "name" field.
+func NameNEQ(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldNEQ(FieldName, v))
+}
+
+// NameIn applies the In predicate on the "name" field.
+func NameIn(vs ...string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldIn(FieldName, vs...))
+}
+
+// NameNotIn applies the NotIn predicate on the "name" field.
+func NameNotIn(vs ...string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldNotIn(FieldName, vs...))
+}
+
+// NameGT applies the GT predicate on the "name" field.
+func NameGT(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldGT(FieldName, v))
+}
+
+// NameGTE applies the GTE predicate on the "name" field.
+func NameGTE(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldGTE(FieldName, v))
+}
+
+// NameLT applies the LT predicate on the "name" field.
+func NameLT(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldLT(FieldName, v))
+}
+
+// NameLTE applies the LTE predicate on the "name" field.
+func NameLTE(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldLTE(FieldName, v))
+}
+
+// NameContains applies the Contains predicate on the "name" field.
+func NameContains(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldContains(FieldName, v))
+}
+
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
+func NameHasPrefix(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldHasPrefix(FieldName, v))
+}
+
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
+func NameHasSuffix(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldHasSuffix(FieldName, v))
+}
+
+// NameEqualFold applies the EqualFold predicate on the "name" field.
+func NameEqualFold(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEqualFold(FieldName, v))
+}
+
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
+func NameContainsFold(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldContainsFold(FieldName, v))
 }
 
 // DescriptionEQ applies the EQ predicate on the "description" field.
@@ -153,177 +208,79 @@ func DescriptionContainsFold(v string) predicate.Rocket {
 	return predicate.Rocket(sql.FieldContainsFold(FieldDescription, v))
 }
 
-// ImageEQ applies the EQ predicate on the "image" field.
-func ImageEQ(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldEQ(FieldImage, v))
+// CodeEQ applies the EQ predicate on the "code" field.
+func CodeEQ(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEQ(FieldCode, v))
 }
 
-// ImageNEQ applies the NEQ predicate on the "image" field.
-func ImageNEQ(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldNEQ(FieldImage, v))
+// CodeNEQ applies the NEQ predicate on the "code" field.
+func CodeNEQ(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldNEQ(FieldCode, v))
 }
 
-// ImageIn applies the In predicate on the "image" field.
-func ImageIn(vs ...string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldIn(FieldImage, vs...))
+// CodeIn applies the In predicate on the "code" field.
+func CodeIn(vs ...string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldIn(FieldCode, vs...))
 }
 
-// ImageNotIn applies the NotIn predicate on the "image" field.
-func ImageNotIn(vs ...string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldNotIn(FieldImage, vs...))
+// CodeNotIn applies the NotIn predicate on the "code" field.
+func CodeNotIn(vs ...string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldNotIn(FieldCode, vs...))
 }
 
-// ImageGT applies the GT predicate on the "image" field.
-func ImageGT(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldGT(FieldImage, v))
+// CodeGT applies the GT predicate on the "code" field.
+func CodeGT(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldGT(FieldCode, v))
 }
 
-// ImageGTE applies the GTE predicate on the "image" field.
-func ImageGTE(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldGTE(FieldImage, v))
+// CodeGTE applies the GTE predicate on the "code" field.
+func CodeGTE(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldGTE(FieldCode, v))
 }
 
-// ImageLT applies the LT predicate on the "image" field.
-func ImageLT(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldLT(FieldImage, v))
+// CodeLT applies the LT predicate on the "code" field.
+func CodeLT(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldLT(FieldCode, v))
 }
 
-// ImageLTE applies the LTE predicate on the "image" field.
-func ImageLTE(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldLTE(FieldImage, v))
+// CodeLTE applies the LTE predicate on the "code" field.
+func CodeLTE(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldLTE(FieldCode, v))
 }
 
-// ImageContains applies the Contains predicate on the "image" field.
-func ImageContains(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldContains(FieldImage, v))
+// CodeContains applies the Contains predicate on the "code" field.
+func CodeContains(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldContains(FieldCode, v))
 }
 
-// ImageHasPrefix applies the HasPrefix predicate on the "image" field.
-func ImageHasPrefix(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldHasPrefix(FieldImage, v))
+// CodeHasPrefix applies the HasPrefix predicate on the "code" field.
+func CodeHasPrefix(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldHasPrefix(FieldCode, v))
 }
 
-// ImageHasSuffix applies the HasSuffix predicate on the "image" field.
-func ImageHasSuffix(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldHasSuffix(FieldImage, v))
+// CodeHasSuffix applies the HasSuffix predicate on the "code" field.
+func CodeHasSuffix(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldHasSuffix(FieldCode, v))
 }
 
-// ImageIsNil applies the IsNil predicate on the "image" field.
-func ImageIsNil() predicate.Rocket {
-	return predicate.Rocket(sql.FieldIsNull(FieldImage))
+// CodeIsNil applies the IsNil predicate on the "code" field.
+func CodeIsNil() predicate.Rocket {
+	return predicate.Rocket(sql.FieldIsNull(FieldCode))
 }
 
-// ImageNotNil applies the NotNil predicate on the "image" field.
-func ImageNotNil() predicate.Rocket {
-	return predicate.Rocket(sql.FieldNotNull(FieldImage))
+// CodeNotNil applies the NotNil predicate on the "code" field.
+func CodeNotNil() predicate.Rocket {
+	return predicate.Rocket(sql.FieldNotNull(FieldCode))
 }
 
-// ImageEqualFold applies the EqualFold predicate on the "image" field.
-func ImageEqualFold(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldEqualFold(FieldImage, v))
+// CodeEqualFold applies the EqualFold predicate on the "code" field.
+func CodeEqualFold(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldEqualFold(FieldCode, v))
 }
 
-// ImageContainsFold applies the ContainsFold predicate on the "image" field.
-func ImageContainsFold(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldContainsFold(FieldImage, v))
-}
-
-// ZipEQ applies the EQ predicate on the "zip" field.
-func ZipEQ(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldEQ(FieldZip, v))
-}
-
-// ZipNEQ applies the NEQ predicate on the "zip" field.
-func ZipNEQ(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldNEQ(FieldZip, v))
-}
-
-// ZipIn applies the In predicate on the "zip" field.
-func ZipIn(vs ...string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldIn(FieldZip, vs...))
-}
-
-// ZipNotIn applies the NotIn predicate on the "zip" field.
-func ZipNotIn(vs ...string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldNotIn(FieldZip, vs...))
-}
-
-// ZipGT applies the GT predicate on the "zip" field.
-func ZipGT(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldGT(FieldZip, v))
-}
-
-// ZipGTE applies the GTE predicate on the "zip" field.
-func ZipGTE(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldGTE(FieldZip, v))
-}
-
-// ZipLT applies the LT predicate on the "zip" field.
-func ZipLT(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldLT(FieldZip, v))
-}
-
-// ZipLTE applies the LTE predicate on the "zip" field.
-func ZipLTE(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldLTE(FieldZip, v))
-}
-
-// ZipContains applies the Contains predicate on the "zip" field.
-func ZipContains(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldContains(FieldZip, v))
-}
-
-// ZipHasPrefix applies the HasPrefix predicate on the "zip" field.
-func ZipHasPrefix(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldHasPrefix(FieldZip, v))
-}
-
-// ZipHasSuffix applies the HasSuffix predicate on the "zip" field.
-func ZipHasSuffix(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldHasSuffix(FieldZip, v))
-}
-
-// ZipIsNil applies the IsNil predicate on the "zip" field.
-func ZipIsNil() predicate.Rocket {
-	return predicate.Rocket(sql.FieldIsNull(FieldZip))
-}
-
-// ZipNotNil applies the NotNil predicate on the "zip" field.
-func ZipNotNil() predicate.Rocket {
-	return predicate.Rocket(sql.FieldNotNull(FieldZip))
-}
-
-// ZipEqualFold applies the EqualFold predicate on the "zip" field.
-func ZipEqualFold(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldEqualFold(FieldZip, v))
-}
-
-// ZipContainsFold applies the ContainsFold predicate on the "zip" field.
-func ZipContainsFold(v string) predicate.Rocket {
-	return predicate.Rocket(sql.FieldContainsFold(FieldZip, v))
-}
-
-// HasMissions applies the HasEdge predicate on the "missions" edge.
-func HasMissions() predicate.Rocket {
-	return predicate.Rocket(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, MissionsTable, MissionsPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasMissionsWith applies the HasEdge predicate on the "missions" edge with a given conditions (other predicates).
-func HasMissionsWith(preds ...predicate.Mission) predicate.Rocket {
-	return predicate.Rocket(func(s *sql.Selector) {
-		step := newMissionsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
+// CodeContainsFold applies the ContainsFold predicate on the "code" field.
+func CodeContainsFold(v string) predicate.Rocket {
+	return predicate.Rocket(sql.FieldContainsFold(FieldCode, v))
 }
 
 // And groups predicates with the AND operator between them.

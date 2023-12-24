@@ -35,6 +35,38 @@ func (at *AccessAccessTokensList) Elem() AccessAccessTokensList {
 	return *at
 }
 
+func NewAccessApprovalsList(e *ent.Approval) *AccessApprovalsList {
+	if e == nil {
+		return nil
+	}
+	var ret AccessApprovalsList
+	ret.ID = e.ID
+	ret.Person = e.Person
+	ret.ApprovedTime = e.ApprovedTime
+	ret.Approved = e.Approved
+	ret.Revoked = e.Revoked
+	ret.RevokedTime = NewOptDateTime(e.RevokedTime)
+	return &ret
+}
+
+func NewAccessApprovalsLists(es []*ent.Approval) []AccessApprovalsList {
+	if len(es) == 0 {
+		return nil
+	}
+	r := make([]AccessApprovalsList, len(es))
+	for i, e := range es {
+		r[i] = NewAccessApprovalsList(e).Elem()
+	}
+	return r
+}
+
+func (a *AccessApprovalsList) Elem() AccessApprovalsList {
+	if a == nil {
+		return AccessApprovalsList{}
+	}
+	return *a
+}
+
 func NewApiKeyCreate(e *ent.ApiKey) *ApiKeyCreate {
 	if e == nil {
 		return nil
@@ -130,7 +162,6 @@ func NewApprovalCreate(e *ent.Approval) *ApprovalCreate {
 	ret.Approved = e.Approved
 	ret.Revoked = e.Revoked
 	ret.RevokedTime = NewOptDateTime(e.RevokedTime)
-	ret.RequestID = e.RequestID
 	return &ret
 }
 
@@ -163,7 +194,6 @@ func NewApprovalList(e *ent.Approval) *ApprovalList {
 	ret.Approved = e.Approved
 	ret.Revoked = e.Revoked
 	ret.RevokedTime = NewOptDateTime(e.RevokedTime)
-	ret.RequestID = e.RequestID
 	return &ret
 }
 
@@ -196,7 +226,6 @@ func NewApprovalRead(e *ent.Approval) *ApprovalRead {
 	ret.Approved = e.Approved
 	ret.Revoked = e.Revoked
 	ret.RevokedTime = NewOptDateTime(e.RevokedTime)
-	ret.RequestID = e.RequestID
 	return &ret
 }
 
@@ -229,7 +258,6 @@ func NewApprovalUpdate(e *ent.Approval) *ApprovalUpdate {
 	ret.Approved = e.Approved
 	ret.Revoked = e.Revoked
 	ret.RevokedTime = NewOptDateTime(e.RevokedTime)
-	ret.RequestID = e.RequestID
 	return &ret
 }
 
@@ -247,6 +275,40 @@ func NewApprovalUpdates(es []*ent.Approval) []ApprovalUpdate {
 func (a *ApprovalUpdate) Elem() ApprovalUpdate {
 	if a == nil {
 		return ApprovalUpdate{}
+	}
+	return *a
+}
+
+func NewApprovalAccessList(e *ent.Access) *ApprovalAccessList {
+	if e == nil {
+		return nil
+	}
+	var ret ApprovalAccessList
+	ret.ID = e.ID
+	ret.StartTime = e.StartTime
+	ret.Approved = e.Approved
+	ret.RolledBack = e.RolledBack
+	ret.RollbackTime = NewOptDateTime(e.RollbackTime)
+	ret.RollbackReason = NewOptString(e.RollbackReason)
+	ret.EndTime = e.EndTime
+	ret.RequestID = e.RequestID
+	return &ret
+}
+
+func NewApprovalAccessLists(es []*ent.Access) []ApprovalAccessList {
+	if len(es) == 0 {
+		return nil
+	}
+	r := make([]ApprovalAccessList, len(es))
+	for i, e := range es {
+		r[i] = NewApprovalAccessList(e).Elem()
+	}
+	return r
+}
+
+func (a *ApprovalAccessList) Elem() ApprovalAccessList {
+	if a == nil {
+		return ApprovalAccessList{}
 	}
 	return *a
 }
@@ -317,6 +379,7 @@ func NewMissionCreate(e *ent.Mission) *MissionCreate {
 	}
 	var ret MissionCreate
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
@@ -347,6 +410,7 @@ func NewMissionList(e *ent.Mission) *MissionList {
 	}
 	var ret MissionList
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
@@ -377,6 +441,7 @@ func NewMissionRead(e *ent.Mission) *MissionRead {
 	}
 	var ret MissionRead
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
@@ -407,6 +472,7 @@ func NewMissionUpdate(e *ent.Mission) *MissionUpdate {
 	}
 	var ret MissionUpdate
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
@@ -439,7 +505,6 @@ func NewMissionRequestsList(e *ent.Request) *MissionRequestsList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -467,9 +532,9 @@ func NewMissionRocketsList(e *ent.Rocket) *MissionRocketsList {
 	}
 	var ret MissionRocketsList
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
-	ret.Image = NewOptString(e.Image)
-	ret.Zip = NewOptString(e.Zip)
+	ret.Code = NewOptString(e.Code)
 	ret.Config = e.Config
 	return &ret
 }
@@ -500,7 +565,6 @@ func NewRequestCreate(e *ent.Request) *RequestCreate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -530,7 +594,6 @@ func NewRequestList(e *ent.Request) *RequestList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -560,7 +623,6 @@ func NewRequestRead(e *ent.Request) *RequestRead {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -590,7 +652,6 @@ func NewRequestUpdate(e *ent.Request) *RequestUpdate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
-	ret.MissionID = e.MissionID
 	return &ret
 }
 
@@ -623,7 +684,6 @@ func NewRequestApprovalsList(e *ent.Approval) *RequestApprovalsList {
 	ret.Approved = e.Approved
 	ret.Revoked = e.Revoked
 	ret.RevokedTime = NewOptDateTime(e.RevokedTime)
-	ret.RequestID = e.RequestID
 	return &ret
 }
 
@@ -651,6 +711,7 @@ func NewRequestMissionRead(e *ent.Mission) *RequestMissionRead {
 	}
 	var ret RequestMissionRead
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
@@ -681,9 +742,9 @@ func NewRocketCreate(e *ent.Rocket) *RocketCreate {
 	}
 	var ret RocketCreate
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
-	ret.Image = NewOptString(e.Image)
-	ret.Zip = NewOptString(e.Zip)
+	ret.Code = NewOptString(e.Code)
 	ret.Config = e.Config
 	return &ret
 }
@@ -712,9 +773,9 @@ func NewRocketList(e *ent.Rocket) *RocketList {
 	}
 	var ret RocketList
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
-	ret.Image = NewOptString(e.Image)
-	ret.Zip = NewOptString(e.Zip)
+	ret.Code = NewOptString(e.Code)
 	ret.Config = e.Config
 	return &ret
 }
@@ -743,9 +804,9 @@ func NewRocketRead(e *ent.Rocket) *RocketRead {
 	}
 	var ret RocketRead
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
-	ret.Image = NewOptString(e.Image)
-	ret.Zip = NewOptString(e.Zip)
+	ret.Code = NewOptString(e.Code)
 	ret.Config = e.Config
 	return &ret
 }
@@ -774,9 +835,9 @@ func NewRocketUpdate(e *ent.Rocket) *RocketUpdate {
 	}
 	var ret RocketUpdate
 	ret.ID = e.ID
+	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
-	ret.Image = NewOptString(e.Image)
-	ret.Zip = NewOptString(e.Zip)
+	ret.Code = NewOptString(e.Code)
 	ret.Config = e.Config
 	return &ret
 }
@@ -797,34 +858,4 @@ func (r *RocketUpdate) Elem() RocketUpdate {
 		return RocketUpdate{}
 	}
 	return *r
-}
-
-func NewRocketMissionsList(e *ent.Mission) *RocketMissionsList {
-	if e == nil {
-		return nil
-	}
-	var ret RocketMissionsList
-	ret.ID = e.ID
-	ret.Description = NewOptString(e.Description)
-	ret.MinApprovers = e.MinApprovers
-	ret.PossibleApprovers = e.PossibleApprovers
-	return &ret
-}
-
-func NewRocketMissionsLists(es []*ent.Mission) []RocketMissionsList {
-	if len(es) == 0 {
-		return nil
-	}
-	r := make([]RocketMissionsList, len(es))
-	for i, e := range es {
-		r[i] = NewRocketMissionsList(e).Elem()
-	}
-	return r
-}
-
-func (m *RocketMissionsList) Elem() RocketMissionsList {
-	if m == nil {
-		return RocketMissionsList{}
-	}
-	return *m
 }

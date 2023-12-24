@@ -27,6 +27,7 @@ type RequestQuery struct {
 	predicates         []predicate.Request
 	withApprovals      *ApprovalQuery
 	withMission        *MissionQuery
+	withFKs            bool
 	withNamedApprovals map[string]*ApprovalQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -100,7 +101,7 @@ func (rq *RequestQuery) QueryMission() *MissionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(request.Table, request.FieldID, selector),
 			sqlgraph.To(mission.Table, mission.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, request.MissionTable, request.MissionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, request.MissionTable, request.MissionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -407,12 +408,19 @@ func (rq *RequestQuery) prepareQuery(ctx context.Context) error {
 func (rq *RequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Request, error) {
 	var (
 		nodes       = []*Request{}
+		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
 		loadedTypes = [2]bool{
 			rq.withApprovals != nil,
 			rq.withMission != nil,
 		}
 	)
+	if rq.withMission != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, request.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Request).scanValues(nil, columns)
 	}
@@ -473,23 +481,26 @@ func (rq *RequestQuery) loadApprovals(ctx context.Context, query *ApprovalQuery,
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.approval_requests
+		fk := n.approval_request
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "approval_requests" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "approval_request" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "approval_requests" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "approval_request" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
 	return nil
 }
 func (rq *RequestQuery) loadMission(ctx context.Context, query *MissionQuery, nodes []*Request, init func(*Request), assign func(*Request, *Mission)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*Request)
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Request)
 	for i := range nodes {
-		fk := nodes[i].MissionID
+		if nodes[i].request_mission == nil {
+			continue
+		}
+		fk := *nodes[i].request_mission
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -506,7 +517,7 @@ func (rq *RequestQuery) loadMission(ctx context.Context, query *MissionQuery, no
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "mission_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "request_mission" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -539,9 +550,6 @@ func (rq *RequestQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != request.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if rq.withMission != nil {
-			_spec.Node.AddColumnOnce(request.FieldMissionID)
 		}
 	}
 	if ps := rq.predicates; len(ps) > 0 {

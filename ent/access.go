@@ -34,31 +34,27 @@ type Access struct {
 	RequestID uuid.UUID `json:"request_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccessQuery when eager-loading is set.
-	Edges            AccessEdges `json:"edges"`
-	access_approvals *uuid.UUID
-	selectValues     sql.SelectValues
+	Edges        AccessEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // AccessEdges holds the relations/edges for other nodes in the graph.
 type AccessEdges struct {
 	// Approvals holds the value of the approvals edge.
-	Approvals *Access `json:"approvals,omitempty"`
+	Approvals []*Approval `json:"approvals,omitempty"`
 	// AccessTokens holds the value of the accessTokens edge.
 	AccessTokens []*ActionTokens `json:"accessTokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes       [2]bool
+	namedApprovals    map[string][]*Approval
 	namedAccessTokens map[string][]*ActionTokens
 }
 
 // ApprovalsOrErr returns the Approvals value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e AccessEdges) ApprovalsOrErr() (*Access, error) {
+// was not loaded in eager-loading.
+func (e AccessEdges) ApprovalsOrErr() ([]*Approval, error) {
 	if e.loadedTypes[0] {
-		if e.Approvals == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: access.Label}
-		}
 		return e.Approvals, nil
 	}
 	return nil, &NotLoadedError{edge: "approvals"}
@@ -86,8 +82,6 @@ func (*Access) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case access.FieldID, access.FieldRequestID:
 			values[i] = new(uuid.UUID)
-		case access.ForeignKeys[0]: // access_approvals
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -151,13 +145,6 @@ func (a *Access) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				a.RequestID = *value
 			}
-		case access.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field access_approvals", values[i])
-			} else if value.Valid {
-				a.access_approvals = new(uuid.UUID)
-				*a.access_approvals = *value.S.(*uuid.UUID)
-			}
 		default:
 			a.selectValues.Set(columns[i], values[i])
 		}
@@ -172,7 +159,7 @@ func (a *Access) Value(name string) (ent.Value, error) {
 }
 
 // QueryApprovals queries the "approvals" edge of the Access entity.
-func (a *Access) QueryApprovals() *AccessQuery {
+func (a *Access) QueryApprovals() *ApprovalQuery {
 	return NewAccessClient(a.config).QueryApprovals(a)
 }
 
@@ -226,6 +213,30 @@ func (a *Access) String() string {
 	builder.WriteString(fmt.Sprintf("%v", a.RequestID))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedApprovals returns the Approvals named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (a *Access) NamedApprovals(name string) ([]*Approval, error) {
+	if a.Edges.namedApprovals == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := a.Edges.namedApprovals[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (a *Access) appendNamedApprovals(name string, edges ...*Approval) {
+	if a.Edges.namedApprovals == nil {
+		a.Edges.namedApprovals = make(map[string][]*Approval)
+	}
+	if len(edges) == 0 {
+		a.Edges.namedApprovals[name] = []*Approval{}
+	} else {
+		a.Edges.namedApprovals[name] = append(a.Edges.namedApprovals[name], edges...)
+	}
 }
 
 // NamedAccessTokens returns the AccessTokens named value or an error if the edge was not

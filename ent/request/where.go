@@ -64,11 +64,6 @@ func Requester(v string) predicate.Request {
 	return predicate.Request(sql.FieldEQ(FieldRequester, v))
 }
 
-// MissionID applies equality check predicate on the "mission_id" field. It's identical to MissionIDEQ.
-func MissionID(v string) predicate.Request {
-	return predicate.Request(sql.FieldEQ(FieldMissionID, v))
-}
-
 // ReasonEQ applies the EQ predicate on the "reason" field.
 func ReasonEQ(v string) predicate.Request {
 	return predicate.Request(sql.FieldEQ(FieldReason, v))
@@ -199,71 +194,6 @@ func RequesterContainsFold(v string) predicate.Request {
 	return predicate.Request(sql.FieldContainsFold(FieldRequester, v))
 }
 
-// MissionIDEQ applies the EQ predicate on the "mission_id" field.
-func MissionIDEQ(v string) predicate.Request {
-	return predicate.Request(sql.FieldEQ(FieldMissionID, v))
-}
-
-// MissionIDNEQ applies the NEQ predicate on the "mission_id" field.
-func MissionIDNEQ(v string) predicate.Request {
-	return predicate.Request(sql.FieldNEQ(FieldMissionID, v))
-}
-
-// MissionIDIn applies the In predicate on the "mission_id" field.
-func MissionIDIn(vs ...string) predicate.Request {
-	return predicate.Request(sql.FieldIn(FieldMissionID, vs...))
-}
-
-// MissionIDNotIn applies the NotIn predicate on the "mission_id" field.
-func MissionIDNotIn(vs ...string) predicate.Request {
-	return predicate.Request(sql.FieldNotIn(FieldMissionID, vs...))
-}
-
-// MissionIDGT applies the GT predicate on the "mission_id" field.
-func MissionIDGT(v string) predicate.Request {
-	return predicate.Request(sql.FieldGT(FieldMissionID, v))
-}
-
-// MissionIDGTE applies the GTE predicate on the "mission_id" field.
-func MissionIDGTE(v string) predicate.Request {
-	return predicate.Request(sql.FieldGTE(FieldMissionID, v))
-}
-
-// MissionIDLT applies the LT predicate on the "mission_id" field.
-func MissionIDLT(v string) predicate.Request {
-	return predicate.Request(sql.FieldLT(FieldMissionID, v))
-}
-
-// MissionIDLTE applies the LTE predicate on the "mission_id" field.
-func MissionIDLTE(v string) predicate.Request {
-	return predicate.Request(sql.FieldLTE(FieldMissionID, v))
-}
-
-// MissionIDContains applies the Contains predicate on the "mission_id" field.
-func MissionIDContains(v string) predicate.Request {
-	return predicate.Request(sql.FieldContains(FieldMissionID, v))
-}
-
-// MissionIDHasPrefix applies the HasPrefix predicate on the "mission_id" field.
-func MissionIDHasPrefix(v string) predicate.Request {
-	return predicate.Request(sql.FieldHasPrefix(FieldMissionID, v))
-}
-
-// MissionIDHasSuffix applies the HasSuffix predicate on the "mission_id" field.
-func MissionIDHasSuffix(v string) predicate.Request {
-	return predicate.Request(sql.FieldHasSuffix(FieldMissionID, v))
-}
-
-// MissionIDEqualFold applies the EqualFold predicate on the "mission_id" field.
-func MissionIDEqualFold(v string) predicate.Request {
-	return predicate.Request(sql.FieldEqualFold(FieldMissionID, v))
-}
-
-// MissionIDContainsFold applies the ContainsFold predicate on the "mission_id" field.
-func MissionIDContainsFold(v string) predicate.Request {
-	return predicate.Request(sql.FieldContainsFold(FieldMissionID, v))
-}
-
 // HasApprovals applies the HasEdge predicate on the "approvals" edge.
 func HasApprovals() predicate.Request {
 	return predicate.Request(func(s *sql.Selector) {
@@ -292,7 +222,7 @@ func HasMission() predicate.Request {
 	return predicate.Request(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, MissionTable, MissionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, MissionTable, MissionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

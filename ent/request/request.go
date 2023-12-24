@@ -17,8 +17,6 @@ const (
 	FieldReason = "reason"
 	// FieldRequester holds the string denoting the requester field in the database.
 	FieldRequester = "requester"
-	// FieldMissionID holds the string denoting the mission_id field in the database.
-	FieldMissionID = "mission_id"
 	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
 	EdgeApprovals = "approvals"
 	// EdgeMission holds the string denoting the mission edge name in mutations.
@@ -31,14 +29,14 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "approval" package.
 	ApprovalsInverseTable = "approvals"
 	// ApprovalsColumn is the table column denoting the approvals relation/edge.
-	ApprovalsColumn = "approval_requests"
+	ApprovalsColumn = "approval_request"
 	// MissionTable is the table that holds the mission relation/edge.
 	MissionTable = "requests"
 	// MissionInverseTable is the table name for the Mission entity.
 	// It exists in this package in order to avoid circular dependency with the "mission" package.
 	MissionInverseTable = "missions"
 	// MissionColumn is the table column denoting the mission relation/edge.
-	MissionColumn = "mission_id"
+	MissionColumn = "request_mission"
 )
 
 // Columns holds all SQL columns for request fields.
@@ -46,13 +44,23 @@ var Columns = []string{
 	FieldID,
 	FieldReason,
 	FieldRequester,
-	FieldMissionID,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "requests"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"request_mission",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -80,11 +88,6 @@ func ByReason(opts ...sql.OrderTermOption) OrderOption {
 // ByRequester orders the results by the requester field.
 func ByRequester(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRequester, opts...).ToFunc()
-}
-
-// ByMissionID orders the results by the mission_id field.
-func ByMissionID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldMissionID, opts...).ToFunc()
 }
 
 // ByApprovalsCount orders the results by approvals count.
@@ -118,6 +121,6 @@ func newMissionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(MissionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, MissionTable, MissionColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, MissionTable, MissionColumn),
 	)
 }

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/audit"
 )
 
@@ -16,7 +17,7 @@ import (
 type Audit struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
 	// Action holds the value of the "action" field.
 	Action audit.Action `json:"action,omitempty"`
 	// Author holds the value of the "author" field.
@@ -31,10 +32,12 @@ func (*Audit) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case audit.FieldID, audit.FieldAction, audit.FieldAuthor:
+		case audit.FieldAction, audit.FieldAuthor:
 			values[i] = new(sql.NullString)
 		case audit.FieldTimestamp:
 			values[i] = new(sql.NullTime)
+		case audit.FieldID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -51,10 +54,10 @@ func (a *Audit) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case audit.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value.Valid {
-				a.ID = value.String
+			} else if value != nil {
+				a.ID = *value
 			}
 		case audit.FieldAction:
 			if value, ok := values[i].(*sql.NullString); !ok {

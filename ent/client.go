@@ -373,14 +373,14 @@ func (c *AccessClient) GetX(ctx context.Context, id uuid.UUID) *Access {
 }
 
 // QueryApprovals queries the approvals edge of a Access.
-func (c *AccessClient) QueryApprovals(a *Access) *AccessQuery {
-	query := (&AccessClient{config: c.config}).Query()
+func (c *AccessClient) QueryApprovals(a *Access) *ApprovalQuery {
+	query := (&ApprovalClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(access.Table, access.FieldID, id),
-			sqlgraph.To(access.Table, access.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, access.ApprovalsTable, access.ApprovalsColumn),
+			sqlgraph.To(approval.Table, approval.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, access.ApprovalsTable, access.ApprovalsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -819,15 +819,31 @@ func (c *ApprovalClient) GetX(ctx context.Context, id uuid.UUID) *Approval {
 	return obj
 }
 
-// QueryRequests queries the requests edge of a Approval.
-func (c *ApprovalClient) QueryRequests(a *Approval) *RequestQuery {
+// QueryRequest queries the request edge of a Approval.
+func (c *ApprovalClient) QueryRequest(a *Approval) *RequestQuery {
 	query := (&RequestClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(approval.Table, approval.FieldID, id),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, approval.RequestsTable, approval.RequestsColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, approval.RequestTable, approval.RequestColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccess queries the access edge of a Approval.
+func (c *ApprovalClient) QueryAccess(a *Approval) *AccessQuery {
+	query := (&AccessClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(approval.Table, approval.FieldID, id),
+			sqlgraph.To(access.Table, access.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, approval.AccessTable, approval.AccessPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -921,7 +937,7 @@ func (c *AuditClient) UpdateOne(a *Audit) *AuditUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *AuditClient) UpdateOneID(id string) *AuditUpdateOne {
+func (c *AuditClient) UpdateOneID(id uuid.UUID) *AuditUpdateOne {
 	mutation := newAuditMutation(c.config, OpUpdateOne, withAuditID(id))
 	return &AuditUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -938,7 +954,7 @@ func (c *AuditClient) DeleteOne(a *Audit) *AuditDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *AuditClient) DeleteOneID(id string) *AuditDeleteOne {
+func (c *AuditClient) DeleteOneID(id uuid.UUID) *AuditDeleteOne {
 	builder := c.Delete().Where(audit.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -955,12 +971,12 @@ func (c *AuditClient) Query() *AuditQuery {
 }
 
 // Get returns a Audit entity by its id.
-func (c *AuditClient) Get(ctx context.Context, id string) (*Audit, error) {
+func (c *AuditClient) Get(ctx context.Context, id uuid.UUID) (*Audit, error) {
 	return c.Query().Where(audit.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *AuditClient) GetX(ctx context.Context, id string) *Audit {
+func (c *AuditClient) GetX(ctx context.Context, id uuid.UUID) *Audit {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1054,7 +1070,7 @@ func (c *MissionClient) UpdateOne(m *Mission) *MissionUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *MissionClient) UpdateOneID(id string) *MissionUpdateOne {
+func (c *MissionClient) UpdateOneID(id uuid.UUID) *MissionUpdateOne {
 	mutation := newMissionMutation(c.config, OpUpdateOne, withMissionID(id))
 	return &MissionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1071,7 +1087,7 @@ func (c *MissionClient) DeleteOne(m *Mission) *MissionDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *MissionClient) DeleteOneID(id string) *MissionDeleteOne {
+func (c *MissionClient) DeleteOneID(id uuid.UUID) *MissionDeleteOne {
 	builder := c.Delete().Where(mission.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1088,12 +1104,12 @@ func (c *MissionClient) Query() *MissionQuery {
 }
 
 // Get returns a Mission entity by its id.
-func (c *MissionClient) Get(ctx context.Context, id string) (*Mission, error) {
+func (c *MissionClient) Get(ctx context.Context, id uuid.UUID) (*Mission, error) {
 	return c.Query().Where(mission.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *MissionClient) GetX(ctx context.Context, id string) *Mission {
+func (c *MissionClient) GetX(ctx context.Context, id uuid.UUID) *Mission {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1109,7 +1125,7 @@ func (c *MissionClient) QueryRockets(m *Mission) *RocketQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mission.Table, mission.FieldID, id),
 			sqlgraph.To(rocket.Table, rocket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, mission.RocketsTable, mission.RocketsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, mission.RocketsTable, mission.RocketsColumn),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
@@ -1125,7 +1141,7 @@ func (c *MissionClient) QueryRequests(m *Mission) *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mission.Table, mission.FieldID, id),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, mission.RequestsTable, mission.RequestsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, mission.RequestsTable, mission.RequestsColumn),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
@@ -1290,7 +1306,7 @@ func (c *RequestClient) QueryMission(r *Request) *MissionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(request.Table, request.FieldID, id),
 			sqlgraph.To(mission.Table, mission.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, request.MissionTable, request.MissionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, request.MissionTable, request.MissionColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -1384,7 +1400,7 @@ func (c *RocketClient) UpdateOne(r *Rocket) *RocketUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *RocketClient) UpdateOneID(id string) *RocketUpdateOne {
+func (c *RocketClient) UpdateOneID(id uuid.UUID) *RocketUpdateOne {
 	mutation := newRocketMutation(c.config, OpUpdateOne, withRocketID(id))
 	return &RocketUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1401,7 +1417,7 @@ func (c *RocketClient) DeleteOne(r *Rocket) *RocketDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *RocketClient) DeleteOneID(id string) *RocketDeleteOne {
+func (c *RocketClient) DeleteOneID(id uuid.UUID) *RocketDeleteOne {
 	builder := c.Delete().Where(rocket.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1418,33 +1434,17 @@ func (c *RocketClient) Query() *RocketQuery {
 }
 
 // Get returns a Rocket entity by its id.
-func (c *RocketClient) Get(ctx context.Context, id string) (*Rocket, error) {
+func (c *RocketClient) Get(ctx context.Context, id uuid.UUID) (*Rocket, error) {
 	return c.Query().Where(rocket.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *RocketClient) GetX(ctx context.Context, id string) *Rocket {
+func (c *RocketClient) GetX(ctx context.Context, id uuid.UUID) *Rocket {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
-}
-
-// QueryMissions queries the missions edge of a Rocket.
-func (c *RocketClient) QueryMissions(r *Rocket) *MissionQuery {
-	query := (&MissionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(rocket.Table, rocket.FieldID, id),
-			sqlgraph.To(mission.Table, mission.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, rocket.MissionsTable, rocket.MissionsPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
 }
 
 // Hooks returns the client hooks.

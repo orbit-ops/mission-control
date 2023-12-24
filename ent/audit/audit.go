@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 )
 
 const (
@@ -45,7 +46,7 @@ var (
 	// AuthorValidator is a validator for the "author" field. It is called by the builders before save.
 	AuthorValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() string
+	DefaultID func() uuid.UUID
 )
 
 // Action defines the type for the "action" enum field.

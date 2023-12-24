@@ -25,6 +25,12 @@ type MissionCreate struct {
 	conflict []sql.ConflictOption
 }
 
+// SetName sets the "name" field.
+func (mc *MissionCreate) SetName(s string) *MissionCreate {
+	mc.mutation.SetName(s)
+	return mc
+}
+
 // SetDescription sets the "description" field.
 func (mc *MissionCreate) SetDescription(s string) *MissionCreate {
 	mc.mutation.SetDescription(s)
@@ -52,20 +58,28 @@ func (mc *MissionCreate) SetPossibleApprovers(s []string) *MissionCreate {
 }
 
 // SetID sets the "id" field.
-func (mc *MissionCreate) SetID(s string) *MissionCreate {
-	mc.mutation.SetID(s)
+func (mc *MissionCreate) SetID(u uuid.UUID) *MissionCreate {
+	mc.mutation.SetID(u)
+	return mc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (mc *MissionCreate) SetNillableID(u *uuid.UUID) *MissionCreate {
+	if u != nil {
+		mc.SetID(*u)
+	}
 	return mc
 }
 
 // AddRocketIDs adds the "rockets" edge to the Rocket entity by IDs.
-func (mc *MissionCreate) AddRocketIDs(ids ...string) *MissionCreate {
+func (mc *MissionCreate) AddRocketIDs(ids ...uuid.UUID) *MissionCreate {
 	mc.mutation.AddRocketIDs(ids...)
 	return mc
 }
 
 // AddRockets adds the "rockets" edges to the Rocket entity.
 func (mc *MissionCreate) AddRockets(r ...*Rocket) *MissionCreate {
-	ids := make([]string, len(r))
+	ids := make([]uuid.UUID, len(r))
 	for i := range r {
 		ids[i] = r[i].ID
 	}
@@ -94,6 +108,7 @@ func (mc *MissionCreate) Mutation() *MissionMutation {
 
 // Save creates the Mission in the database.
 func (mc *MissionCreate) Save(ctx context.Context) (*Mission, error) {
+	mc.defaults()
 	return withHooks(ctx, mc.sqlSave, mc.mutation, mc.hooks)
 }
 
@@ -119,8 +134,24 @@ func (mc *MissionCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (mc *MissionCreate) defaults() {
+	if _, ok := mc.mutation.ID(); !ok {
+		v := mission.DefaultID()
+		mc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (mc *MissionCreate) check() error {
+	if _, ok := mc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Mission.name"`)}
+	}
+	if v, ok := mc.mutation.Name(); ok {
+		if err := mission.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Mission.name": %w`, err)}
+		}
+	}
 	if _, ok := mc.mutation.MinApprovers(); !ok {
 		return &ValidationError{Name: "min_approvers", err: errors.New(`ent: missing required field "Mission.min_approvers"`)}
 	}
@@ -150,10 +181,10 @@ func (mc *MissionCreate) sqlSave(ctx context.Context) (*Mission, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Mission.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	mc.mutation.id = &_node.ID
@@ -164,12 +195,16 @@ func (mc *MissionCreate) sqlSave(ctx context.Context) (*Mission, error) {
 func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Mission{config: mc.config}
-		_spec = sqlgraph.NewCreateSpec(mission.Table, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(mission.Table, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = mc.conflict
 	if id, ok := mc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
+	}
+	if value, ok := mc.mutation.Name(); ok {
+		_spec.SetField(mission.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := mc.mutation.Description(); ok {
 		_spec.SetField(mission.FieldDescription, field.TypeString, value)
@@ -185,13 +220,13 @@ func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 	}
 	if nodes := mc.mutation.RocketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
 			Table:   mission.RocketsTable,
-			Columns: mission.RocketsPrimaryKey,
+			Columns: []string{mission.RocketsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -202,7 +237,7 @@ func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 	if nodes := mc.mutation.RequestsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   mission.RequestsTable,
 			Columns: []string{mission.RequestsColumn},
 			Bidi:    false,
@@ -222,7 +257,7 @@ func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.Mission.Create().
-//		SetDescription(v).
+//		SetName(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -231,7 +266,7 @@ func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.MissionUpsert) {
-//			SetDescription(v+v).
+//			SetName(v+v).
 //		}).
 //		Exec(ctx)
 func (mc *MissionCreate) OnConflict(opts ...sql.ConflictOption) *MissionUpsertOne {
@@ -266,6 +301,18 @@ type (
 		*sql.UpdateSet
 	}
 )
+
+// SetName sets the "name" field.
+func (u *MissionUpsert) SetName(v string) *MissionUpsert {
+	u.Set(mission.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *MissionUpsert) UpdateName() *MissionUpsert {
+	u.SetExcluded(mission.FieldName)
+	return u
+}
 
 // SetDescription sets the "description" field.
 func (u *MissionUpsert) SetDescription(v string) *MissionUpsert {
@@ -363,6 +410,20 @@ func (u *MissionUpsertOne) Update(set func(*MissionUpsert)) *MissionUpsertOne {
 	return u
 }
 
+// SetName sets the "name" field.
+func (u *MissionUpsertOne) SetName(v string) *MissionUpsertOne {
+	return u.Update(func(s *MissionUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *MissionUpsertOne) UpdateName() *MissionUpsertOne {
+	return u.Update(func(s *MissionUpsert) {
+		s.UpdateName()
+	})
+}
+
 // SetDescription sets the "description" field.
 func (u *MissionUpsertOne) SetDescription(v string) *MissionUpsertOne {
 	return u.Update(func(s *MissionUpsert) {
@@ -435,7 +496,7 @@ func (u *MissionUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *MissionUpsertOne) ID(ctx context.Context) (id string, err error) {
+func (u *MissionUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -449,7 +510,7 @@ func (u *MissionUpsertOne) ID(ctx context.Context) (id string, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *MissionUpsertOne) IDX(ctx context.Context) string {
+func (u *MissionUpsertOne) IDX(ctx context.Context) uuid.UUID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -476,6 +537,7 @@ func (mcb *MissionCreateBulk) Save(ctx context.Context) ([]*Mission, error) {
 	for i := range mcb.builders {
 		func(i int, root context.Context) {
 			builder := mcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*MissionMutation)
 				if !ok {
@@ -554,7 +616,7 @@ func (mcb *MissionCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.MissionUpsert) {
-//			SetDescription(v+v).
+//			SetName(v+v).
 //		}).
 //		Exec(ctx)
 func (mcb *MissionCreateBulk) OnConflict(opts ...sql.ConflictOption) *MissionUpsertBulk {
@@ -631,6 +693,20 @@ func (u *MissionUpsertBulk) Update(set func(*MissionUpsert)) *MissionUpsertBulk 
 		set(&MissionUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetName sets the "name" field.
+func (u *MissionUpsertBulk) SetName(v string) *MissionUpsertBulk {
+	return u.Update(func(s *MissionUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *MissionUpsertBulk) UpdateName() *MissionUpsertBulk {
+	return u.Update(func(s *MissionUpsert) {
+		s.UpdateName()
+	})
 }
 
 // SetDescription sets the "description" field.

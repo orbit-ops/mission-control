@@ -18,21 +18,12 @@ var (
 		{Name: "rollback_reason", Type: field.TypeString, Nullable: true},
 		{Name: "end_time", Type: field.TypeTime},
 		{Name: "request_id", Type: field.TypeUUID},
-		{Name: "access_approvals", Type: field.TypeUUID, Unique: true, Nullable: true},
 	}
 	// AccessesTable holds the schema information for the "accesses" table.
 	AccessesTable = &schema.Table{
 		Name:       "accesses",
 		Columns:    AccessesColumns,
 		PrimaryKey: []*schema.Column{AccessesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "accesses_accesses_approvals",
-				Columns:    []*schema.Column{AccessesColumns[8]},
-				RefColumns: []*schema.Column{AccessesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// ActionTokensColumns holds the columns for the "action_tokens" table.
 	ActionTokensColumns = []*schema.Column{
@@ -76,8 +67,7 @@ var (
 		{Name: "approved", Type: field.TypeBool},
 		{Name: "revoked", Type: field.TypeBool, Default: false},
 		{Name: "revoked_time", Type: field.TypeTime, Nullable: true},
-		{Name: "request_id", Type: field.TypeUUID},
-		{Name: "approval_requests", Type: field.TypeUUID},
+		{Name: "approval_request", Type: field.TypeUUID},
 	}
 	// ApprovalsTable holds the schema information for the "approvals" table.
 	ApprovalsTable = &schema.Table{
@@ -86,8 +76,8 @@ var (
 		PrimaryKey: []*schema.Column{ApprovalsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "approvals_requests_requests",
-				Columns:    []*schema.Column{ApprovalsColumns[7]},
+				Symbol:     "approvals_requests_request",
+				Columns:    []*schema.Column{ApprovalsColumns[6]},
 				RefColumns: []*schema.Column{RequestsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -95,7 +85,7 @@ var (
 	}
 	// AuditsColumns holds the columns for the "audits" table.
 	AuditsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString},
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "action", Type: field.TypeEnum, Enums: []string{"ApproveRequest", "RevokeApprovalRequest", "RejectRequest", "CreateAccess", "RemoveAccess"}},
 		{Name: "author", Type: field.TypeString},
 		{Name: "timestamp", Type: field.TypeTime},
@@ -108,7 +98,8 @@ var (
 	}
 	// MissionsColumns holds the columns for the "missions" table.
 	MissionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "min_approvers", Type: field.TypeInt},
 		{Name: "possible_approvers", Type: field.TypeJSON},
@@ -124,7 +115,7 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "reason", Type: field.TypeString},
 		{Name: "requester", Type: field.TypeString},
-		{Name: "mission_id", Type: field.TypeString},
+		{Name: "request_mission", Type: field.TypeUUID},
 	}
 	// RequestsTable holds the schema information for the "requests" table.
 	RequestsTable = &schema.Table{
@@ -133,7 +124,7 @@ var (
 		PrimaryKey: []*schema.Column{RequestsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "requests_missions_requests",
+				Symbol:     "requests_missions_mission",
 				Columns:    []*schema.Column{RequestsColumns[3]},
 				RefColumns: []*schema.Column{MissionsColumns[0]},
 				OnDelete:   schema.NoAction,
@@ -142,39 +133,48 @@ var (
 	}
 	// RocketsColumns holds the columns for the "rockets" table.
 	RocketsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "description", Type: field.TypeString, Nullable: true},
-		{Name: "image", Type: field.TypeString, Nullable: true},
-		{Name: "zip", Type: field.TypeString, Nullable: true},
+		{Name: "code", Type: field.TypeString, Nullable: true},
 		{Name: "config", Type: field.TypeJSON},
+		{Name: "mission_rockets", Type: field.TypeUUID, Nullable: true},
 	}
 	// RocketsTable holds the schema information for the "rockets" table.
 	RocketsTable = &schema.Table{
 		Name:       "rockets",
 		Columns:    RocketsColumns,
 		PrimaryKey: []*schema.Column{RocketsColumns[0]},
-	}
-	// RocketMissionsColumns holds the columns for the "rocket_missions" table.
-	RocketMissionsColumns = []*schema.Column{
-		{Name: "rocket_id", Type: field.TypeString},
-		{Name: "mission_id", Type: field.TypeString},
-	}
-	// RocketMissionsTable holds the schema information for the "rocket_missions" table.
-	RocketMissionsTable = &schema.Table{
-		Name:       "rocket_missions",
-		Columns:    RocketMissionsColumns,
-		PrimaryKey: []*schema.Column{RocketMissionsColumns[0], RocketMissionsColumns[1]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "rocket_missions_rocket_id",
-				Columns:    []*schema.Column{RocketMissionsColumns[0]},
-				RefColumns: []*schema.Column{RocketsColumns[0]},
+				Symbol:     "rockets_missions_rockets",
+				Columns:    []*schema.Column{RocketsColumns[5]},
+				RefColumns: []*schema.Column{MissionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// AccessApprovalsColumns holds the columns for the "access_approvals" table.
+	AccessApprovalsColumns = []*schema.Column{
+		{Name: "access_id", Type: field.TypeUUID},
+		{Name: "approval_id", Type: field.TypeUUID},
+	}
+	// AccessApprovalsTable holds the schema information for the "access_approvals" table.
+	AccessApprovalsTable = &schema.Table{
+		Name:       "access_approvals",
+		Columns:    AccessApprovalsColumns,
+		PrimaryKey: []*schema.Column{AccessApprovalsColumns[0], AccessApprovalsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "access_approvals_access_id",
+				Columns:    []*schema.Column{AccessApprovalsColumns[0]},
+				RefColumns: []*schema.Column{AccessesColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "rocket_missions_mission_id",
-				Columns:    []*schema.Column{RocketMissionsColumns[1]},
-				RefColumns: []*schema.Column{MissionsColumns[0]},
+				Symbol:     "access_approvals_approval_id",
+				Columns:    []*schema.Column{AccessApprovalsColumns[1]},
+				RefColumns: []*schema.Column{ApprovalsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
@@ -189,15 +189,15 @@ var (
 		MissionsTable,
 		RequestsTable,
 		RocketsTable,
-		RocketMissionsTable,
+		AccessApprovalsTable,
 	}
 )
 
 func init() {
-	AccessesTable.ForeignKeys[0].RefTable = AccessesTable
 	ActionTokensTable.ForeignKeys[0].RefTable = AccessesTable
 	ApprovalsTable.ForeignKeys[0].RefTable = RequestsTable
 	RequestsTable.ForeignKeys[0].RefTable = MissionsTable
-	RocketMissionsTable.ForeignKeys[0].RefTable = RocketsTable
-	RocketMissionsTable.ForeignKeys[1].RefTable = MissionsTable
+	RocketsTable.ForeignKeys[0].RefTable = MissionsTable
+	AccessApprovalsTable.ForeignKeys[0].RefTable = AccessesTable
+	AccessApprovalsTable.ForeignKeys[1].RefTable = ApprovalsTable
 }

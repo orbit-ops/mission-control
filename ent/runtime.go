@@ -60,13 +60,21 @@ func init() {
 	// auditDescID is the schema descriptor for id field.
 	auditDescID := auditFields[0].Descriptor()
 	// audit.DefaultID holds the default value on creation for the id field.
-	audit.DefaultID = auditDescID.Default.(func() string)
+	audit.DefaultID = auditDescID.Default.(func() uuid.UUID)
 	missionFields := schema.Mission{}.Fields()
 	_ = missionFields
+	// missionDescName is the schema descriptor for name field.
+	missionDescName := missionFields[1].Descriptor()
+	// mission.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	mission.NameValidator = missionDescName.Validators[0].(func(string) error)
 	// missionDescMinApprovers is the schema descriptor for min_approvers field.
-	missionDescMinApprovers := missionFields[2].Descriptor()
+	missionDescMinApprovers := missionFields[3].Descriptor()
 	// mission.MinApproversValidator is a validator for the "min_approvers" field. It is called by the builders before save.
 	mission.MinApproversValidator = missionDescMinApprovers.Validators[0].(func(int) error)
+	// missionDescID is the schema descriptor for id field.
+	missionDescID := missionFields[0].Descriptor()
+	// mission.DefaultID holds the default value on creation for the id field.
+	mission.DefaultID = missionDescID.Default.(func() uuid.UUID)
 	requestFields := schema.Request{}.Fields()
 	_ = requestFields
 	// requestDescID is the schema descriptor for id field.
@@ -75,8 +83,20 @@ func init() {
 	request.DefaultID = requestDescID.Default.(func() uuid.UUID)
 	rocketFields := schema.Rocket{}.Fields()
 	_ = rocketFields
-	// rocketDescImage is the schema descriptor for image field.
-	rocketDescImage := rocketFields[2].Descriptor()
-	// rocket.ImageValidator is a validator for the "image" field. It is called by the builders before save.
-	rocket.ImageValidator = rocketDescImage.Validators[0].(func(string) error)
+	// rocketDescName is the schema descriptor for name field.
+	rocketDescName := rocketFields[1].Descriptor()
+	// rocket.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	rocket.NameValidator = rocketDescName.Validators[0].(func(string) error)
+	// rocketDescCode is the schema descriptor for code field.
+	rocketDescCode := rocketFields[3].Descriptor()
+	// rocket.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	rocket.CodeValidator = rocketDescCode.Validators[0].(func(string) error)
+	// rocketDescConfig is the schema descriptor for config field.
+	rocketDescConfig := rocketFields[4].Descriptor()
+	// rocket.DefaultConfig holds the default value on creation for the config field.
+	rocket.DefaultConfig = rocketDescConfig.Default.(map[string]string)
+	// rocketDescID is the schema descriptor for id field.
+	rocketDescID := rocketFields[0].Descriptor()
+	// rocket.DefaultID holds the default value on creation for the id field.
+	rocket.DefaultID = rocketDescID.Default.(func() uuid.UUID)
 }

@@ -25,11 +25,7 @@ func (Audit) Annotations() []schema.Annotation {
 // Fields of the User.
 func (Audit) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").DefaultFunc(func() string {
-			// An example of a dumb ID generator - use a production-ready alternative instead.
-			uuid, _ := uuid.NewUUID()
-			return uuid.String()
-		}),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.Enum("action").Values(
 			"ApproveRequest",
 			"RevokeApprovalRequest",

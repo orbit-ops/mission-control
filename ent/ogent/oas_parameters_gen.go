@@ -151,7 +151,7 @@ func decodeDeleteApprovalParams(args [1]string, argsEscaped bool, r *http.Reques
 // DeleteMissionParams is parameters of deleteMission operation.
 type DeleteMissionParams struct {
 	// ID of the Mission.
-	ID string
+	ID uuid.UUID
 }
 
 func unpackDeleteMissionParams(packed middleware.Parameters) (params DeleteMissionParams) {
@@ -160,7 +160,7 @@ func unpackDeleteMissionParams(packed middleware.Parameters) (params DeleteMissi
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	return params
 }
@@ -190,7 +190,7 @@ func decodeDeleteMissionParams(args [1]string, argsEscaped bool, r *http.Request
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -283,7 +283,7 @@ func decodeDeleteRequestParams(args [1]string, argsEscaped bool, r *http.Request
 // DeleteRocketParams is parameters of deleteRocket operation.
 type DeleteRocketParams struct {
 	// ID of the Rocket.
-	ID string
+	ID uuid.UUID
 }
 
 func unpackDeleteRocketParams(packed middleware.Parameters) (params DeleteRocketParams) {
@@ -292,7 +292,7 @@ func unpackDeleteRocketParams(packed middleware.Parameters) (params DeleteRocket
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	return params
 }
@@ -322,7 +322,7 @@ func decodeDeleteRocketParams(args [1]string, argsEscaped bool, r *http.Request)
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -386,6 +386,177 @@ func unpackListAccessAccessTokensParams(packed middleware.Parameters) (params Li
 }
 
 func decodeListAccessAccessTokensParams(args [1]string, argsEscaped bool, r *http.Request) (params ListAccessAccessTokensParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: id.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.ID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "id",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: page.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Page.SetTo(paramsDotPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: itemsPerPage.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "itemsPerPage",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotItemsPerPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotItemsPerPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.ItemsPerPage.SetTo(paramsDotItemsPerPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "itemsPerPage",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ListAccessApprovalsParams is parameters of listAccessApprovals operation.
+type ListAccessApprovalsParams struct {
+	// ID of the Access.
+	ID uuid.UUID
+	// What page to render.
+	Page OptInt
+	// Item count to render per page.
+	ItemsPerPage OptInt
+}
+
+func unpackListAccessApprovalsParams(packed middleware.Parameters) (params ListAccessApprovalsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "id",
+			In:   "path",
+		}
+		params.ID = packed[key].(uuid.UUID)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "page",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Page = v.(OptInt)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "itemsPerPage",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.ItemsPerPage = v.(OptInt)
+		}
+	}
+	return params
+}
+
+func decodeListAccessApprovalsParams(args [1]string, argsEscaped bool, r *http.Request) (params ListAccessApprovalsParams, _ error) {
 	q := uri.NewQueryDecoder(r.URL.Query())
 	// Decode path: id.
 	if err := func() error {
@@ -847,6 +1018,177 @@ func decodeListApprovalParams(args [0]string, argsEscaped bool, r *http.Request)
 	return params, nil
 }
 
+// ListApprovalAccessParams is parameters of listApprovalAccess operation.
+type ListApprovalAccessParams struct {
+	// ID of the Approval.
+	ID uuid.UUID
+	// What page to render.
+	Page OptInt
+	// Item count to render per page.
+	ItemsPerPage OptInt
+}
+
+func unpackListApprovalAccessParams(packed middleware.Parameters) (params ListApprovalAccessParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "id",
+			In:   "path",
+		}
+		params.ID = packed[key].(uuid.UUID)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "page",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Page = v.(OptInt)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "itemsPerPage",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.ItemsPerPage = v.(OptInt)
+		}
+	}
+	return params
+}
+
+func decodeListApprovalAccessParams(args [1]string, argsEscaped bool, r *http.Request) (params ListApprovalAccessParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: id.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToUUID(val)
+				if err != nil {
+					return err
+				}
+
+				params.ID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "id",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: page.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Page.SetTo(paramsDotPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: itemsPerPage.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "itemsPerPage",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotItemsPerPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotItemsPerPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.ItemsPerPage.SetTo(paramsDotItemsPerPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "itemsPerPage",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ListAuditParams is parameters of listAudit operation.
 type ListAuditParams struct {
 	// What page to render.
@@ -1180,7 +1522,7 @@ func decodeListMissionParams(args [0]string, argsEscaped bool, r *http.Request) 
 // ListMissionRequestsParams is parameters of listMissionRequests operation.
 type ListMissionRequestsParams struct {
 	// ID of the Mission.
-	ID string
+	ID uuid.UUID
 	// What page to render.
 	Page OptInt
 	// Item count to render per page.
@@ -1193,7 +1535,7 @@ func unpackListMissionRequestsParams(packed middleware.Parameters) (params ListM
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	{
 		key := middleware.ParameterKey{
@@ -1242,7 +1584,7 @@ func decodeListMissionRequestsParams(args [1]string, argsEscaped bool, r *http.R
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -1351,7 +1693,7 @@ func decodeListMissionRequestsParams(args [1]string, argsEscaped bool, r *http.R
 // ListMissionRocketsParams is parameters of listMissionRockets operation.
 type ListMissionRocketsParams struct {
 	// ID of the Mission.
-	ID string
+	ID uuid.UUID
 	// What page to render.
 	Page OptInt
 	// Item count to render per page.
@@ -1364,7 +1706,7 @@ func unpackListMissionRocketsParams(packed middleware.Parameters) (params ListMi
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	{
 		key := middleware.ParameterKey{
@@ -1413,7 +1755,7 @@ func decodeListMissionRocketsParams(args [1]string, argsEscaped bool, r *http.Re
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -2020,177 +2362,6 @@ func decodeListRocketParams(args [0]string, argsEscaped bool, r *http.Request) (
 	return params, nil
 }
 
-// ListRocketMissionsParams is parameters of listRocketMissions operation.
-type ListRocketMissionsParams struct {
-	// ID of the Rocket.
-	ID string
-	// What page to render.
-	Page OptInt
-	// Item count to render per page.
-	ItemsPerPage OptInt
-}
-
-func unpackListRocketMissionsParams(packed middleware.Parameters) (params ListRocketMissionsParams) {
-	{
-		key := middleware.ParameterKey{
-			Name: "id",
-			In:   "path",
-		}
-		params.ID = packed[key].(string)
-	}
-	{
-		key := middleware.ParameterKey{
-			Name: "page",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.Page = v.(OptInt)
-		}
-	}
-	{
-		key := middleware.ParameterKey{
-			Name: "itemsPerPage",
-			In:   "query",
-		}
-		if v, ok := packed[key]; ok {
-			params.ItemsPerPage = v.(OptInt)
-		}
-	}
-	return params
-}
-
-func decodeListRocketMissionsParams(args [1]string, argsEscaped bool, r *http.Request) (params ListRocketMissionsParams, _ error) {
-	q := uri.NewQueryDecoder(r.URL.Query())
-	// Decode path: id.
-	if err := func() error {
-		param := args[0]
-		if argsEscaped {
-			unescaped, err := url.PathUnescape(args[0])
-			if err != nil {
-				return errors.Wrap(err, "unescape path")
-			}
-			param = unescaped
-		}
-		if len(param) > 0 {
-			d := uri.NewPathDecoder(uri.PathDecoderConfig{
-				Param:   "id",
-				Value:   param,
-				Style:   uri.PathStyleSimple,
-				Explode: false,
-			})
-
-			if err := func() error {
-				val, err := d.DecodeValue()
-				if err != nil {
-					return err
-				}
-
-				c, err := conv.ToString(val)
-				if err != nil {
-					return err
-				}
-
-				params.ID = c
-				return nil
-			}(); err != nil {
-				return err
-			}
-		} else {
-			return validate.ErrFieldRequired
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "id",
-			In:   "path",
-			Err:  err,
-		}
-	}
-	// Decode query: page.
-	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "page",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotPageVal int
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToInt(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotPageVal = c
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.Page.SetTo(paramsDotPageVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "page",
-			In:   "query",
-			Err:  err,
-		}
-	}
-	// Decode query: itemsPerPage.
-	if err := func() error {
-		cfg := uri.QueryParameterDecodingConfig{
-			Name:    "itemsPerPage",
-			Style:   uri.QueryStyleForm,
-			Explode: true,
-		}
-
-		if err := q.HasParam(cfg); err == nil {
-			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
-				var paramsDotItemsPerPageVal int
-				if err := func() error {
-					val, err := d.DecodeValue()
-					if err != nil {
-						return err
-					}
-
-					c, err := conv.ToInt(val)
-					if err != nil {
-						return err
-					}
-
-					paramsDotItemsPerPageVal = c
-					return nil
-				}(); err != nil {
-					return err
-				}
-				params.ItemsPerPage.SetTo(paramsDotItemsPerPageVal)
-				return nil
-			}); err != nil {
-				return err
-			}
-		}
-		return nil
-	}(); err != nil {
-		return params, &ogenerrors.DecodeParamError{
-			Name: "itemsPerPage",
-			In:   "query",
-			Err:  err,
-		}
-	}
-	return params, nil
-}
-
 // ReadApiKeyParams is parameters of readApiKey operation.
 type ReadApiKeyParams struct {
 	// ID of the ApiKey.
@@ -2326,7 +2497,7 @@ func decodeReadApprovalParams(args [1]string, argsEscaped bool, r *http.Request)
 // ReadAuditParams is parameters of readAudit operation.
 type ReadAuditParams struct {
 	// ID of the Audit.
-	ID string
+	ID uuid.UUID
 }
 
 func unpackReadAuditParams(packed middleware.Parameters) (params ReadAuditParams) {
@@ -2335,7 +2506,7 @@ func unpackReadAuditParams(packed middleware.Parameters) (params ReadAuditParams
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	return params
 }
@@ -2365,7 +2536,7 @@ func decodeReadAuditParams(args [1]string, argsEscaped bool, r *http.Request) (p
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -2392,7 +2563,7 @@ func decodeReadAuditParams(args [1]string, argsEscaped bool, r *http.Request) (p
 // ReadMissionParams is parameters of readMission operation.
 type ReadMissionParams struct {
 	// ID of the Mission.
-	ID string
+	ID uuid.UUID
 }
 
 func unpackReadMissionParams(packed middleware.Parameters) (params ReadMissionParams) {
@@ -2401,7 +2572,7 @@ func unpackReadMissionParams(packed middleware.Parameters) (params ReadMissionPa
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	return params
 }
@@ -2431,7 +2602,7 @@ func decodeReadMissionParams(args [1]string, argsEscaped bool, r *http.Request) 
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -2590,7 +2761,7 @@ func decodeReadRequestMissionParams(args [1]string, argsEscaped bool, r *http.Re
 // ReadRocketParams is parameters of readRocket operation.
 type ReadRocketParams struct {
 	// ID of the Rocket.
-	ID string
+	ID uuid.UUID
 }
 
 func unpackReadRocketParams(packed middleware.Parameters) (params ReadRocketParams) {
@@ -2599,7 +2770,7 @@ func unpackReadRocketParams(packed middleware.Parameters) (params ReadRocketPara
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	return params
 }
@@ -2629,7 +2800,7 @@ func decodeReadRocketParams(args [1]string, argsEscaped bool, r *http.Request) (
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -2722,7 +2893,7 @@ func decodeUpdateApprovalParams(args [1]string, argsEscaped bool, r *http.Reques
 // UpdateMissionParams is parameters of updateMission operation.
 type UpdateMissionParams struct {
 	// ID of the Mission.
-	ID string
+	ID uuid.UUID
 }
 
 func unpackUpdateMissionParams(packed middleware.Parameters) (params UpdateMissionParams) {
@@ -2731,7 +2902,7 @@ func unpackUpdateMissionParams(packed middleware.Parameters) (params UpdateMissi
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	return params
 }
@@ -2761,7 +2932,7 @@ func decodeUpdateMissionParams(args [1]string, argsEscaped bool, r *http.Request
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}
@@ -2854,7 +3025,7 @@ func decodeUpdateRequestParams(args [1]string, argsEscaped bool, r *http.Request
 // UpdateRocketParams is parameters of updateRocket operation.
 type UpdateRocketParams struct {
 	// ID of the Rocket.
-	ID string
+	ID uuid.UUID
 }
 
 func unpackUpdateRocketParams(packed middleware.Parameters) (params UpdateRocketParams) {
@@ -2863,7 +3034,7 @@ func unpackUpdateRocketParams(packed middleware.Parameters) (params UpdateRocket
 			Name: "id",
 			In:   "path",
 		}
-		params.ID = packed[key].(string)
+		params.ID = packed[key].(uuid.UUID)
 	}
 	return params
 }
@@ -2893,7 +3064,7 @@ func decodeUpdateRocketParams(args [1]string, argsEscaped bool, r *http.Request)
 					return err
 				}
 
-				c, err := conv.ToString(val)
+				c, err := conv.ToUUID(val)
 				if err != nil {
 					return err
 				}

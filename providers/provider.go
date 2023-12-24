@@ -27,8 +27,8 @@ type ProviderConfig struct {
 
 type BaseProvider struct{}
 
-func (BaseProvider) EncodeRocketConfig(req *ent.Request) (string, error) {
-	bs, err := json.Marshal(req.RocketConfig)
+func (BaseProvider) EncodeRocketConfig(payload any) (string, error) {
+	bs, err := json.Marshal(payload)
 	if err != nil {
 		return "", err
 	}

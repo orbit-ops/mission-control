@@ -45,8 +45,16 @@ type ListAccessAccessTokensRes interface {
 	listAccessAccessTokensRes()
 }
 
+type ListAccessApprovalsRes interface {
+	listAccessApprovalsRes()
+}
+
 type ListApiKeyRes interface {
 	listApiKeyRes()
+}
+
+type ListApprovalAccessRes interface {
+	listApprovalAccessRes()
 }
 
 type ListApprovalRes interface {
@@ -75,10 +83,6 @@ type ListRequestApprovalsRes interface {
 
 type ListRequestRes interface {
 	listRequestRes()
-}
-
-type ListRocketMissionsRes interface {
-	listRocketMissionsRes()
 }
 
 type ListRocketRes interface {

@@ -6,62 +6,53 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id string) predicate.Audit {
+func ID(id uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id string) predicate.Audit {
+func IDEQ(id uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id string) predicate.Audit {
+func IDNEQ(id uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...string) predicate.Audit {
+func IDIn(ids ...uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...string) predicate.Audit {
+func IDNotIn(ids ...uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id string) predicate.Audit {
+func IDGT(id uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id string) predicate.Audit {
+func IDGTE(id uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id string) predicate.Audit {
+func IDLT(id uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id string) predicate.Audit {
+func IDLTE(id uuid.UUID) predicate.Audit {
 	return predicate.Audit(sql.FieldLTE(FieldID, id))
-}
-
-// IDEqualFold applies the EqualFold predicate on the ID field.
-func IDEqualFold(id string) predicate.Audit {
-	return predicate.Audit(sql.FieldEqualFold(FieldID, id))
-}
-
-// IDContainsFold applies the ContainsFold predicate on the ID field.
-func IDContainsFold(id string) predicate.Audit {
-	return predicate.Audit(sql.FieldContainsFold(FieldID, id))
 }
 
 // Author applies equality check predicate on the "author" field. It's identical to AuthorEQ.

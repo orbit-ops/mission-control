@@ -22,14 +22,14 @@ func (Request) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("reason").Immutable(),
 		field.String("requester").Immutable(),
-		field.String("mission_id").Immutable(),
+		// field.UUID("mission_id", uuid.UUID{}).Immutable(),
 	}
 }
 
 // Edges of the Request.
 func (Request) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("approvals", Approval.Type).Ref("requests").Immutable(),
-		edge.From("mission", Mission.Type).Immutable().Unique().Required().Ref("requests").Field("mission_id"),
+		edge.From("approvals", Approval.Type).Ref("request").Immutable(),
+		edge.To("mission", Mission.Type).Immutable().Unique().Required(),
 	}
 }

@@ -35,7 +35,7 @@ func (lp *LocalProvider) runJob(ctx context.Context, command providers.ProviderC
 		return err
 	}
 
-	cmd := exec.Command("go", "run", rocket.Image)
+	cmd := exec.Command("go", "run", rocket.Code)
 	cmd.Env = []string{
 		fmt.Sprintf("LAUNCHPAD_API_URL=%s", lp.conf.ApiUrl),
 		fmt.Sprintf("LAUNCHPAD_TOKEN=%s", token),

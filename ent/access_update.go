@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
+	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 )
 
@@ -98,23 +99,19 @@ func (au *AccessUpdate) SetNillableRequestID(u *uuid.UUID) *AccessUpdate {
 	return au
 }
 
-// SetApprovalsID sets the "approvals" edge to the Access entity by ID.
-func (au *AccessUpdate) SetApprovalsID(id uuid.UUID) *AccessUpdate {
-	au.mutation.SetApprovalsID(id)
+// AddApprovalIDs adds the "approvals" edge to the Approval entity by IDs.
+func (au *AccessUpdate) AddApprovalIDs(ids ...uuid.UUID) *AccessUpdate {
+	au.mutation.AddApprovalIDs(ids...)
 	return au
 }
 
-// SetNillableApprovalsID sets the "approvals" edge to the Access entity by ID if the given value is not nil.
-func (au *AccessUpdate) SetNillableApprovalsID(id *uuid.UUID) *AccessUpdate {
-	if id != nil {
-		au = au.SetApprovalsID(*id)
+// AddApprovals adds the "approvals" edges to the Approval entity.
+func (au *AccessUpdate) AddApprovals(a ...*Approval) *AccessUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return au
-}
-
-// SetApprovals sets the "approvals" edge to the Access entity.
-func (au *AccessUpdate) SetApprovals(a *Access) *AccessUpdate {
-	return au.SetApprovalsID(a.ID)
+	return au.AddApprovalIDs(ids...)
 }
 
 // AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by IDs.
@@ -137,10 +134,25 @@ func (au *AccessUpdate) Mutation() *AccessMutation {
 	return au.mutation
 }
 
-// ClearApprovals clears the "approvals" edge to the Access entity.
+// ClearApprovals clears all "approvals" edges to the Approval entity.
 func (au *AccessUpdate) ClearApprovals() *AccessUpdate {
 	au.mutation.ClearApprovals()
 	return au
+}
+
+// RemoveApprovalIDs removes the "approvals" edge to Approval entities by IDs.
+func (au *AccessUpdate) RemoveApprovalIDs(ids ...uuid.UUID) *AccessUpdate {
+	au.mutation.RemoveApprovalIDs(ids...)
+	return au
+}
+
+// RemoveApprovals removes "approvals" edges to Approval entities.
+func (au *AccessUpdate) RemoveApprovals(a ...*Approval) *AccessUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.RemoveApprovalIDs(ids...)
 }
 
 // ClearAccessTokens clears all "accessTokens" edges to the ActionTokens entity.
@@ -220,26 +232,42 @@ func (au *AccessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if au.mutation.ApprovalsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: []string{access.ApprovalsColumn},
-			Bidi:    true,
+			Columns: access.ApprovalsPrimaryKey,
+			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
 			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedApprovalsIDs(); len(nodes) > 0 && !au.mutation.ApprovalsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   access.ApprovalsTable,
+			Columns: access.ApprovalsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := au.mutation.ApprovalsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: []string{access.ApprovalsColumn},
-			Bidi:    true,
+			Columns: access.ApprovalsPrimaryKey,
+			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -380,23 +408,19 @@ func (auo *AccessUpdateOne) SetNillableRequestID(u *uuid.UUID) *AccessUpdateOne 
 	return auo
 }
 
-// SetApprovalsID sets the "approvals" edge to the Access entity by ID.
-func (auo *AccessUpdateOne) SetApprovalsID(id uuid.UUID) *AccessUpdateOne {
-	auo.mutation.SetApprovalsID(id)
+// AddApprovalIDs adds the "approvals" edge to the Approval entity by IDs.
+func (auo *AccessUpdateOne) AddApprovalIDs(ids ...uuid.UUID) *AccessUpdateOne {
+	auo.mutation.AddApprovalIDs(ids...)
 	return auo
 }
 
-// SetNillableApprovalsID sets the "approvals" edge to the Access entity by ID if the given value is not nil.
-func (auo *AccessUpdateOne) SetNillableApprovalsID(id *uuid.UUID) *AccessUpdateOne {
-	if id != nil {
-		auo = auo.SetApprovalsID(*id)
+// AddApprovals adds the "approvals" edges to the Approval entity.
+func (auo *AccessUpdateOne) AddApprovals(a ...*Approval) *AccessUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return auo
-}
-
-// SetApprovals sets the "approvals" edge to the Access entity.
-func (auo *AccessUpdateOne) SetApprovals(a *Access) *AccessUpdateOne {
-	return auo.SetApprovalsID(a.ID)
+	return auo.AddApprovalIDs(ids...)
 }
 
 // AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by IDs.
@@ -419,10 +443,25 @@ func (auo *AccessUpdateOne) Mutation() *AccessMutation {
 	return auo.mutation
 }
 
-// ClearApprovals clears the "approvals" edge to the Access entity.
+// ClearApprovals clears all "approvals" edges to the Approval entity.
 func (auo *AccessUpdateOne) ClearApprovals() *AccessUpdateOne {
 	auo.mutation.ClearApprovals()
 	return auo
+}
+
+// RemoveApprovalIDs removes the "approvals" edge to Approval entities by IDs.
+func (auo *AccessUpdateOne) RemoveApprovalIDs(ids ...uuid.UUID) *AccessUpdateOne {
+	auo.mutation.RemoveApprovalIDs(ids...)
+	return auo
+}
+
+// RemoveApprovals removes "approvals" edges to Approval entities.
+func (auo *AccessUpdateOne) RemoveApprovals(a ...*Approval) *AccessUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.RemoveApprovalIDs(ids...)
 }
 
 // ClearAccessTokens clears all "accessTokens" edges to the ActionTokens entity.
@@ -532,26 +571,42 @@ func (auo *AccessUpdateOne) sqlSave(ctx context.Context) (_node *Access, err err
 	}
 	if auo.mutation.ApprovalsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: []string{access.ApprovalsColumn},
-			Bidi:    true,
+			Columns: access.ApprovalsPrimaryKey,
+			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
 			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedApprovalsIDs(); len(nodes) > 0 && !auo.mutation.ApprovalsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   access.ApprovalsTable,
+			Columns: access.ApprovalsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := auo.mutation.ApprovalsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: []string{access.ApprovalsColumn},
-			Bidi:    true,
+			Columns: access.ApprovalsPrimaryKey,
+			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

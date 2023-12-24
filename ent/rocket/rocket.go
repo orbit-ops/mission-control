@@ -4,7 +4,7 @@ package rocket
 
 import (
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -12,39 +12,32 @@ const (
 	Label = "rocket"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
-	// FieldImage holds the string denoting the image field in the database.
-	FieldImage = "image"
-	// FieldZip holds the string denoting the zip field in the database.
-	FieldZip = "zip"
+	// FieldCode holds the string denoting the code field in the database.
+	FieldCode = "code"
 	// FieldConfig holds the string denoting the config field in the database.
 	FieldConfig = "config"
-	// EdgeMissions holds the string denoting the missions edge name in mutations.
-	EdgeMissions = "missions"
 	// Table holds the table name of the rocket in the database.
 	Table = "rockets"
-	// MissionsTable is the table that holds the missions relation/edge. The primary key declared below.
-	MissionsTable = "rocket_missions"
-	// MissionsInverseTable is the table name for the Mission entity.
-	// It exists in this package in order to avoid circular dependency with the "mission" package.
-	MissionsInverseTable = "missions"
 )
 
 // Columns holds all SQL columns for rocket fields.
 var Columns = []string{
 	FieldID,
+	FieldName,
 	FieldDescription,
-	FieldImage,
-	FieldZip,
+	FieldCode,
 	FieldConfig,
 }
 
-var (
-	// MissionsPrimaryKey and MissionsColumn2 are the table columns denoting the
-	// primary key for the missions relation (M2M).
-	MissionsPrimaryKey = []string{"rocket_id", "mission_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "rockets"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"mission_rockets",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -53,12 +46,23 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
 
 var (
-	// ImageValidator is a validator for the "image" field. It is called by the builders before save.
-	ImageValidator func(string) error
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
+	// CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	CodeValidator func(string) error
+	// DefaultConfig holds the default value on creation for the "config" field.
+	DefaultConfig map[string]string
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )
 
 // OrderOption defines the ordering options for the Rocket queries.
@@ -69,38 +73,17 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
-// ByImage orders the results by the image field.
-func ByImage(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldImage, opts...).ToFunc()
-}
-
-// ByZip orders the results by the zip field.
-func ByZip(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldZip, opts...).ToFunc()
-}
-
-// ByMissionsCount orders the results by missions count.
-func ByMissionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newMissionsStep(), opts...)
-	}
-}
-
-// ByMissions orders the results by missions terms.
-func ByMissions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newMissionsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newMissionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(MissionsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, MissionsTable, MissionsPrimaryKey...),
-	)
+// ByCode orders the results by the code field.
+func ByCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCode, opts...).ToFunc()
 }

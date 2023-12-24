@@ -60,7 +60,7 @@ func (au *AuditUpdate) ExecX(ctx context.Context) {
 }
 
 func (au *AuditUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(audit.Table, audit.Columns, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(audit.Table, audit.Columns, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeUUID))
 	if ps := au.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -134,7 +134,7 @@ func (auo *AuditUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (auo *AuditUpdateOne) sqlSave(ctx context.Context) (_node *Audit, err error) {
-	_spec := sqlgraph.NewUpdateSpec(audit.Table, audit.Columns, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(audit.Table, audit.Columns, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeUUID))
 	id, ok := auo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Audit.id" for update`)}

@@ -10,7 +10,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/launchpad-core/ent/mission"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
@@ -25,6 +24,20 @@ type RocketUpdate struct {
 // Where appends a list predicates to the RocketUpdate builder.
 func (ru *RocketUpdate) Where(ps ...predicate.Rocket) *RocketUpdate {
 	ru.mutation.Where(ps...)
+	return ru
+}
+
+// SetName sets the "name" field.
+func (ru *RocketUpdate) SetName(s string) *RocketUpdate {
+	ru.mutation.SetName(s)
+	return ru
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (ru *RocketUpdate) SetNillableName(s *string) *RocketUpdate {
+	if s != nil {
+		ru.SetName(*s)
+	}
 	return ru
 }
 
@@ -48,43 +61,23 @@ func (ru *RocketUpdate) ClearDescription() *RocketUpdate {
 	return ru
 }
 
-// SetImage sets the "image" field.
-func (ru *RocketUpdate) SetImage(s string) *RocketUpdate {
-	ru.mutation.SetImage(s)
+// SetCode sets the "code" field.
+func (ru *RocketUpdate) SetCode(s string) *RocketUpdate {
+	ru.mutation.SetCode(s)
 	return ru
 }
 
-// SetNillableImage sets the "image" field if the given value is not nil.
-func (ru *RocketUpdate) SetNillableImage(s *string) *RocketUpdate {
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (ru *RocketUpdate) SetNillableCode(s *string) *RocketUpdate {
 	if s != nil {
-		ru.SetImage(*s)
+		ru.SetCode(*s)
 	}
 	return ru
 }
 
-// ClearImage clears the value of the "image" field.
-func (ru *RocketUpdate) ClearImage() *RocketUpdate {
-	ru.mutation.ClearImage()
-	return ru
-}
-
-// SetZip sets the "zip" field.
-func (ru *RocketUpdate) SetZip(s string) *RocketUpdate {
-	ru.mutation.SetZip(s)
-	return ru
-}
-
-// SetNillableZip sets the "zip" field if the given value is not nil.
-func (ru *RocketUpdate) SetNillableZip(s *string) *RocketUpdate {
-	if s != nil {
-		ru.SetZip(*s)
-	}
-	return ru
-}
-
-// ClearZip clears the value of the "zip" field.
-func (ru *RocketUpdate) ClearZip() *RocketUpdate {
-	ru.mutation.ClearZip()
+// ClearCode clears the value of the "code" field.
+func (ru *RocketUpdate) ClearCode() *RocketUpdate {
+	ru.mutation.ClearCode()
 	return ru
 }
 
@@ -94,45 +87,9 @@ func (ru *RocketUpdate) SetConfig(m map[string]string) *RocketUpdate {
 	return ru
 }
 
-// AddMissionIDs adds the "missions" edge to the Mission entity by IDs.
-func (ru *RocketUpdate) AddMissionIDs(ids ...string) *RocketUpdate {
-	ru.mutation.AddMissionIDs(ids...)
-	return ru
-}
-
-// AddMissions adds the "missions" edges to the Mission entity.
-func (ru *RocketUpdate) AddMissions(m ...*Mission) *RocketUpdate {
-	ids := make([]string, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ru.AddMissionIDs(ids...)
-}
-
 // Mutation returns the RocketMutation object of the builder.
 func (ru *RocketUpdate) Mutation() *RocketMutation {
 	return ru.mutation
-}
-
-// ClearMissions clears all "missions" edges to the Mission entity.
-func (ru *RocketUpdate) ClearMissions() *RocketUpdate {
-	ru.mutation.ClearMissions()
-	return ru
-}
-
-// RemoveMissionIDs removes the "missions" edge to Mission entities by IDs.
-func (ru *RocketUpdate) RemoveMissionIDs(ids ...string) *RocketUpdate {
-	ru.mutation.RemoveMissionIDs(ids...)
-	return ru
-}
-
-// RemoveMissions removes "missions" edges to Mission entities.
-func (ru *RocketUpdate) RemoveMissions(m ...*Mission) *RocketUpdate {
-	ids := make([]string, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ru.RemoveMissionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -164,9 +121,14 @@ func (ru *RocketUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (ru *RocketUpdate) check() error {
-	if v, ok := ru.mutation.Image(); ok {
-		if err := rocket.ImageValidator(v); err != nil {
-			return &ValidationError{Name: "image", err: fmt.Errorf(`ent: validator failed for field "Rocket.image": %w`, err)}
+	if v, ok := ru.mutation.Name(); ok {
+		if err := rocket.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Rocket.name": %w`, err)}
+		}
+	}
+	if v, ok := ru.mutation.Code(); ok {
+		if err := rocket.CodeValidator(v); err != nil {
+			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Rocket.code": %w`, err)}
 		}
 	}
 	return nil
@@ -176,7 +138,7 @@ func (ru *RocketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := ru.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(rocket.Table, rocket.Columns, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(rocket.Table, rocket.Columns, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeUUID))
 	if ps := ru.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -184,71 +146,23 @@ func (ru *RocketUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := ru.mutation.Name(); ok {
+		_spec.SetField(rocket.FieldName, field.TypeString, value)
+	}
 	if value, ok := ru.mutation.Description(); ok {
 		_spec.SetField(rocket.FieldDescription, field.TypeString, value)
 	}
 	if ru.mutation.DescriptionCleared() {
 		_spec.ClearField(rocket.FieldDescription, field.TypeString)
 	}
-	if value, ok := ru.mutation.Image(); ok {
-		_spec.SetField(rocket.FieldImage, field.TypeString, value)
+	if value, ok := ru.mutation.Code(); ok {
+		_spec.SetField(rocket.FieldCode, field.TypeString, value)
 	}
-	if ru.mutation.ImageCleared() {
-		_spec.ClearField(rocket.FieldImage, field.TypeString)
-	}
-	if value, ok := ru.mutation.Zip(); ok {
-		_spec.SetField(rocket.FieldZip, field.TypeString, value)
-	}
-	if ru.mutation.ZipCleared() {
-		_spec.ClearField(rocket.FieldZip, field.TypeString)
+	if ru.mutation.CodeCleared() {
+		_spec.ClearField(rocket.FieldCode, field.TypeString)
 	}
 	if value, ok := ru.mutation.Config(); ok {
 		_spec.SetField(rocket.FieldConfig, field.TypeJSON, value)
-	}
-	if ru.mutation.MissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   rocket.MissionsTable,
-			Columns: rocket.MissionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.RemovedMissionsIDs(); len(nodes) > 0 && !ru.mutation.MissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   rocket.MissionsTable,
-			Columns: rocket.MissionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ru.mutation.MissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   rocket.MissionsTable,
-			Columns: rocket.MissionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -268,6 +182,20 @@ type RocketUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *RocketMutation
+}
+
+// SetName sets the "name" field.
+func (ruo *RocketUpdateOne) SetName(s string) *RocketUpdateOne {
+	ruo.mutation.SetName(s)
+	return ruo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (ruo *RocketUpdateOne) SetNillableName(s *string) *RocketUpdateOne {
+	if s != nil {
+		ruo.SetName(*s)
+	}
+	return ruo
 }
 
 // SetDescription sets the "description" field.
@@ -290,43 +218,23 @@ func (ruo *RocketUpdateOne) ClearDescription() *RocketUpdateOne {
 	return ruo
 }
 
-// SetImage sets the "image" field.
-func (ruo *RocketUpdateOne) SetImage(s string) *RocketUpdateOne {
-	ruo.mutation.SetImage(s)
+// SetCode sets the "code" field.
+func (ruo *RocketUpdateOne) SetCode(s string) *RocketUpdateOne {
+	ruo.mutation.SetCode(s)
 	return ruo
 }
 
-// SetNillableImage sets the "image" field if the given value is not nil.
-func (ruo *RocketUpdateOne) SetNillableImage(s *string) *RocketUpdateOne {
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (ruo *RocketUpdateOne) SetNillableCode(s *string) *RocketUpdateOne {
 	if s != nil {
-		ruo.SetImage(*s)
+		ruo.SetCode(*s)
 	}
 	return ruo
 }
 
-// ClearImage clears the value of the "image" field.
-func (ruo *RocketUpdateOne) ClearImage() *RocketUpdateOne {
-	ruo.mutation.ClearImage()
-	return ruo
-}
-
-// SetZip sets the "zip" field.
-func (ruo *RocketUpdateOne) SetZip(s string) *RocketUpdateOne {
-	ruo.mutation.SetZip(s)
-	return ruo
-}
-
-// SetNillableZip sets the "zip" field if the given value is not nil.
-func (ruo *RocketUpdateOne) SetNillableZip(s *string) *RocketUpdateOne {
-	if s != nil {
-		ruo.SetZip(*s)
-	}
-	return ruo
-}
-
-// ClearZip clears the value of the "zip" field.
-func (ruo *RocketUpdateOne) ClearZip() *RocketUpdateOne {
-	ruo.mutation.ClearZip()
+// ClearCode clears the value of the "code" field.
+func (ruo *RocketUpdateOne) ClearCode() *RocketUpdateOne {
+	ruo.mutation.ClearCode()
 	return ruo
 }
 
@@ -336,45 +244,9 @@ func (ruo *RocketUpdateOne) SetConfig(m map[string]string) *RocketUpdateOne {
 	return ruo
 }
 
-// AddMissionIDs adds the "missions" edge to the Mission entity by IDs.
-func (ruo *RocketUpdateOne) AddMissionIDs(ids ...string) *RocketUpdateOne {
-	ruo.mutation.AddMissionIDs(ids...)
-	return ruo
-}
-
-// AddMissions adds the "missions" edges to the Mission entity.
-func (ruo *RocketUpdateOne) AddMissions(m ...*Mission) *RocketUpdateOne {
-	ids := make([]string, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ruo.AddMissionIDs(ids...)
-}
-
 // Mutation returns the RocketMutation object of the builder.
 func (ruo *RocketUpdateOne) Mutation() *RocketMutation {
 	return ruo.mutation
-}
-
-// ClearMissions clears all "missions" edges to the Mission entity.
-func (ruo *RocketUpdateOne) ClearMissions() *RocketUpdateOne {
-	ruo.mutation.ClearMissions()
-	return ruo
-}
-
-// RemoveMissionIDs removes the "missions" edge to Mission entities by IDs.
-func (ruo *RocketUpdateOne) RemoveMissionIDs(ids ...string) *RocketUpdateOne {
-	ruo.mutation.RemoveMissionIDs(ids...)
-	return ruo
-}
-
-// RemoveMissions removes "missions" edges to Mission entities.
-func (ruo *RocketUpdateOne) RemoveMissions(m ...*Mission) *RocketUpdateOne {
-	ids := make([]string, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ruo.RemoveMissionIDs(ids...)
 }
 
 // Where appends a list predicates to the RocketUpdate builder.
@@ -419,9 +291,14 @@ func (ruo *RocketUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (ruo *RocketUpdateOne) check() error {
-	if v, ok := ruo.mutation.Image(); ok {
-		if err := rocket.ImageValidator(v); err != nil {
-			return &ValidationError{Name: "image", err: fmt.Errorf(`ent: validator failed for field "Rocket.image": %w`, err)}
+	if v, ok := ruo.mutation.Name(); ok {
+		if err := rocket.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Rocket.name": %w`, err)}
+		}
+	}
+	if v, ok := ruo.mutation.Code(); ok {
+		if err := rocket.CodeValidator(v); err != nil {
+			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Rocket.code": %w`, err)}
 		}
 	}
 	return nil
@@ -431,7 +308,7 @@ func (ruo *RocketUpdateOne) sqlSave(ctx context.Context) (_node *Rocket, err err
 	if err := ruo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(rocket.Table, rocket.Columns, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeString))
+	_spec := sqlgraph.NewUpdateSpec(rocket.Table, rocket.Columns, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeUUID))
 	id, ok := ruo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Rocket.id" for update`)}
@@ -456,71 +333,23 @@ func (ruo *RocketUpdateOne) sqlSave(ctx context.Context) (_node *Rocket, err err
 			}
 		}
 	}
+	if value, ok := ruo.mutation.Name(); ok {
+		_spec.SetField(rocket.FieldName, field.TypeString, value)
+	}
 	if value, ok := ruo.mutation.Description(); ok {
 		_spec.SetField(rocket.FieldDescription, field.TypeString, value)
 	}
 	if ruo.mutation.DescriptionCleared() {
 		_spec.ClearField(rocket.FieldDescription, field.TypeString)
 	}
-	if value, ok := ruo.mutation.Image(); ok {
-		_spec.SetField(rocket.FieldImage, field.TypeString, value)
+	if value, ok := ruo.mutation.Code(); ok {
+		_spec.SetField(rocket.FieldCode, field.TypeString, value)
 	}
-	if ruo.mutation.ImageCleared() {
-		_spec.ClearField(rocket.FieldImage, field.TypeString)
-	}
-	if value, ok := ruo.mutation.Zip(); ok {
-		_spec.SetField(rocket.FieldZip, field.TypeString, value)
-	}
-	if ruo.mutation.ZipCleared() {
-		_spec.ClearField(rocket.FieldZip, field.TypeString)
+	if ruo.mutation.CodeCleared() {
+		_spec.ClearField(rocket.FieldCode, field.TypeString)
 	}
 	if value, ok := ruo.mutation.Config(); ok {
 		_spec.SetField(rocket.FieldConfig, field.TypeJSON, value)
-	}
-	if ruo.mutation.MissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   rocket.MissionsTable,
-			Columns: rocket.MissionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.RemovedMissionsIDs(); len(nodes) > 0 && !ruo.mutation.MissionsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   rocket.MissionsTable,
-			Columns: rocket.MissionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ruo.mutation.MissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   rocket.MissionsTable,
-			Columns: rocket.MissionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Rocket{config: ruo.config}
 	_spec.Assign = _node.assignValues

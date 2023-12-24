@@ -22,12 +22,11 @@ type Request struct {
 	Reason string `json:"reason,omitempty"`
 	// Requester holds the value of the "requester" field.
 	Requester string `json:"requester,omitempty"`
-	// MissionID holds the value of the "mission_id" field.
-	MissionID string `json:"mission_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RequestQuery when eager-loading is set.
-	Edges        RequestEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges           RequestEdges `json:"edges"`
+	request_mission *uuid.UUID
+	selectValues    sql.SelectValues
 }
 
 // RequestEdges holds the relations/edges for other nodes in the graph.
@@ -69,10 +68,12 @@ func (*Request) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case request.FieldReason, request.FieldRequester, request.FieldMissionID:
+		case request.FieldReason, request.FieldRequester:
 			values[i] = new(sql.NullString)
 		case request.FieldID:
 			values[i] = new(uuid.UUID)
+		case request.ForeignKeys[0]: // request_mission
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -106,11 +107,12 @@ func (r *Request) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Requester = value.String
 			}
-		case request.FieldMissionID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field mission_id", values[i])
+		case request.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field request_mission", values[i])
 			} else if value.Valid {
-				r.MissionID = value.String
+				r.request_mission = new(uuid.UUID)
+				*r.request_mission = *value.S.(*uuid.UUID)
 			}
 		default:
 			r.selectValues.Set(columns[i], values[i])
@@ -163,9 +165,6 @@ func (r *Request) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("requester=")
 	builder.WriteString(r.Requester)
-	builder.WriteString(", ")
-	builder.WriteString("mission_id=")
-	builder.WriteString(r.MissionID)
 	builder.WriteByte(')')
 	return builder.String()
 }

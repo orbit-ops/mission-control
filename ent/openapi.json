@@ -72,6 +72,79 @@
         }
       }
     },
+    "/accesses/{id}/approvals": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "List attached Approvals",
+        "description": "List attached Approvals.",
+        "operationId": "listAccessApprovals",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Access",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "result Accesses list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Access_ApprovalsList"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
+      }
+    },
     "/api-keys": {
       "get": {
         "tags": [
@@ -393,13 +466,16 @@
                     "type": "string",
                     "format": "date-time"
                   },
-                  "request_id": {
+                  "request": {
                     "type": "string",
                     "format": "uuid"
                   },
-                  "requests": {
-                    "type": "string",
-                    "format": "uuid"
+                  "access": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
                   }
                 },
                 "required": [
@@ -407,8 +483,7 @@
                   "approved_time",
                   "approved",
                   "revoked",
-                  "request_id",
-                  "requests"
+                  "request"
                 ]
               }
             }
@@ -580,13 +655,16 @@
                     "type": "string",
                     "format": "date-time"
                   },
-                  "request_id": {
+                  "request": {
                     "type": "string",
                     "format": "uuid"
                   },
-                  "requests": {
-                    "type": "string",
-                    "format": "uuid"
+                  "access": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
                   }
                 }
               }
@@ -618,6 +696,79 @@
             "$ref": "#/components/responses/500"
           }
         }
+      }
+    },
+    "/approvals/{id}/access": {
+      "get": {
+        "tags": [
+          "Approval"
+        ],
+        "summary": "List attached Accesses",
+        "description": "List attached Accesses.",
+        "operationId": "listApprovalAccess",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Approval",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "what page to render",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "itemsPerPage",
+            "in": "query",
+            "description": "item count to render per page",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "result Approvals list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Approval_AccessList"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "409": {
+            "$ref": "#/components/responses/409"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
       }
     },
     "/audits": {
@@ -703,7 +854,8 @@
             "description": "ID of the Audit",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -820,6 +972,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string"
+                  },
                   "description": {
                     "type": "string"
                   },
@@ -835,7 +990,8 @@
                   "rockets": {
                     "type": "array",
                     "items": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "uuid"
                     }
                   },
                   "requests": {
@@ -847,6 +1003,7 @@
                   }
                 },
                 "required": [
+                  "name",
                   "min_approvers",
                   "possible_approvers",
                   "rockets"
@@ -902,7 +1059,8 @@
             "description": "ID of the Mission",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -953,7 +1111,8 @@
             "description": "ID of the Mission",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -997,7 +1156,8 @@
             "description": "ID of the Mission",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1008,6 +1168,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string"
+                  },
                   "description": {
                     "type": "string"
                   },
@@ -1023,7 +1186,8 @@
                   "rockets": {
                     "type": "array",
                     "items": {
-                      "type": "string"
+                      "type": "string",
+                      "format": "uuid"
                     }
                   },
                   "requests": {
@@ -1080,7 +1244,8 @@
             "description": "ID of the Mission",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -1152,7 +1317,8 @@
             "description": "ID of the Mission",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -1294,9 +1460,6 @@
                   "requester": {
                     "type": "string"
                   },
-                  "mission_id": {
-                    "type": "string"
-                  },
                   "approvals": {
                     "type": "array",
                     "items": {
@@ -1305,13 +1468,13 @@
                     }
                   },
                   "mission": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "uuid"
                   }
                 },
                 "required": [
                   "reason",
                   "requester",
-                  "mission_id",
                   "mission"
                 ]
               }
@@ -1482,7 +1645,8 @@
                     }
                   },
                   "mission": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "uuid"
                   }
                 }
               }
@@ -1722,13 +1886,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string"
+                  },
                   "description": {
                     "type": "string"
                   },
-                  "image": {
-                    "type": "string"
-                  },
-                  "zip": {
+                  "code": {
                     "type": "string"
                   },
                   "config": {
@@ -1736,15 +1900,10 @@
                     "additionalProperties": {
                       "type": "string"
                     }
-                  },
-                  "missions": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
                   }
                 },
                 "required": [
+                  "name",
                   "config"
                 ]
               }
@@ -1798,7 +1957,8 @@
             "description": "ID of the Rocket",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1849,7 +2009,8 @@
             "description": "ID of the Rocket",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1893,7 +2054,8 @@
             "description": "ID of the Rocket",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1904,24 +2066,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string"
+                  },
                   "description": {
                     "type": "string"
                   },
-                  "image": {
-                    "type": "string"
-                  },
-                  "zip": {
+                  "code": {
                     "type": "string"
                   },
                   "config": {
                     "type": "object",
                     "additionalProperties": {
-                      "type": "string"
-                    }
-                  },
-                  "missions": {
-                    "type": "array",
-                    "items": {
                       "type": "string"
                     }
                   }
@@ -1955,78 +2111,6 @@
             "$ref": "#/components/responses/500"
           }
         }
-      }
-    },
-    "/rockets/{id}/missions": {
-      "get": {
-        "tags": [
-          "Rocket"
-        ],
-        "summary": "List attached Missions",
-        "description": "List attached Missions.",
-        "operationId": "listRocketMissions",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the Rocket",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "what page to render",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "itemsPerPage",
-            "in": "query",
-            "description": "item count to render per page",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "result Rockets list",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Rocket_MissionsList"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/400"
-          },
-          "404": {
-            "$ref": "#/components/responses/404"
-          },
-          "409": {
-            "$ref": "#/components/responses/409"
-          },
-          "500": {
-            "$ref": "#/components/responses/500"
-          }
-        },
-        "security": [
-          {
-            "ApiKeyAuth": []
-          },
-          {
-            "CookieAuth": []
-          }
-        ]
       }
     }
   },
@@ -2065,7 +2149,10 @@
             "format": "uuid"
           },
           "approvals": {
-            "$ref": "#/components/schemas/Access"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Approval"
+            }
           },
           "accessTokens": {
             "type": "array",
@@ -2115,6 +2202,39 @@
           "token",
           "access_id",
           "expiration"
+        ]
+      },
+      "Access_ApprovalsList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "person": {
+            "type": "string"
+          },
+          "approved_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "revoked": {
+            "type": "boolean"
+          },
+          "revoked_time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "person",
+          "approved_time",
+          "approved",
+          "revoked"
         ]
       },
       "ActionTokens": {
@@ -2243,12 +2363,14 @@
             "type": "string",
             "format": "date-time"
           },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "requests": {
+          "request": {
             "$ref": "#/components/schemas/Request"
+          },
+          "access": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Access"
+            }
           }
         },
         "required": [
@@ -2257,8 +2379,7 @@
           "approved_time",
           "approved",
           "revoked",
-          "request_id",
-          "requests"
+          "request"
         ]
       },
       "ApprovalCreate": {
@@ -2284,10 +2405,6 @@
           "revoked_time": {
             "type": "string",
             "format": "date-time"
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
           }
         },
         "required": [
@@ -2295,8 +2412,7 @@
           "person",
           "approved_time",
           "approved",
-          "revoked",
-          "request_id"
+          "revoked"
         ]
       },
       "ApprovalList": {
@@ -2322,10 +2438,6 @@
           "revoked_time": {
             "type": "string",
             "format": "date-time"
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
           }
         },
         "required": [
@@ -2333,8 +2445,7 @@
           "person",
           "approved_time",
           "approved",
-          "revoked",
-          "request_id"
+          "revoked"
         ]
       },
       "ApprovalRead": {
@@ -2360,10 +2471,6 @@
           "revoked_time": {
             "type": "string",
             "format": "date-time"
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
           }
         },
         "required": [
@@ -2371,8 +2478,7 @@
           "person",
           "approved_time",
           "approved",
-          "revoked",
-          "request_id"
+          "revoked"
         ]
       },
       "ApprovalUpdate": {
@@ -2398,6 +2504,43 @@
           "revoked_time": {
             "type": "string",
             "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "person",
+          "approved_time",
+          "approved",
+          "revoked"
+        ]
+      },
+      "Approval_AccessList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "rolled_back": {
+            "type": "boolean"
+          },
+          "rollback_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rollback_reason": {
+            "type": "string"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time"
           },
           "request_id": {
             "type": "string",
@@ -2406,10 +2549,10 @@
         },
         "required": [
           "id",
-          "person",
-          "approved_time",
+          "start_time",
           "approved",
-          "revoked",
+          "rolled_back",
+          "end_time",
           "request_id"
         ]
       },
@@ -2417,7 +2560,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "action": {
             "type": "string",
@@ -2448,7 +2592,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "action": {
             "type": "string",
@@ -2479,7 +2624,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid"
           },
           "action": {
             "type": "string",
@@ -2510,6 +2656,10 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
@@ -2539,6 +2689,7 @@
         },
         "required": [
           "id",
+          "name",
           "min_approvers",
           "possible_approvers",
           "rockets"
@@ -2548,6 +2699,10 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
@@ -2565,6 +2720,7 @@
         },
         "required": [
           "id",
+          "name",
           "min_approvers",
           "possible_approvers"
         ]
@@ -2573,6 +2729,10 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
@@ -2590,6 +2750,7 @@
         },
         "required": [
           "id",
+          "name",
           "min_approvers",
           "possible_approvers"
         ]
@@ -2598,6 +2759,10 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
@@ -2615,6 +2780,7 @@
         },
         "required": [
           "id",
+          "name",
           "min_approvers",
           "possible_approvers"
         ]
@@ -2623,6 +2789,10 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
@@ -2640,6 +2810,7 @@
         },
         "required": [
           "id",
+          "name",
           "min_approvers",
           "possible_approvers"
         ]
@@ -2656,31 +2827,28 @@
           },
           "requester": {
             "type": "string"
-          },
-          "mission_id": {
-            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
-          "requester",
-          "mission_id"
+          "requester"
         ]
       },
       "Mission_RocketsList": {
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
-          "zip": {
+          "code": {
             "type": "string"
           },
           "config": {
@@ -2692,6 +2860,7 @@
         },
         "required": [
           "id",
+          "name",
           "config"
         ]
       },
@@ -2723,9 +2892,6 @@
           "requester": {
             "type": "string"
           },
-          "mission_id": {
-            "type": "string"
-          },
           "approvals": {
             "type": "array",
             "items": {
@@ -2740,7 +2906,6 @@
           "id",
           "reason",
           "requester",
-          "mission_id",
           "mission"
         ]
       },
@@ -2756,16 +2921,12 @@
           },
           "requester": {
             "type": "string"
-          },
-          "mission_id": {
-            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
-          "requester",
-          "mission_id"
+          "requester"
         ]
       },
       "RequestList": {
@@ -2780,16 +2941,12 @@
           },
           "requester": {
             "type": "string"
-          },
-          "mission_id": {
-            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
-          "requester",
-          "mission_id"
+          "requester"
         ]
       },
       "RequestRead": {
@@ -2804,16 +2961,12 @@
           },
           "requester": {
             "type": "string"
-          },
-          "mission_id": {
-            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
-          "requester",
-          "mission_id"
+          "requester"
         ]
       },
       "RequestUpdate": {
@@ -2828,16 +2981,12 @@
           },
           "requester": {
             "type": "string"
-          },
-          "mission_id": {
-            "type": "string"
           }
         },
         "required": [
           "id",
           "reason",
-          "requester",
-          "mission_id"
+          "requester"
         ]
       },
       "Request_ApprovalsList": {
@@ -2863,10 +3012,6 @@
           "revoked_time": {
             "type": "string",
             "format": "date-time"
-          },
-          "request_id": {
-            "type": "string",
-            "format": "uuid"
           }
         },
         "required": [
@@ -2874,14 +3019,17 @@
           "person",
           "approved_time",
           "approved",
-          "revoked",
-          "request_id"
+          "revoked"
         ]
       },
       "Request_MissionRead": {
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
@@ -2899,6 +3047,7 @@
         },
         "required": [
           "id",
+          "name",
           "min_approvers",
           "possible_approvers"
         ]
@@ -2907,15 +3056,16 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
-          "zip": {
+          "code": {
             "type": "string"
           },
           "config": {
@@ -2923,16 +3073,11 @@
             "additionalProperties": {
               "type": "string"
             }
-          },
-          "missions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Mission"
-            }
           }
         },
         "required": [
           "id",
+          "name",
           "config"
         ]
       },
@@ -2940,15 +3085,16 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
-          "zip": {
+          "code": {
             "type": "string"
           },
           "config": {
@@ -2960,6 +3106,7 @@
         },
         "required": [
           "id",
+          "name",
           "config"
         ]
       },
@@ -2967,15 +3114,16 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
-          "zip": {
+          "code": {
             "type": "string"
           },
           "config": {
@@ -2987,6 +3135,7 @@
         },
         "required": [
           "id",
+          "name",
           "config"
         ]
       },
@@ -2994,15 +3143,16 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
-          "zip": {
+          "code": {
             "type": "string"
           },
           "config": {
@@ -3014,6 +3164,7 @@
         },
         "required": [
           "id",
+          "name",
           "config"
         ]
       },
@@ -3021,15 +3172,16 @@
         "type": "object",
         "properties": {
           "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
             "type": "string"
           },
           "description": {
             "type": "string"
           },
-          "image": {
-            "type": "string"
-          },
-          "zip": {
+          "code": {
             "type": "string"
           },
           "config": {
@@ -3041,32 +3193,8 @@
         },
         "required": [
           "id",
+          "name",
           "config"
-        ]
-      },
-      "Rocket_MissionsList": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "min_approvers": {
-            "type": "integer"
-          },
-          "possible_approvers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "min_approvers",
-          "possible_approvers"
         ]
       }
     },

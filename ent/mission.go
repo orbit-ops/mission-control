@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/mission"
 )
 
@@ -16,7 +17,9 @@ import (
 type Mission struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
 	// MinApprovers holds the value of the "min_approvers" field.
@@ -69,8 +72,10 @@ func (*Mission) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case mission.FieldMinApprovers:
 			values[i] = new(sql.NullInt64)
-		case mission.FieldID, mission.FieldDescription:
+		case mission.FieldName, mission.FieldDescription:
 			values[i] = new(sql.NullString)
+		case mission.FieldID:
+			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -87,10 +92,16 @@ func (m *Mission) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case mission.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				m.ID = *value
+			}
+		case mission.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				m.ID = value.String
+				m.Name = value.String
 			}
 		case mission.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -158,6 +169,9 @@ func (m *Mission) String() string {
 	var builder strings.Builder
 	builder.WriteString("Mission(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", m.ID))
+	builder.WriteString("name=")
+	builder.WriteString(m.Name)
+	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(m.Description)
 	builder.WriteString(", ")

@@ -37,12 +37,6 @@ func (rc *RequestCreate) SetRequester(s string) *RequestCreate {
 	return rc
 }
 
-// SetMissionID sets the "mission_id" field.
-func (rc *RequestCreate) SetMissionID(s string) *RequestCreate {
-	rc.mutation.SetMissionID(s)
-	return rc
-}
-
 // SetID sets the "id" field.
 func (rc *RequestCreate) SetID(u uuid.UUID) *RequestCreate {
 	rc.mutation.SetID(u)
@@ -70,6 +64,12 @@ func (rc *RequestCreate) AddApprovals(a ...*Approval) *RequestCreate {
 		ids[i] = a[i].ID
 	}
 	return rc.AddApprovalIDs(ids...)
+}
+
+// SetMissionID sets the "mission" edge to the Mission entity by ID.
+func (rc *RequestCreate) SetMissionID(id uuid.UUID) *RequestCreate {
+	rc.mutation.SetMissionID(id)
+	return rc
 }
 
 // SetMission sets the "mission" edge to the Mission entity.
@@ -125,9 +125,6 @@ func (rc *RequestCreate) check() error {
 	}
 	if _, ok := rc.mutation.Requester(); !ok {
 		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required field "Request.requester"`)}
-	}
-	if _, ok := rc.mutation.MissionID(); !ok {
-		return &ValidationError{Name: "mission_id", err: errors.New(`ent: missing required field "Request.mission_id"`)}
 	}
 	if _, ok := rc.mutation.MissionID(); !ok {
 		return &ValidationError{Name: "mission", err: errors.New(`ent: missing required edge "Request.mission"`)}
@@ -195,18 +192,18 @@ func (rc *RequestCreate) createSpec() (*Request, *sqlgraph.CreateSpec) {
 	if nodes := rc.mutation.MissionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   request.MissionTable,
 			Columns: []string{request.MissionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.MissionID = nodes[0]
+		_node.request_mission = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -283,9 +280,6 @@ func (u *RequestUpsertOne) UpdateNewValues() *RequestUpsertOne {
 		}
 		if _, exists := u.create.mutation.Requester(); exists {
 			s.SetIgnore(request.FieldRequester)
-		}
-		if _, exists := u.create.mutation.MissionID(); exists {
-			s.SetIgnore(request.FieldMissionID)
 		}
 	}))
 	return u
@@ -506,9 +500,6 @@ func (u *RequestUpsertBulk) UpdateNewValues() *RequestUpsertBulk {
 			}
 			if _, exists := b.mutation.Requester(); exists {
 				s.SetIgnore(request.FieldRequester)
-			}
-			if _, exists := b.mutation.MissionID(); exists {
-				s.SetIgnore(request.FieldMissionID)
 			}
 		}
 	}))

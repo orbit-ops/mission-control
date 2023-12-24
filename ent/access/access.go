@@ -33,10 +33,11 @@ const (
 	EdgeAccessTokens = "accessTokens"
 	// Table holds the table name of the access in the database.
 	Table = "accesses"
-	// ApprovalsTable is the table that holds the approvals relation/edge.
-	ApprovalsTable = "accesses"
-	// ApprovalsColumn is the table column denoting the approvals relation/edge.
-	ApprovalsColumn = "access_approvals"
+	// ApprovalsTable is the table that holds the approvals relation/edge. The primary key declared below.
+	ApprovalsTable = "access_approvals"
+	// ApprovalsInverseTable is the table name for the Approval entity.
+	// It exists in this package in order to avoid circular dependency with the "approval" package.
+	ApprovalsInverseTable = "approvals"
 	// AccessTokensTable is the table that holds the accessTokens relation/edge.
 	AccessTokensTable = "action_tokens"
 	// AccessTokensInverseTable is the table name for the ActionTokens entity.
@@ -58,21 +59,16 @@ var Columns = []string{
 	FieldRequestID,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "accesses"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"access_approvals",
-}
+var (
+	// ApprovalsPrimaryKey and ApprovalsColumn2 are the table columns denoting the
+	// primary key for the approvals relation (M2M).
+	ApprovalsPrimaryKey = []string{"access_id", "approval_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -129,10 +125,17 @@ func ByRequestID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRequestID, opts...).ToFunc()
 }
 
-// ByApprovalsField orders the results by approvals field.
-func ByApprovalsField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByApprovalsCount orders the results by approvals count.
+func ByApprovalsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newApprovalsStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborsCount(s, newApprovalsStep(), opts...)
+	}
+}
+
+// ByApprovals orders the results by approvals terms.
+func ByApprovals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newApprovalsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -152,8 +155,8 @@ func ByAccessTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 func newApprovalsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(Table, FieldID),
-		sqlgraph.Edge(sqlgraph.O2O, false, ApprovalsTable, ApprovalsColumn),
+		sqlgraph.To(ApprovalsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ApprovalsTable, ApprovalsPrimaryKey...),
 	)
 }
 func newAccessTokensStep() *sqlgraph.Step {

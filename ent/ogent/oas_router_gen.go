@@ -91,25 +91,57 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						break
 					}
 					switch elem[0] {
-					case '/': // Prefix: "/access-tokens"
-						if l := len("/access-tokens"); len(elem) >= l && elem[0:l] == "/access-tokens" {
+					case '/': // Prefix: "/a"
+						if l := len("/a"); len(elem) >= l && elem[0:l] == "/a" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
 						if len(elem) == 0 {
-							// Leaf node.
-							switch r.Method {
-							case "GET":
-								s.handleListAccessAccessTokensRequest([1]string{
-									args[0],
-								}, elemIsEscaped, w, r)
-							default:
-								s.notAllowed(w, r, "GET")
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "ccess-tokens"
+							if l := len("ccess-tokens"); len(elem) >= l && elem[0:l] == "ccess-tokens" {
+								elem = elem[l:]
+							} else {
+								break
 							}
 
-							return
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "GET":
+									s.handleListAccessAccessTokensRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "GET")
+								}
+
+								return
+							}
+						case 'p': // Prefix: "pprovals"
+							if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								// Leaf node.
+								switch r.Method {
+								case "GET":
+									s.handleListAccessApprovalsRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
+								default:
+									s.notAllowed(w, r, "GET")
+								}
+
+								return
+							}
 						}
 					}
 				case 'p': // Prefix: "p"
@@ -201,12 +233,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							}
 
 							// Param: "id"
-							// Leaf parameter
-							args[0] = elem
-							elem = ""
+							// Match until "/"
+							idx := strings.IndexByte(elem, '/')
+							if idx < 0 {
+								idx = len(elem)
+							}
+							args[0] = elem[:idx]
+							elem = elem[idx:]
 
 							if len(elem) == 0 {
-								// Leaf node.
 								switch r.Method {
 								case "DELETE":
 									s.handleDeleteApprovalRequest([1]string{
@@ -225,6 +260,28 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								}
 
 								return
+							}
+							switch elem[0] {
+							case '/': // Prefix: "/access"
+								if l := len("/access"); len(elem) >= l && elem[0:l] == "/access" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									// Leaf node.
+									switch r.Method {
+									case "GET":
+										s.handleListApprovalAccessRequest([1]string{
+											args[0],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
+								}
 							}
 						}
 					}
@@ -534,15 +591,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						}
 
 						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
+						// Leaf parameter
+						args[0] = elem
+						elem = ""
 
 						if len(elem) == 0 {
+							// Leaf node.
 							switch r.Method {
 							case "DELETE":
 								s.handleDeleteRocketRequest([1]string{
@@ -561,28 +615,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							}
 
 							return
-						}
-						switch elem[0] {
-						case '/': // Prefix: "/missions"
-							if l := len("/missions"); len(elem) >= l && elem[0:l] == "/missions" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								// Leaf node.
-								switch r.Method {
-								case "GET":
-									s.handleListRocketMissionsRequest([1]string{
-										args[0],
-									}, elemIsEscaped, w, r)
-								default:
-									s.notAllowed(w, r, "GET")
-								}
-
-								return
-							}
 						}
 					}
 				}
@@ -709,26 +741,60 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						break
 					}
 					switch elem[0] {
-					case '/': // Prefix: "/access-tokens"
-						if l := len("/access-tokens"); len(elem) >= l && elem[0:l] == "/access-tokens" {
+					case '/': // Prefix: "/a"
+						if l := len("/a"); len(elem) >= l && elem[0:l] == "/a" {
 							elem = elem[l:]
 						} else {
 							break
 						}
 
 						if len(elem) == 0 {
-							switch method {
-							case "GET":
-								// Leaf: ListAccessAccessTokens
-								r.name = "ListAccessAccessTokens"
-								r.summary = "List attached AccessTokens"
-								r.operationID = "listAccessAccessTokens"
-								r.pathPattern = "/accesses/{id}/access-tokens"
-								r.args = args
-								r.count = 1
-								return r, true
-							default:
-								return
+							break
+						}
+						switch elem[0] {
+						case 'c': // Prefix: "ccess-tokens"
+							if l := len("ccess-tokens"); len(elem) >= l && elem[0:l] == "ccess-tokens" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								switch method {
+								case "GET":
+									// Leaf: ListAccessAccessTokens
+									r.name = "ListAccessAccessTokens"
+									r.summary = "List attached AccessTokens"
+									r.operationID = "listAccessAccessTokens"
+									r.pathPattern = "/accesses/{id}/access-tokens"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
+							}
+						case 'p': // Prefix: "pprovals"
+							if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
+								elem = elem[l:]
+							} else {
+								break
+							}
+
+							if len(elem) == 0 {
+								switch method {
+								case "GET":
+									// Leaf: ListAccessApprovals
+									r.name = "ListAccessApprovals"
+									r.summary = "List attached Approvals"
+									r.operationID = "listAccessApprovals"
+									r.pathPattern = "/accesses/{id}/approvals"
+									r.args = args
+									r.count = 1
+									return r, true
+								default:
+									return
+								}
 							}
 						}
 					}
@@ -848,14 +914,17 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							}
 
 							// Param: "id"
-							// Leaf parameter
-							args[0] = elem
-							elem = ""
+							// Match until "/"
+							idx := strings.IndexByte(elem, '/')
+							if idx < 0 {
+								idx = len(elem)
+							}
+							args[0] = elem[:idx]
+							elem = elem[idx:]
 
 							if len(elem) == 0 {
 								switch method {
 								case "DELETE":
-									// Leaf: DeleteApproval
 									r.name = "DeleteApproval"
 									r.summary = "Deletes a Approval by ID"
 									r.operationID = "deleteApproval"
@@ -864,7 +933,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.count = 1
 									return r, true
 								case "GET":
-									// Leaf: ReadApproval
 									r.name = "ReadApproval"
 									r.summary = "Find a Approval by ID"
 									r.operationID = "readApproval"
@@ -873,7 +941,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									r.count = 1
 									return r, true
 								case "PATCH":
-									// Leaf: UpdateApproval
 									r.name = "UpdateApproval"
 									r.summary = "Updates a Approval"
 									r.operationID = "updateApproval"
@@ -883,6 +950,30 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 									return r, true
 								default:
 									return
+								}
+							}
+							switch elem[0] {
+							case '/': // Prefix: "/access"
+								if l := len("/access"); len(elem) >= l && elem[0:l] == "/access" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									switch method {
+									case "GET":
+										// Leaf: ListApprovalAccess
+										r.name = "ListApprovalAccess"
+										r.summary = "List attached Accesses"
+										r.operationID = "listApprovalAccess"
+										r.pathPattern = "/approvals/{id}/access"
+										r.args = args
+										r.count = 1
+										return r, true
+									default:
+										return
+									}
 								}
 							}
 						}
@@ -1257,17 +1348,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						}
 
 						// Param: "id"
-						// Match until "/"
-						idx := strings.IndexByte(elem, '/')
-						if idx < 0 {
-							idx = len(elem)
-						}
-						args[0] = elem[:idx]
-						elem = elem[idx:]
+						// Leaf parameter
+						args[0] = elem
+						elem = ""
 
 						if len(elem) == 0 {
 							switch method {
 							case "DELETE":
+								// Leaf: DeleteRocket
 								r.name = "DeleteRocket"
 								r.summary = "Deletes a Rocket by ID"
 								r.operationID = "deleteRocket"
@@ -1276,6 +1364,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 1
 								return r, true
 							case "GET":
+								// Leaf: ReadRocket
 								r.name = "ReadRocket"
 								r.summary = "Find a Rocket by ID"
 								r.operationID = "readRocket"
@@ -1284,6 +1373,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								r.count = 1
 								return r, true
 							case "PATCH":
+								// Leaf: UpdateRocket
 								r.name = "UpdateRocket"
 								r.summary = "Updates a Rocket"
 								r.operationID = "updateRocket"
@@ -1293,30 +1383,6 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								return r, true
 							default:
 								return
-							}
-						}
-						switch elem[0] {
-						case '/': // Prefix: "/missions"
-							if l := len("/missions"); len(elem) >= l && elem[0:l] == "/missions" {
-								elem = elem[l:]
-							} else {
-								break
-							}
-
-							if len(elem) == 0 {
-								switch method {
-								case "GET":
-									// Leaf: ListRocketMissions
-									r.name = "ListRocketMissions"
-									r.summary = "List attached Missions"
-									r.operationID = "listRocketMissions"
-									r.pathPattern = "/rockets/{id}/missions"
-									r.args = args
-									r.count = 1
-									return r, true
-								default:
-									return
-								}
 							}
 						}
 					}

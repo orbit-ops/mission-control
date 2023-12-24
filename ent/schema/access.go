@@ -42,9 +42,8 @@ func (Access) Annotations() []schema.Annotation {
 
 // Edges of the Access.
 func (Access) Edges() []ent.Edge {
-
 	return []ent.Edge{
-		edge.To("approvals", Access.Type).Unique().
+		edge.To("approvals", Approval.Type).
 			Annotations(
 				entoas.ReadOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
 			),

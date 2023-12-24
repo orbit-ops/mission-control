@@ -4,14 +4,13 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
@@ -19,12 +18,11 @@ import (
 // RocketQuery is the builder for querying Rocket entities.
 type RocketQuery struct {
 	config
-	ctx               *QueryContext
-	order             []rocket.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.Rocket
-	withMissions      *MissionQuery
-	withNamedMissions map[string]*MissionQuery
+	ctx        *QueryContext
+	order      []rocket.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Rocket
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,28 +59,6 @@ func (rq *RocketQuery) Order(o ...rocket.OrderOption) *RocketQuery {
 	return rq
 }
 
-// QueryMissions chains the current query on the "missions" edge.
-func (rq *RocketQuery) QueryMissions() *MissionQuery {
-	query := (&MissionClient{config: rq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := rq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := rq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(rocket.Table, rocket.FieldID, selector),
-			sqlgraph.To(mission.Table, mission.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, rocket.MissionsTable, rocket.MissionsPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // First returns the first Rocket entity from the query.
 // Returns a *NotFoundError when no Rocket was found.
 func (rq *RocketQuery) First(ctx context.Context) (*Rocket, error) {
@@ -107,8 +83,8 @@ func (rq *RocketQuery) FirstX(ctx context.Context) *Rocket {
 
 // FirstID returns the first Rocket ID from the query.
 // Returns a *NotFoundError when no Rocket ID was found.
-func (rq *RocketQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (rq *RocketQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = rq.Limit(1).IDs(setContextOp(ctx, rq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -120,7 +96,7 @@ func (rq *RocketQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (rq *RocketQuery) FirstIDX(ctx context.Context) string {
+func (rq *RocketQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := rq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +134,8 @@ func (rq *RocketQuery) OnlyX(ctx context.Context) *Rocket {
 // OnlyID is like Only, but returns the only Rocket ID in the query.
 // Returns a *NotSingularError when more than one Rocket ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (rq *RocketQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (rq *RocketQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = rq.Limit(2).IDs(setContextOp(ctx, rq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -175,7 +151,7 @@ func (rq *RocketQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (rq *RocketQuery) OnlyIDX(ctx context.Context) string {
+func (rq *RocketQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := rq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +179,7 @@ func (rq *RocketQuery) AllX(ctx context.Context) []*Rocket {
 }
 
 // IDs executes the query and returns a list of Rocket IDs.
-func (rq *RocketQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (rq *RocketQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if rq.ctx.Unique == nil && rq.path != nil {
 		rq.Unique(true)
 	}
@@ -215,7 +191,7 @@ func (rq *RocketQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (rq *RocketQuery) IDsX(ctx context.Context) []string {
+func (rq *RocketQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := rq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -270,27 +246,15 @@ func (rq *RocketQuery) Clone() *RocketQuery {
 		return nil
 	}
 	return &RocketQuery{
-		config:       rq.config,
-		ctx:          rq.ctx.Clone(),
-		order:        append([]rocket.OrderOption{}, rq.order...),
-		inters:       append([]Interceptor{}, rq.inters...),
-		predicates:   append([]predicate.Rocket{}, rq.predicates...),
-		withMissions: rq.withMissions.Clone(),
+		config:     rq.config,
+		ctx:        rq.ctx.Clone(),
+		order:      append([]rocket.OrderOption{}, rq.order...),
+		inters:     append([]Interceptor{}, rq.inters...),
+		predicates: append([]predicate.Rocket{}, rq.predicates...),
 		// clone intermediate query.
 		sql:  rq.sql.Clone(),
 		path: rq.path,
 	}
-}
-
-// WithMissions tells the query-builder to eager-load the nodes that are connected to
-// the "missions" edge. The optional arguments are used to configure the query builder of the edge.
-func (rq *RocketQuery) WithMissions(opts ...func(*MissionQuery)) *RocketQuery {
-	query := (&MissionClient{config: rq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	rq.withMissions = query
-	return rq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -299,12 +263,12 @@ func (rq *RocketQuery) WithMissions(opts ...func(*MissionQuery)) *RocketQuery {
 // Example:
 //
 //	var v []struct {
-//		Description string `json:"description,omitempty"`
+//		Name string `json:"name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Rocket.Query().
-//		GroupBy(rocket.FieldDescription).
+//		GroupBy(rocket.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (rq *RocketQuery) GroupBy(field string, fields ...string) *RocketGroupBy {
@@ -322,11 +286,11 @@ func (rq *RocketQuery) GroupBy(field string, fields ...string) *RocketGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Description string `json:"description,omitempty"`
+//		Name string `json:"name,omitempty"`
 //	}
 //
 //	client.Rocket.Query().
-//		Select(rocket.FieldDescription).
+//		Select(rocket.FieldName).
 //		Scan(ctx, &v)
 func (rq *RocketQuery) Select(fields ...string) *RocketSelect {
 	rq.ctx.Fields = append(rq.ctx.Fields, fields...)
@@ -369,19 +333,19 @@ func (rq *RocketQuery) prepareQuery(ctx context.Context) error {
 
 func (rq *RocketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Rocket, error) {
 	var (
-		nodes       = []*Rocket{}
-		_spec       = rq.querySpec()
-		loadedTypes = [1]bool{
-			rq.withMissions != nil,
-		}
+		nodes   = []*Rocket{}
+		withFKs = rq.withFKs
+		_spec   = rq.querySpec()
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, rocket.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Rocket).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Rocket{config: rq.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -393,83 +357,7 @@ func (rq *RocketQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Rocke
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := rq.withMissions; query != nil {
-		if err := rq.loadMissions(ctx, query, nodes,
-			func(n *Rocket) { n.Edges.Missions = []*Mission{} },
-			func(n *Rocket, e *Mission) { n.Edges.Missions = append(n.Edges.Missions, e) }); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range rq.withNamedMissions {
-		if err := rq.loadMissions(ctx, query, nodes,
-			func(n *Rocket) { n.appendNamedMissions(name) },
-			func(n *Rocket, e *Mission) { n.appendNamedMissions(name, e) }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
-}
-
-func (rq *RocketQuery) loadMissions(ctx context.Context, query *MissionQuery, nodes []*Rocket, init func(*Rocket), assign func(*Rocket, *Mission)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[string]*Rocket)
-	nids := make(map[string]map[*Rocket]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(rocket.MissionsTable)
-		s.Join(joinT).On(s.C(mission.FieldID), joinT.C(rocket.MissionsPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(rocket.MissionsPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(rocket.MissionsPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullString)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := values[0].(*sql.NullString).String
-				inValue := values[1].(*sql.NullString).String
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Rocket]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Mission](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "missions" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
-	}
-	return nil
 }
 
 func (rq *RocketQuery) sqlCount(ctx context.Context) (int, error) {
@@ -482,7 +370,7 @@ func (rq *RocketQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (rq *RocketQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(rocket.Table, rocket.Columns, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(rocket.Table, rocket.Columns, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeUUID))
 	_spec.From = rq.sql
 	if unique := rq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -551,20 +439,6 @@ func (rq *RocketQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// WithNamedMissions tells the query-builder to eager-load the nodes that are connected to the "missions"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (rq *RocketQuery) WithNamedMissions(name string, opts ...func(*MissionQuery)) *RocketQuery {
-	query := (&MissionClient{config: rq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if rq.withNamedMissions == nil {
-		rq.withNamedMissions = make(map[string]*MissionQuery)
-	}
-	rq.withNamedMissions[name] = query
-	return rq
 }
 
 // RocketGroupBy is the group-by builder for Rocket entities.

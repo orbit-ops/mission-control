@@ -5,6 +5,7 @@ package mission
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/google/uuid"
 )
 
 const (
@@ -12,6 +13,8 @@ const (
 	Label = "mission"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// FieldMinApprovers holds the string denoting the min_approvers field in the database.
@@ -24,33 +27,30 @@ const (
 	EdgeRequests = "requests"
 	// Table holds the table name of the mission in the database.
 	Table = "missions"
-	// RocketsTable is the table that holds the rockets relation/edge. The primary key declared below.
-	RocketsTable = "rocket_missions"
+	// RocketsTable is the table that holds the rockets relation/edge.
+	RocketsTable = "rockets"
 	// RocketsInverseTable is the table name for the Rocket entity.
 	// It exists in this package in order to avoid circular dependency with the "rocket" package.
 	RocketsInverseTable = "rockets"
+	// RocketsColumn is the table column denoting the rockets relation/edge.
+	RocketsColumn = "mission_rockets"
 	// RequestsTable is the table that holds the requests relation/edge.
 	RequestsTable = "requests"
 	// RequestsInverseTable is the table name for the Request entity.
 	// It exists in this package in order to avoid circular dependency with the "request" package.
 	RequestsInverseTable = "requests"
 	// RequestsColumn is the table column denoting the requests relation/edge.
-	RequestsColumn = "mission_id"
+	RequestsColumn = "request_mission"
 )
 
 // Columns holds all SQL columns for mission fields.
 var Columns = []string{
 	FieldID,
+	FieldName,
 	FieldDescription,
 	FieldMinApprovers,
 	FieldPossibleApprovers,
 }
-
-var (
-	// RocketsPrimaryKey and RocketsColumn2 are the table columns denoting the
-	// primary key for the rockets relation (M2M).
-	RocketsPrimaryKey = []string{"rocket_id", "mission_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -63,8 +63,12 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 	// MinApproversValidator is a validator for the "min_approvers" field. It is called by the builders before save.
 	MinApproversValidator func(int) error
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() uuid.UUID
 )
 
 // OrderOption defines the ordering options for the Mission queries.
@@ -73,6 +77,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByDescription orders the results by the description field.
@@ -116,13 +125,13 @@ func newRocketsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RocketsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, RocketsTable, RocketsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, RocketsTable, RocketsColumn),
 	)
 }
 func newRequestsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RequestsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, RequestsTable, RequestsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, RequestsTable, RequestsColumn),
 	)
 }

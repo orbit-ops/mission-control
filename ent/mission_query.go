@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/mission"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 	"github.com/orbit-ops/launchpad-core/ent/request"
@@ -78,7 +79,7 @@ func (mq *MissionQuery) QueryRockets() *RocketQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mission.Table, mission.FieldID, selector),
 			sqlgraph.To(rocket.Table, rocket.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, mission.RocketsTable, mission.RocketsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, mission.RocketsTable, mission.RocketsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -100,7 +101,7 @@ func (mq *MissionQuery) QueryRequests() *RequestQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(mission.Table, mission.FieldID, selector),
 			sqlgraph.To(request.Table, request.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, mission.RequestsTable, mission.RequestsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, mission.RequestsTable, mission.RequestsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -132,8 +133,8 @@ func (mq *MissionQuery) FirstX(ctx context.Context) *Mission {
 
 // FirstID returns the first Mission ID from the query.
 // Returns a *NotFoundError when no Mission ID was found.
-func (mq *MissionQuery) FirstID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (mq *MissionQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = mq.Limit(1).IDs(setContextOp(ctx, mq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -145,7 +146,7 @@ func (mq *MissionQuery) FirstID(ctx context.Context) (id string, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (mq *MissionQuery) FirstIDX(ctx context.Context) string {
+func (mq *MissionQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := mq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -183,8 +184,8 @@ func (mq *MissionQuery) OnlyX(ctx context.Context) *Mission {
 // OnlyID is like Only, but returns the only Mission ID in the query.
 // Returns a *NotSingularError when more than one Mission ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (mq *MissionQuery) OnlyID(ctx context.Context) (id string, err error) {
-	var ids []string
+func (mq *MissionQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = mq.Limit(2).IDs(setContextOp(ctx, mq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -200,7 +201,7 @@ func (mq *MissionQuery) OnlyID(ctx context.Context) (id string, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (mq *MissionQuery) OnlyIDX(ctx context.Context) string {
+func (mq *MissionQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := mq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -228,7 +229,7 @@ func (mq *MissionQuery) AllX(ctx context.Context) []*Mission {
 }
 
 // IDs executes the query and returns a list of Mission IDs.
-func (mq *MissionQuery) IDs(ctx context.Context) (ids []string, err error) {
+func (mq *MissionQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if mq.ctx.Unique == nil && mq.path != nil {
 		mq.Unique(true)
 	}
@@ -240,7 +241,7 @@ func (mq *MissionQuery) IDs(ctx context.Context) (ids []string, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (mq *MissionQuery) IDsX(ctx context.Context) []string {
+func (mq *MissionQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := mq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -336,12 +337,12 @@ func (mq *MissionQuery) WithRequests(opts ...func(*RequestQuery)) *MissionQuery 
 // Example:
 //
 //	var v []struct {
-//		Description string `json:"description,omitempty"`
+//		Name string `json:"name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Mission.Query().
-//		GroupBy(mission.FieldDescription).
+//		GroupBy(mission.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (mq *MissionQuery) GroupBy(field string, fields ...string) *MissionGroupBy {
@@ -359,11 +360,11 @@ func (mq *MissionQuery) GroupBy(field string, fields ...string) *MissionGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Description string `json:"description,omitempty"`
+//		Name string `json:"name,omitempty"`
 //	}
 //
 //	client.Mission.Query().
-//		Select(mission.FieldDescription).
+//		Select(mission.FieldName).
 //		Scan(ctx, &v)
 func (mq *MissionQuery) Select(fields ...string) *MissionSelect {
 	mq.ctx.Fields = append(mq.ctx.Fields, fields...)
@@ -463,69 +464,8 @@ func (mq *MissionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Miss
 }
 
 func (mq *MissionQuery) loadRockets(ctx context.Context, query *RocketQuery, nodes []*Mission, init func(*Mission), assign func(*Mission, *Rocket)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[string]*Mission)
-	nids := make(map[string]map[*Mission]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(mission.RocketsTable)
-		s.Join(joinT).On(s.C(rocket.FieldID), joinT.C(mission.RocketsPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(mission.RocketsPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(mission.RocketsPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullString)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := values[0].(*sql.NullString).String
-				inValue := values[1].(*sql.NullString).String
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Mission]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Rocket](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "rockets" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
-	}
-	return nil
-}
-func (mq *MissionQuery) loadRequests(ctx context.Context, query *RequestQuery, nodes []*Mission, init func(*Mission), assign func(*Mission, *Request)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*Mission)
+	nodeids := make(map[uuid.UUID]*Mission)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -533,9 +473,38 @@ func (mq *MissionQuery) loadRequests(ctx context.Context, query *RequestQuery, n
 			init(nodes[i])
 		}
 	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(request.FieldMissionID)
+	query.withFKs = true
+	query.Where(predicate.Rocket(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(mission.RocketsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
 	}
+	for _, n := range neighbors {
+		fk := n.mission_rockets
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "mission_rockets" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "mission_rockets" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (mq *MissionQuery) loadRequests(ctx context.Context, query *RequestQuery, nodes []*Mission, init func(*Mission), assign func(*Mission, *Request)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Mission)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
 	query.Where(predicate.Request(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(mission.RequestsColumn), fks...))
 	}))
@@ -544,10 +513,13 @@ func (mq *MissionQuery) loadRequests(ctx context.Context, query *RequestQuery, n
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.MissionID
-		node, ok := nodeids[fk]
+		fk := n.request_mission
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "request_mission" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "mission_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "request_mission" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -564,7 +536,7 @@ func (mq *MissionQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (mq *MissionQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(mission.Table, mission.Columns, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString))
+	_spec := sqlgraph.NewQuerySpec(mission.Table, mission.Columns, sqlgraph.NewFieldSpec(mission.FieldID, field.TypeUUID))
 	_spec.From = mq.sql
 	if unique := mq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

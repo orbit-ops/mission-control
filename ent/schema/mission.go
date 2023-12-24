@@ -21,8 +21,8 @@ type Mission struct {
 // Fields of the Mission.
 func (Mission) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Unique(),
-		field.String("name").Unique(),
+		field.UUID("id", uuid.UUID{}).Default(uuid.New),
+		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
 		field.Int("min_approvers").Validate(func(n int) error {
 			if n < 1 {
@@ -37,8 +37,8 @@ func (Mission) Fields() []ent.Field {
 // Edges of the Mission.
 func (Mission) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("rockets", Rocket.Type).Ref("missions").Immutable().Required(),
-		edge.To("requests", Request.Type),
+		edge.To("rockets", Rocket.Type).Immutable().Required(),
+		edge.From("requests", Request.Type).Ref("mission"),
 	}
 }
 

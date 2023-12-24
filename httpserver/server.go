@@ -12,7 +12,6 @@ import (
 	"github.com/orbit-ops/launchpad-core/ent"
 	"github.com/orbit-ops/launchpad-core/ent/ogent"
 	ogauth "github.com/orbit-ops/launchpad-core/ent/ogentauth"
-	"github.com/orbit-ops/launchpad-core/internal/handler"
 	"github.com/orbit-ops/launchpad-core/providers"
 )
 
@@ -24,7 +23,7 @@ func Start(cfg *config.Config, prov providers.Provider, client *ent.Client) erro
 	authHandler := ogauth.NewSecurityHandler(NewSecurityHandler(cfg.Sessions, client))
 
 	srv, err := ogent.NewServer(
-		handler.NewHandler(ac, client),
+		ac,
 		ogauth.NewSecurityHandler(authHandler),
 		ogent.WithPathPrefix("/api/v1"),
 	)

@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/orbit-ops/launchpad-core/ent/mission"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
@@ -21,6 +21,12 @@ type RocketCreate struct {
 	mutation *RocketMutation
 	hooks    []Hook
 	conflict []sql.ConflictOption
+}
+
+// SetName sets the "name" field.
+func (rc *RocketCreate) SetName(s string) *RocketCreate {
+	rc.mutation.SetName(s)
+	return rc
 }
 
 // SetDescription sets the "description" field.
@@ -37,30 +43,16 @@ func (rc *RocketCreate) SetNillableDescription(s *string) *RocketCreate {
 	return rc
 }
 
-// SetImage sets the "image" field.
-func (rc *RocketCreate) SetImage(s string) *RocketCreate {
-	rc.mutation.SetImage(s)
+// SetCode sets the "code" field.
+func (rc *RocketCreate) SetCode(s string) *RocketCreate {
+	rc.mutation.SetCode(s)
 	return rc
 }
 
-// SetNillableImage sets the "image" field if the given value is not nil.
-func (rc *RocketCreate) SetNillableImage(s *string) *RocketCreate {
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (rc *RocketCreate) SetNillableCode(s *string) *RocketCreate {
 	if s != nil {
-		rc.SetImage(*s)
-	}
-	return rc
-}
-
-// SetZip sets the "zip" field.
-func (rc *RocketCreate) SetZip(s string) *RocketCreate {
-	rc.mutation.SetZip(s)
-	return rc
-}
-
-// SetNillableZip sets the "zip" field if the given value is not nil.
-func (rc *RocketCreate) SetNillableZip(s *string) *RocketCreate {
-	if s != nil {
-		rc.SetZip(*s)
+		rc.SetCode(*s)
 	}
 	return rc
 }
@@ -72,24 +64,17 @@ func (rc *RocketCreate) SetConfig(m map[string]string) *RocketCreate {
 }
 
 // SetID sets the "id" field.
-func (rc *RocketCreate) SetID(s string) *RocketCreate {
-	rc.mutation.SetID(s)
+func (rc *RocketCreate) SetID(u uuid.UUID) *RocketCreate {
+	rc.mutation.SetID(u)
 	return rc
 }
 
-// AddMissionIDs adds the "missions" edge to the Mission entity by IDs.
-func (rc *RocketCreate) AddMissionIDs(ids ...string) *RocketCreate {
-	rc.mutation.AddMissionIDs(ids...)
-	return rc
-}
-
-// AddMissions adds the "missions" edges to the Mission entity.
-func (rc *RocketCreate) AddMissions(m ...*Mission) *RocketCreate {
-	ids := make([]string, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+// SetNillableID sets the "id" field if the given value is not nil.
+func (rc *RocketCreate) SetNillableID(u *uuid.UUID) *RocketCreate {
+	if u != nil {
+		rc.SetID(*u)
 	}
-	return rc.AddMissionIDs(ids...)
+	return rc
 }
 
 // Mutation returns the RocketMutation object of the builder.
@@ -99,6 +84,7 @@ func (rc *RocketCreate) Mutation() *RocketMutation {
 
 // Save creates the Rocket in the database.
 func (rc *RocketCreate) Save(ctx context.Context) (*Rocket, error) {
+	rc.defaults()
 	return withHooks(ctx, rc.sqlSave, rc.mutation, rc.hooks)
 }
 
@@ -124,11 +110,31 @@ func (rc *RocketCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (rc *RocketCreate) defaults() {
+	if _, ok := rc.mutation.Config(); !ok {
+		v := rocket.DefaultConfig
+		rc.mutation.SetConfig(v)
+	}
+	if _, ok := rc.mutation.ID(); !ok {
+		v := rocket.DefaultID()
+		rc.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (rc *RocketCreate) check() error {
-	if v, ok := rc.mutation.Image(); ok {
-		if err := rocket.ImageValidator(v); err != nil {
-			return &ValidationError{Name: "image", err: fmt.Errorf(`ent: validator failed for field "Rocket.image": %w`, err)}
+	if _, ok := rc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Rocket.name"`)}
+	}
+	if v, ok := rc.mutation.Name(); ok {
+		if err := rocket.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Rocket.name": %w`, err)}
+		}
+	}
+	if v, ok := rc.mutation.Code(); ok {
+		if err := rocket.CodeValidator(v); err != nil {
+			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Rocket.code": %w`, err)}
 		}
 	}
 	if _, ok := rc.mutation.Config(); !ok {
@@ -149,10 +155,10 @@ func (rc *RocketCreate) sqlSave(ctx context.Context) (*Rocket, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Rocket.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	rc.mutation.id = &_node.ID
@@ -163,44 +169,28 @@ func (rc *RocketCreate) sqlSave(ctx context.Context) (*Rocket, error) {
 func (rc *RocketCreate) createSpec() (*Rocket, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Rocket{config: rc.config}
-		_spec = sqlgraph.NewCreateSpec(rocket.Table, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(rocket.Table, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = rc.conflict
 	if id, ok := rc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
+	}
+	if value, ok := rc.mutation.Name(); ok {
+		_spec.SetField(rocket.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := rc.mutation.Description(); ok {
 		_spec.SetField(rocket.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := rc.mutation.Image(); ok {
-		_spec.SetField(rocket.FieldImage, field.TypeString, value)
-		_node.Image = value
-	}
-	if value, ok := rc.mutation.Zip(); ok {
-		_spec.SetField(rocket.FieldZip, field.TypeString, value)
-		_node.Zip = value
+	if value, ok := rc.mutation.Code(); ok {
+		_spec.SetField(rocket.FieldCode, field.TypeString, value)
+		_node.Code = value
 	}
 	if value, ok := rc.mutation.Config(); ok {
 		_spec.SetField(rocket.FieldConfig, field.TypeJSON, value)
 		_node.Config = value
-	}
-	if nodes := rc.mutation.MissionsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   rocket.MissionsTable,
-			Columns: rocket.MissionsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(mission.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
@@ -209,7 +199,7 @@ func (rc *RocketCreate) createSpec() (*Rocket, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.Rocket.Create().
-//		SetDescription(v).
+//		SetName(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -218,7 +208,7 @@ func (rc *RocketCreate) createSpec() (*Rocket, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.RocketUpsert) {
-//			SetDescription(v+v).
+//			SetName(v+v).
 //		}).
 //		Exec(ctx)
 func (rc *RocketCreate) OnConflict(opts ...sql.ConflictOption) *RocketUpsertOne {
@@ -254,6 +244,18 @@ type (
 	}
 )
 
+// SetName sets the "name" field.
+func (u *RocketUpsert) SetName(v string) *RocketUpsert {
+	u.Set(rocket.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *RocketUpsert) UpdateName() *RocketUpsert {
+	u.SetExcluded(rocket.FieldName)
+	return u
+}
+
 // SetDescription sets the "description" field.
 func (u *RocketUpsert) SetDescription(v string) *RocketUpsert {
 	u.Set(rocket.FieldDescription, v)
@@ -272,39 +274,21 @@ func (u *RocketUpsert) ClearDescription() *RocketUpsert {
 	return u
 }
 
-// SetImage sets the "image" field.
-func (u *RocketUpsert) SetImage(v string) *RocketUpsert {
-	u.Set(rocket.FieldImage, v)
+// SetCode sets the "code" field.
+func (u *RocketUpsert) SetCode(v string) *RocketUpsert {
+	u.Set(rocket.FieldCode, v)
 	return u
 }
 
-// UpdateImage sets the "image" field to the value that was provided on create.
-func (u *RocketUpsert) UpdateImage() *RocketUpsert {
-	u.SetExcluded(rocket.FieldImage)
+// UpdateCode sets the "code" field to the value that was provided on create.
+func (u *RocketUpsert) UpdateCode() *RocketUpsert {
+	u.SetExcluded(rocket.FieldCode)
 	return u
 }
 
-// ClearImage clears the value of the "image" field.
-func (u *RocketUpsert) ClearImage() *RocketUpsert {
-	u.SetNull(rocket.FieldImage)
-	return u
-}
-
-// SetZip sets the "zip" field.
-func (u *RocketUpsert) SetZip(v string) *RocketUpsert {
-	u.Set(rocket.FieldZip, v)
-	return u
-}
-
-// UpdateZip sets the "zip" field to the value that was provided on create.
-func (u *RocketUpsert) UpdateZip() *RocketUpsert {
-	u.SetExcluded(rocket.FieldZip)
-	return u
-}
-
-// ClearZip clears the value of the "zip" field.
-func (u *RocketUpsert) ClearZip() *RocketUpsert {
-	u.SetNull(rocket.FieldZip)
+// ClearCode clears the value of the "code" field.
+func (u *RocketUpsert) ClearCode() *RocketUpsert {
+	u.SetNull(rocket.FieldCode)
 	return u
 }
 
@@ -368,6 +352,20 @@ func (u *RocketUpsertOne) Update(set func(*RocketUpsert)) *RocketUpsertOne {
 	return u
 }
 
+// SetName sets the "name" field.
+func (u *RocketUpsertOne) SetName(v string) *RocketUpsertOne {
+	return u.Update(func(s *RocketUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *RocketUpsertOne) UpdateName() *RocketUpsertOne {
+	return u.Update(func(s *RocketUpsert) {
+		s.UpdateName()
+	})
+}
+
 // SetDescription sets the "description" field.
 func (u *RocketUpsertOne) SetDescription(v string) *RocketUpsertOne {
 	return u.Update(func(s *RocketUpsert) {
@@ -389,45 +387,24 @@ func (u *RocketUpsertOne) ClearDescription() *RocketUpsertOne {
 	})
 }
 
-// SetImage sets the "image" field.
-func (u *RocketUpsertOne) SetImage(v string) *RocketUpsertOne {
+// SetCode sets the "code" field.
+func (u *RocketUpsertOne) SetCode(v string) *RocketUpsertOne {
 	return u.Update(func(s *RocketUpsert) {
-		s.SetImage(v)
+		s.SetCode(v)
 	})
 }
 
-// UpdateImage sets the "image" field to the value that was provided on create.
-func (u *RocketUpsertOne) UpdateImage() *RocketUpsertOne {
+// UpdateCode sets the "code" field to the value that was provided on create.
+func (u *RocketUpsertOne) UpdateCode() *RocketUpsertOne {
 	return u.Update(func(s *RocketUpsert) {
-		s.UpdateImage()
+		s.UpdateCode()
 	})
 }
 
-// ClearImage clears the value of the "image" field.
-func (u *RocketUpsertOne) ClearImage() *RocketUpsertOne {
+// ClearCode clears the value of the "code" field.
+func (u *RocketUpsertOne) ClearCode() *RocketUpsertOne {
 	return u.Update(func(s *RocketUpsert) {
-		s.ClearImage()
-	})
-}
-
-// SetZip sets the "zip" field.
-func (u *RocketUpsertOne) SetZip(v string) *RocketUpsertOne {
-	return u.Update(func(s *RocketUpsert) {
-		s.SetZip(v)
-	})
-}
-
-// UpdateZip sets the "zip" field to the value that was provided on create.
-func (u *RocketUpsertOne) UpdateZip() *RocketUpsertOne {
-	return u.Update(func(s *RocketUpsert) {
-		s.UpdateZip()
-	})
-}
-
-// ClearZip clears the value of the "zip" field.
-func (u *RocketUpsertOne) ClearZip() *RocketUpsertOne {
-	return u.Update(func(s *RocketUpsert) {
-		s.ClearZip()
+		s.ClearCode()
 	})
 }
 
@@ -461,7 +438,7 @@ func (u *RocketUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *RocketUpsertOne) ID(ctx context.Context) (id string, err error) {
+func (u *RocketUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -475,7 +452,7 @@ func (u *RocketUpsertOne) ID(ctx context.Context) (id string, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *RocketUpsertOne) IDX(ctx context.Context) string {
+func (u *RocketUpsertOne) IDX(ctx context.Context) uuid.UUID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -502,6 +479,7 @@ func (rcb *RocketCreateBulk) Save(ctx context.Context) ([]*Rocket, error) {
 	for i := range rcb.builders {
 		func(i int, root context.Context) {
 			builder := rcb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*RocketMutation)
 				if !ok {
@@ -580,7 +558,7 @@ func (rcb *RocketCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.RocketUpsert) {
-//			SetDescription(v+v).
+//			SetName(v+v).
 //		}).
 //		Exec(ctx)
 func (rcb *RocketCreateBulk) OnConflict(opts ...sql.ConflictOption) *RocketUpsertBulk {
@@ -659,6 +637,20 @@ func (u *RocketUpsertBulk) Update(set func(*RocketUpsert)) *RocketUpsertBulk {
 	return u
 }
 
+// SetName sets the "name" field.
+func (u *RocketUpsertBulk) SetName(v string) *RocketUpsertBulk {
+	return u.Update(func(s *RocketUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *RocketUpsertBulk) UpdateName() *RocketUpsertBulk {
+	return u.Update(func(s *RocketUpsert) {
+		s.UpdateName()
+	})
+}
+
 // SetDescription sets the "description" field.
 func (u *RocketUpsertBulk) SetDescription(v string) *RocketUpsertBulk {
 	return u.Update(func(s *RocketUpsert) {
@@ -680,45 +672,24 @@ func (u *RocketUpsertBulk) ClearDescription() *RocketUpsertBulk {
 	})
 }
 
-// SetImage sets the "image" field.
-func (u *RocketUpsertBulk) SetImage(v string) *RocketUpsertBulk {
+// SetCode sets the "code" field.
+func (u *RocketUpsertBulk) SetCode(v string) *RocketUpsertBulk {
 	return u.Update(func(s *RocketUpsert) {
-		s.SetImage(v)
+		s.SetCode(v)
 	})
 }
 
-// UpdateImage sets the "image" field to the value that was provided on create.
-func (u *RocketUpsertBulk) UpdateImage() *RocketUpsertBulk {
+// UpdateCode sets the "code" field to the value that was provided on create.
+func (u *RocketUpsertBulk) UpdateCode() *RocketUpsertBulk {
 	return u.Update(func(s *RocketUpsert) {
-		s.UpdateImage()
+		s.UpdateCode()
 	})
 }
 
-// ClearImage clears the value of the "image" field.
-func (u *RocketUpsertBulk) ClearImage() *RocketUpsertBulk {
+// ClearCode clears the value of the "code" field.
+func (u *RocketUpsertBulk) ClearCode() *RocketUpsertBulk {
 	return u.Update(func(s *RocketUpsert) {
-		s.ClearImage()
-	})
-}
-
-// SetZip sets the "zip" field.
-func (u *RocketUpsertBulk) SetZip(v string) *RocketUpsertBulk {
-	return u.Update(func(s *RocketUpsert) {
-		s.SetZip(v)
-	})
-}
-
-// UpdateZip sets the "zip" field to the value that was provided on create.
-func (u *RocketUpsertBulk) UpdateZip() *RocketUpsertBulk {
-	return u.Update(func(s *RocketUpsert) {
-		s.UpdateZip()
-	})
-}
-
-// ClearZip clears the value of the "zip" field.
-func (u *RocketUpsertBulk) ClearZip() *RocketUpsertBulk {
-	return u.Update(func(s *RocketUpsert) {
-		s.ClearZip()
+		s.ClearCode()
 	})
 }
 

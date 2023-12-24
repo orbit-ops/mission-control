@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/request"
 )
@@ -71,12 +72,6 @@ func (ac *ApprovalCreate) SetNillableRevokedTime(t *time.Time) *ApprovalCreate {
 	return ac
 }
 
-// SetRequestID sets the "request_id" field.
-func (ac *ApprovalCreate) SetRequestID(u uuid.UUID) *ApprovalCreate {
-	ac.mutation.SetRequestID(u)
-	return ac
-}
-
 // SetID sets the "id" field.
 func (ac *ApprovalCreate) SetID(u uuid.UUID) *ApprovalCreate {
 	ac.mutation.SetID(u)
@@ -91,15 +86,30 @@ func (ac *ApprovalCreate) SetNillableID(u *uuid.UUID) *ApprovalCreate {
 	return ac
 }
 
-// SetRequestsID sets the "requests" edge to the Request entity by ID.
-func (ac *ApprovalCreate) SetRequestsID(id uuid.UUID) *ApprovalCreate {
-	ac.mutation.SetRequestsID(id)
+// SetRequestID sets the "request" edge to the Request entity by ID.
+func (ac *ApprovalCreate) SetRequestID(id uuid.UUID) *ApprovalCreate {
+	ac.mutation.SetRequestID(id)
 	return ac
 }
 
-// SetRequests sets the "requests" edge to the Request entity.
-func (ac *ApprovalCreate) SetRequests(r *Request) *ApprovalCreate {
-	return ac.SetRequestsID(r.ID)
+// SetRequest sets the "request" edge to the Request entity.
+func (ac *ApprovalCreate) SetRequest(r *Request) *ApprovalCreate {
+	return ac.SetRequestID(r.ID)
+}
+
+// AddAccesIDs adds the "access" edge to the Access entity by IDs.
+func (ac *ApprovalCreate) AddAccesIDs(ids ...uuid.UUID) *ApprovalCreate {
+	ac.mutation.AddAccesIDs(ids...)
+	return ac
+}
+
+// AddAccess adds the "access" edges to the Access entity.
+func (ac *ApprovalCreate) AddAccess(a ...*Access) *ApprovalCreate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ac.AddAccesIDs(ids...)
 }
 
 // Mutation returns the ApprovalMutation object of the builder.
@@ -162,10 +172,7 @@ func (ac *ApprovalCreate) check() error {
 		return &ValidationError{Name: "revoked", err: errors.New(`ent: missing required field "Approval.revoked"`)}
 	}
 	if _, ok := ac.mutation.RequestID(); !ok {
-		return &ValidationError{Name: "request_id", err: errors.New(`ent: missing required field "Approval.request_id"`)}
-	}
-	if _, ok := ac.mutation.RequestsID(); !ok {
-		return &ValidationError{Name: "requests", err: errors.New(`ent: missing required edge "Approval.requests"`)}
+		return &ValidationError{Name: "request", err: errors.New(`ent: missing required edge "Approval.request"`)}
 	}
 	return nil
 }
@@ -223,16 +230,12 @@ func (ac *ApprovalCreate) createSpec() (*Approval, *sqlgraph.CreateSpec) {
 		_spec.SetField(approval.FieldRevokedTime, field.TypeTime, value)
 		_node.RevokedTime = value
 	}
-	if value, ok := ac.mutation.RequestID(); ok {
-		_spec.SetField(approval.FieldRequestID, field.TypeUUID, value)
-		_node.RequestID = value
-	}
-	if nodes := ac.mutation.RequestsIDs(); len(nodes) > 0 {
+	if nodes := ac.mutation.RequestIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   approval.RequestsTable,
-			Columns: []string{approval.RequestsColumn},
+			Table:   approval.RequestTable,
+			Columns: []string{approval.RequestColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeUUID),
@@ -241,7 +244,23 @@ func (ac *ApprovalCreate) createSpec() (*Approval, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.approval_requests = &nodes[0]
+		_node.approval_request = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.AccessIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   approval.AccessTable,
+			Columns: approval.AccessPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -323,18 +342,6 @@ func (u *ApprovalUpsert) UpdateRevokedTime() *ApprovalUpsert {
 // ClearRevokedTime clears the value of the "revoked_time" field.
 func (u *ApprovalUpsert) ClearRevokedTime() *ApprovalUpsert {
 	u.SetNull(approval.FieldRevokedTime)
-	return u
-}
-
-// SetRequestID sets the "request_id" field.
-func (u *ApprovalUpsert) SetRequestID(v uuid.UUID) *ApprovalUpsert {
-	u.Set(approval.FieldRequestID, v)
-	return u
-}
-
-// UpdateRequestID sets the "request_id" field to the value that was provided on create.
-func (u *ApprovalUpsert) UpdateRequestID() *ApprovalUpsert {
-	u.SetExcluded(approval.FieldRequestID)
 	return u
 }
 
@@ -427,20 +434,6 @@ func (u *ApprovalUpsertOne) UpdateRevokedTime() *ApprovalUpsertOne {
 func (u *ApprovalUpsertOne) ClearRevokedTime() *ApprovalUpsertOne {
 	return u.Update(func(s *ApprovalUpsert) {
 		s.ClearRevokedTime()
-	})
-}
-
-// SetRequestID sets the "request_id" field.
-func (u *ApprovalUpsertOne) SetRequestID(v uuid.UUID) *ApprovalUpsertOne {
-	return u.Update(func(s *ApprovalUpsert) {
-		s.SetRequestID(v)
-	})
-}
-
-// UpdateRequestID sets the "request_id" field to the value that was provided on create.
-func (u *ApprovalUpsertOne) UpdateRequestID() *ApprovalUpsertOne {
-	return u.Update(func(s *ApprovalUpsert) {
-		s.UpdateRequestID()
 	})
 }
 
@@ -700,20 +693,6 @@ func (u *ApprovalUpsertBulk) UpdateRevokedTime() *ApprovalUpsertBulk {
 func (u *ApprovalUpsertBulk) ClearRevokedTime() *ApprovalUpsertBulk {
 	return u.Update(func(s *ApprovalUpsert) {
 		s.ClearRevokedTime()
-	})
-}
-
-// SetRequestID sets the "request_id" field.
-func (u *ApprovalUpsertBulk) SetRequestID(v uuid.UUID) *ApprovalUpsertBulk {
-	return u.Update(func(s *ApprovalUpsert) {
-		s.SetRequestID(v)
-	})
-}
-
-// UpdateRequestID sets the "request_id" field to the value that was provided on create.
-func (u *ApprovalUpsertBulk) UpdateRequestID() *ApprovalUpsertBulk {
-	return u.Update(func(s *ApprovalUpsert) {
-		s.UpdateRequestID()
 	})
 }
 

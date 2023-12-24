@@ -81,11 +81,6 @@ func RevokedTime(v time.Time) predicate.Approval {
 	return predicate.Approval(sql.FieldEQ(FieldRevokedTime, v))
 }
 
-// RequestID applies equality check predicate on the "request_id" field. It's identical to RequestIDEQ.
-func RequestID(v uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldEQ(FieldRequestID, v))
-}
-
 // PersonEQ applies the EQ predicate on the "person" field.
 func PersonEQ(v string) predicate.Approval {
 	return predicate.Approval(sql.FieldEQ(FieldPerson, v))
@@ -261,61 +256,44 @@ func RevokedTimeNotNil() predicate.Approval {
 	return predicate.Approval(sql.FieldNotNull(FieldRevokedTime))
 }
 
-// RequestIDEQ applies the EQ predicate on the "request_id" field.
-func RequestIDEQ(v uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldEQ(FieldRequestID, v))
-}
-
-// RequestIDNEQ applies the NEQ predicate on the "request_id" field.
-func RequestIDNEQ(v uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldNEQ(FieldRequestID, v))
-}
-
-// RequestIDIn applies the In predicate on the "request_id" field.
-func RequestIDIn(vs ...uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldIn(FieldRequestID, vs...))
-}
-
-// RequestIDNotIn applies the NotIn predicate on the "request_id" field.
-func RequestIDNotIn(vs ...uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldNotIn(FieldRequestID, vs...))
-}
-
-// RequestIDGT applies the GT predicate on the "request_id" field.
-func RequestIDGT(v uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldGT(FieldRequestID, v))
-}
-
-// RequestIDGTE applies the GTE predicate on the "request_id" field.
-func RequestIDGTE(v uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldGTE(FieldRequestID, v))
-}
-
-// RequestIDLT applies the LT predicate on the "request_id" field.
-func RequestIDLT(v uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldLT(FieldRequestID, v))
-}
-
-// RequestIDLTE applies the LTE predicate on the "request_id" field.
-func RequestIDLTE(v uuid.UUID) predicate.Approval {
-	return predicate.Approval(sql.FieldLTE(FieldRequestID, v))
-}
-
-// HasRequests applies the HasEdge predicate on the "requests" edge.
-func HasRequests() predicate.Approval {
+// HasRequest applies the HasEdge predicate on the "request" edge.
+func HasRequest() predicate.Approval {
 	return predicate.Approval(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, RequestsTable, RequestsColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, RequestTable, RequestColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasRequestsWith applies the HasEdge predicate on the "requests" edge with a given conditions (other predicates).
-func HasRequestsWith(preds ...predicate.Request) predicate.Approval {
+// HasRequestWith applies the HasEdge predicate on the "request" edge with a given conditions (other predicates).
+func HasRequestWith(preds ...predicate.Request) predicate.Approval {
 	return predicate.Approval(func(s *sql.Selector) {
-		step := newRequestsStep()
+		step := newRequestStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAccess applies the HasEdge predicate on the "access" edge.
+func HasAccess() predicate.Approval {
+	return predicate.Approval(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, AccessTable, AccessPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccessWith applies the HasEdge predicate on the "access" edge with a given conditions (other predicates).
+func HasAccessWith(preds ...predicate.Access) predicate.Approval {
+	return predicate.Approval(func(s *sql.Selector) {
+		step := newAccessStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

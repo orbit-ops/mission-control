@@ -361,14 +361,14 @@ func HasApprovals() predicate.Access {
 	return predicate.Access(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, ApprovalsTable, ApprovalsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, ApprovalsTable, ApprovalsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
 // HasApprovalsWith applies the HasEdge predicate on the "approvals" edge with a given conditions (other predicates).
-func HasApprovalsWith(preds ...predicate.Access) predicate.Access {
+func HasApprovalsWith(preds ...predicate.Approval) predicate.Access {
 	return predicate.Access(func(s *sql.Selector) {
 		step := newApprovalsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {

@@ -218,6 +218,187 @@ func (s *AccessAccessTokensListAction) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *AccessApprovalsList) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *AccessApprovalsList) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("id")
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("person")
+		e.Str(s.Person)
+	}
+	{
+		e.FieldStart("approved_time")
+		json.EncodeDateTime(e, s.ApprovedTime)
+	}
+	{
+		e.FieldStart("approved")
+		e.Bool(s.Approved)
+	}
+	{
+		e.FieldStart("revoked")
+		e.Bool(s.Revoked)
+	}
+	{
+		if s.RevokedTime.Set {
+			e.FieldStart("revoked_time")
+			s.RevokedTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+}
+
+var jsonFieldsNameOfAccessApprovalsList = [6]string{
+	0: "id",
+	1: "person",
+	2: "approved_time",
+	3: "approved",
+	4: "revoked",
+	5: "revoked_time",
+}
+
+// Decode decodes AccessApprovalsList from json.
+func (s *AccessApprovalsList) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode AccessApprovalsList to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "id":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := json.DecodeUUID(d)
+				s.ID = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "person":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Person = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"person\"")
+			}
+		case "approved_time":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.ApprovedTime = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"approved_time\"")
+			}
+		case "approved":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Bool()
+				s.Approved = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"approved\"")
+			}
+		case "revoked":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Bool()
+				s.Revoked = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"revoked\"")
+			}
+		case "revoked_time":
+			if err := func() error {
+				s.RevokedTime.Reset()
+				if err := s.RevokedTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"revoked_time\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode AccessApprovalsList")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00011111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfAccessApprovalsList) {
+					name = jsonFieldsNameOfAccessApprovalsList[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *AccessApprovalsList) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *AccessApprovalsList) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *ApiKeyCreate) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -557,6 +738,221 @@ func (s *ApiKeyRead) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *ApprovalAccessList) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *ApprovalAccessList) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("id")
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("start_time")
+		json.EncodeDateTime(e, s.StartTime)
+	}
+	{
+		e.FieldStart("approved")
+		e.Bool(s.Approved)
+	}
+	{
+		e.FieldStart("rolled_back")
+		e.Bool(s.RolledBack)
+	}
+	{
+		if s.RollbackTime.Set {
+			e.FieldStart("rollback_time")
+			s.RollbackTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		if s.RollbackReason.Set {
+			e.FieldStart("rollback_reason")
+			s.RollbackReason.Encode(e)
+		}
+	}
+	{
+		e.FieldStart("end_time")
+		json.EncodeDateTime(e, s.EndTime)
+	}
+	{
+		e.FieldStart("request_id")
+		json.EncodeUUID(e, s.RequestID)
+	}
+}
+
+var jsonFieldsNameOfApprovalAccessList = [8]string{
+	0: "id",
+	1: "start_time",
+	2: "approved",
+	3: "rolled_back",
+	4: "rollback_time",
+	5: "rollback_reason",
+	6: "end_time",
+	7: "request_id",
+}
+
+// Decode decodes ApprovalAccessList from json.
+func (s *ApprovalAccessList) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ApprovalAccessList to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "id":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := json.DecodeUUID(d)
+				s.ID = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "start_time":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.StartTime = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"start_time\"")
+			}
+		case "approved":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Bool()
+				s.Approved = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"approved\"")
+			}
+		case "rolled_back":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Bool()
+				s.RolledBack = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rolled_back\"")
+			}
+		case "rollback_time":
+			if err := func() error {
+				s.RollbackTime.Reset()
+				if err := s.RollbackTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rollback_time\"")
+			}
+		case "rollback_reason":
+			if err := func() error {
+				s.RollbackReason.Reset()
+				if err := s.RollbackReason.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"rollback_reason\"")
+			}
+		case "end_time":
+			requiredBitSet[0] |= 1 << 6
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.EndTime = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"end_time\"")
+			}
+		case "request_id":
+			requiredBitSet[0] |= 1 << 7
+			if err := func() error {
+				v, err := json.DecodeUUID(d)
+				s.RequestID = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"request_id\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode ApprovalAccessList")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b11001111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfApprovalAccessList) {
+					name = jsonFieldsNameOfApprovalAccessList[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *ApprovalAccessList) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ApprovalAccessList) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *ApprovalCreate) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -591,20 +987,15 @@ func (s *ApprovalCreate) encodeFields(e *jx.Encoder) {
 			s.RevokedTime.Encode(e, json.EncodeDateTime)
 		}
 	}
-	{
-		e.FieldStart("request_id")
-		json.EncodeUUID(e, s.RequestID)
-	}
 }
 
-var jsonFieldsNameOfApprovalCreate = [7]string{
+var jsonFieldsNameOfApprovalCreate = [6]string{
 	0: "id",
 	1: "person",
 	2: "approved_time",
 	3: "approved",
 	4: "revoked",
 	5: "revoked_time",
-	6: "request_id",
 }
 
 // Decode decodes ApprovalCreate from json.
@@ -686,18 +1077,6 @@ func (s *ApprovalCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"revoked_time\"")
 			}
-		case "request_id":
-			requiredBitSet[0] |= 1 << 6
-			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.RequestID = v
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -708,7 +1087,7 @@ func (s *ApprovalCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01011111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -789,20 +1168,15 @@ func (s *ApprovalList) encodeFields(e *jx.Encoder) {
 			s.RevokedTime.Encode(e, json.EncodeDateTime)
 		}
 	}
-	{
-		e.FieldStart("request_id")
-		json.EncodeUUID(e, s.RequestID)
-	}
 }
 
-var jsonFieldsNameOfApprovalList = [7]string{
+var jsonFieldsNameOfApprovalList = [6]string{
 	0: "id",
 	1: "person",
 	2: "approved_time",
 	3: "approved",
 	4: "revoked",
 	5: "revoked_time",
-	6: "request_id",
 }
 
 // Decode decodes ApprovalList from json.
@@ -884,18 +1258,6 @@ func (s *ApprovalList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"revoked_time\"")
 			}
-		case "request_id":
-			requiredBitSet[0] |= 1 << 6
-			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.RequestID = v
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -906,7 +1268,7 @@ func (s *ApprovalList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01011111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -987,20 +1349,15 @@ func (s *ApprovalRead) encodeFields(e *jx.Encoder) {
 			s.RevokedTime.Encode(e, json.EncodeDateTime)
 		}
 	}
-	{
-		e.FieldStart("request_id")
-		json.EncodeUUID(e, s.RequestID)
-	}
 }
 
-var jsonFieldsNameOfApprovalRead = [7]string{
+var jsonFieldsNameOfApprovalRead = [6]string{
 	0: "id",
 	1: "person",
 	2: "approved_time",
 	3: "approved",
 	4: "revoked",
 	5: "revoked_time",
-	6: "request_id",
 }
 
 // Decode decodes ApprovalRead from json.
@@ -1082,18 +1439,6 @@ func (s *ApprovalRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"revoked_time\"")
 			}
-		case "request_id":
-			requiredBitSet[0] |= 1 << 6
-			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.RequestID = v
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -1104,7 +1449,7 @@ func (s *ApprovalRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01011111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -1185,20 +1530,15 @@ func (s *ApprovalUpdate) encodeFields(e *jx.Encoder) {
 			s.RevokedTime.Encode(e, json.EncodeDateTime)
 		}
 	}
-	{
-		e.FieldStart("request_id")
-		json.EncodeUUID(e, s.RequestID)
-	}
 }
 
-var jsonFieldsNameOfApprovalUpdate = [7]string{
+var jsonFieldsNameOfApprovalUpdate = [6]string{
 	0: "id",
 	1: "person",
 	2: "approved_time",
 	3: "approved",
 	4: "revoked",
 	5: "revoked_time",
-	6: "request_id",
 }
 
 // Decode decodes ApprovalUpdate from json.
@@ -1280,18 +1620,6 @@ func (s *ApprovalUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"revoked_time\"")
 			}
-		case "request_id":
-			requiredBitSet[0] |= 1 << 6
-			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.RequestID = v
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -1302,7 +1630,7 @@ func (s *ApprovalUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01011111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -1359,7 +1687,7 @@ func (s *AuditList) Encode(e *jx.Encoder) {
 func (s *AuditList) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
 	}
 	{
 		e.FieldStart("action")
@@ -1394,8 +1722,8 @@ func (s *AuditList) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
@@ -1550,7 +1878,7 @@ func (s *AuditRead) Encode(e *jx.Encoder) {
 func (s *AuditRead) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
 	}
 	{
 		e.FieldStart("action")
@@ -1585,8 +1913,8 @@ func (s *AuditRead) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
@@ -1875,12 +2203,18 @@ func (s *CreateApprovalReq) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		e.FieldStart("request_id")
-		json.EncodeUUID(e, s.RequestID)
+		e.FieldStart("request")
+		json.EncodeUUID(e, s.Request)
 	}
 	{
-		e.FieldStart("requests")
-		json.EncodeUUID(e, s.Requests)
+		if s.Access != nil {
+			e.FieldStart("access")
+			e.ArrStart()
+			for _, elem := range s.Access {
+				json.EncodeUUID(e, elem)
+			}
+			e.ArrEnd()
+		}
 	}
 }
 
@@ -1890,8 +2224,8 @@ var jsonFieldsNameOfCreateApprovalReq = [7]string{
 	2: "approved",
 	3: "revoked",
 	4: "revoked_time",
-	5: "request_id",
-	6: "requests",
+	5: "request",
+	6: "access",
 }
 
 // Decode decodes CreateApprovalReq from json.
@@ -1961,29 +2295,36 @@ func (s *CreateApprovalReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"revoked_time\"")
 			}
-		case "request_id":
+		case "request":
 			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeUUID(d)
-				s.RequestID = v
+				s.Request = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
+				return errors.Wrap(err, "decode field \"request\"")
 			}
-		case "requests":
-			requiredBitSet[0] |= 1 << 6
+		case "access":
 			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.Requests = v
-				if err != nil {
+				s.Access = make([]uuid.UUID, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem uuid.UUID
+					v, err := json.DecodeUUID(d)
+					elem = v
+					if err != nil {
+						return err
+					}
+					s.Access = append(s.Access, elem)
+					return nil
+				}); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"requests\"")
+				return errors.Wrap(err, "decode field \"access\"")
 			}
 		default:
 			return d.Skip()
@@ -1995,7 +2336,7 @@ func (s *CreateApprovalReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01101111,
+		0b00101111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2051,6 +2392,10 @@ func (s *CreateMissionReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *CreateMissionReq) encodeFields(e *jx.Encoder) {
 	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
 		if s.Description.Set {
 			e.FieldStart("description")
 			s.Description.Encode(e)
@@ -2072,7 +2417,7 @@ func (s *CreateMissionReq) encodeFields(e *jx.Encoder) {
 		e.FieldStart("rockets")
 		e.ArrStart()
 		for _, elem := range s.Rockets {
-			e.Str(elem)
+			json.EncodeUUID(e, elem)
 		}
 		e.ArrEnd()
 	}
@@ -2088,12 +2433,13 @@ func (s *CreateMissionReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCreateMissionReq = [5]string{
-	0: "description",
-	1: "min_approvers",
-	2: "possible_approvers",
-	3: "rockets",
-	4: "requests",
+var jsonFieldsNameOfCreateMissionReq = [6]string{
+	0: "name",
+	1: "description",
+	2: "min_approvers",
+	3: "possible_approvers",
+	4: "rockets",
+	5: "requests",
 }
 
 // Decode decodes CreateMissionReq from json.
@@ -2105,6 +2451,18 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
+		case "name":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
 		case "description":
 			if err := func() error {
 				s.Description.Reset()
@@ -2116,7 +2474,7 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
 		case "min_approvers":
-			requiredBitSet[0] |= 1 << 1
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -2128,7 +2486,7 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -2148,13 +2506,13 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"possible_approvers\"")
 			}
 		case "rockets":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
-				s.Rockets = make([]string, 0)
+				s.Rockets = make([]uuid.UUID, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem string
-					v, err := d.Str()
-					elem = string(v)
+					var elem uuid.UUID
+					v, err := json.DecodeUUID(d)
+					elem = v
 					if err != nil {
 						return err
 					}
@@ -2196,7 +2554,7 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001110,
+		0b00011101,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2260,10 +2618,6 @@ func (s *CreateRequestReq) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
-		e.FieldStart("mission_id")
-		e.Str(s.MissionID)
-	}
-	{
 		if s.Approvals != nil {
 			e.FieldStart("approvals")
 			e.ArrStart()
@@ -2275,16 +2629,15 @@ func (s *CreateRequestReq) encodeFields(e *jx.Encoder) {
 	}
 	{
 		e.FieldStart("mission")
-		e.Str(s.Mission)
+		json.EncodeUUID(e, s.Mission)
 	}
 }
 
-var jsonFieldsNameOfCreateRequestReq = [5]string{
+var jsonFieldsNameOfCreateRequestReq = [4]string{
 	0: "reason",
 	1: "requester",
-	2: "mission_id",
-	3: "approvals",
-	4: "mission",
+	2: "approvals",
+	3: "mission",
 }
 
 // Decode decodes CreateRequestReq from json.
@@ -2320,18 +2673,6 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "mission_id":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Str()
-				s.MissionID = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"mission_id\"")
-			}
 		case "approvals":
 			if err := func() error {
 				s.Approvals = make([]uuid.UUID, 0)
@@ -2352,10 +2693,10 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"approvals\"")
 			}
 		case "mission":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
-				v, err := d.Str()
-				s.Mission = string(v)
+				v, err := json.DecodeUUID(d)
+				s.Mission = v
 				if err != nil {
 					return err
 				}
@@ -2373,7 +2714,7 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00010111,
+		0b00001011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2429,45 +2770,32 @@ func (s *CreateRocketReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *CreateRocketReq) encodeFields(e *jx.Encoder) {
 	{
+		e.FieldStart("name")
+		e.Str(s.Name)
+	}
+	{
 		if s.Description.Set {
 			e.FieldStart("description")
 			s.Description.Encode(e)
 		}
 	}
 	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.Zip.Set {
-			e.FieldStart("zip")
-			s.Zip.Encode(e)
+		if s.Code.Set {
+			e.FieldStart("code")
+			s.Code.Encode(e)
 		}
 	}
 	{
 		e.FieldStart("config")
 		s.Config.Encode(e)
 	}
-	{
-		if s.Missions != nil {
-			e.FieldStart("missions")
-			e.ArrStart()
-			for _, elem := range s.Missions {
-				e.Str(elem)
-			}
-			e.ArrEnd()
-		}
-	}
 }
 
-var jsonFieldsNameOfCreateRocketReq = [5]string{
-	0: "description",
-	1: "image",
-	2: "zip",
+var jsonFieldsNameOfCreateRocketReq = [4]string{
+	0: "name",
+	1: "description",
+	2: "code",
 	3: "config",
-	4: "missions",
 }
 
 // Decode decodes CreateRocketReq from json.
@@ -2479,6 +2807,18 @@ func (s *CreateRocketReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
+		case "name":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
 		case "description":
 			if err := func() error {
 				s.Description.Reset()
@@ -2489,25 +2829,15 @@ func (s *CreateRocketReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "image":
+		case "code":
 			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
+				s.Code.Reset()
+				if err := s.Code.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		case "zip":
-			if err := func() error {
-				s.Zip.Reset()
-				if err := s.Zip.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"zip\"")
+				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "config":
 			requiredBitSet[0] |= 1 << 3
@@ -2519,25 +2849,6 @@ func (s *CreateRocketReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"config\"")
 			}
-		case "missions":
-			if err := func() error {
-				s.Missions = make([]string, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem string
-					v, err := d.Str()
-					elem = string(v)
-					if err != nil {
-						return err
-					}
-					s.Missions = append(s.Missions, elem)
-					return nil
-				}); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"missions\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -2548,7 +2859,7 @@ func (s *CreateRocketReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001000,
+		0b00001001,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2700,6 +3011,56 @@ func (s *ListAccessAccessTokensOKApplicationJSON) UnmarshalJSON(data []byte) err
 	return s.Decode(d)
 }
 
+// Encode encodes ListAccessApprovalsOKApplicationJSON as json.
+func (s ListAccessApprovalsOKApplicationJSON) Encode(e *jx.Encoder) {
+	unwrapped := []AccessApprovalsList(s)
+
+	e.ArrStart()
+	for _, elem := range unwrapped {
+		elem.Encode(e)
+	}
+	e.ArrEnd()
+}
+
+// Decode decodes ListAccessApprovalsOKApplicationJSON from json.
+func (s *ListAccessApprovalsOKApplicationJSON) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ListAccessApprovalsOKApplicationJSON to nil")
+	}
+	var unwrapped []AccessApprovalsList
+	if err := func() error {
+		unwrapped = make([]AccessApprovalsList, 0)
+		if err := d.Arr(func(d *jx.Decoder) error {
+			var elem AccessApprovalsList
+			if err := elem.Decode(d); err != nil {
+				return err
+			}
+			unwrapped = append(unwrapped, elem)
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ListAccessApprovalsOKApplicationJSON(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ListAccessApprovalsOKApplicationJSON) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ListAccessApprovalsOKApplicationJSON) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes ListApiKeyOKApplicationJSON as json.
 func (s ListApiKeyOKApplicationJSON) Encode(e *jx.Encoder) {
 	unwrapped := []ApiKeyList(s)
@@ -2746,6 +3107,56 @@ func (s ListApiKeyOKApplicationJSON) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *ListApiKeyOKApplicationJSON) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes ListApprovalAccessOKApplicationJSON as json.
+func (s ListApprovalAccessOKApplicationJSON) Encode(e *jx.Encoder) {
+	unwrapped := []ApprovalAccessList(s)
+
+	e.ArrStart()
+	for _, elem := range unwrapped {
+		elem.Encode(e)
+	}
+	e.ArrEnd()
+}
+
+// Decode decodes ListApprovalAccessOKApplicationJSON from json.
+func (s *ListApprovalAccessOKApplicationJSON) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ListApprovalAccessOKApplicationJSON to nil")
+	}
+	var unwrapped []ApprovalAccessList
+	if err := func() error {
+		unwrapped = make([]ApprovalAccessList, 0)
+		if err := d.Arr(func(d *jx.Decoder) error {
+			var elem ApprovalAccessList
+			if err := elem.Decode(d); err != nil {
+				return err
+			}
+			unwrapped = append(unwrapped, elem)
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		return errors.Wrap(err, "alias")
+	}
+	*s = ListApprovalAccessOKApplicationJSON(unwrapped)
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ListApprovalAccessOKApplicationJSON) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ListApprovalAccessOKApplicationJSON) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -3100,56 +3511,6 @@ func (s *ListRequestOKApplicationJSON) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
-// Encode encodes ListRocketMissionsOKApplicationJSON as json.
-func (s ListRocketMissionsOKApplicationJSON) Encode(e *jx.Encoder) {
-	unwrapped := []RocketMissionsList(s)
-
-	e.ArrStart()
-	for _, elem := range unwrapped {
-		elem.Encode(e)
-	}
-	e.ArrEnd()
-}
-
-// Decode decodes ListRocketMissionsOKApplicationJSON from json.
-func (s *ListRocketMissionsOKApplicationJSON) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode ListRocketMissionsOKApplicationJSON to nil")
-	}
-	var unwrapped []RocketMissionsList
-	if err := func() error {
-		unwrapped = make([]RocketMissionsList, 0)
-		if err := d.Arr(func(d *jx.Decoder) error {
-			var elem RocketMissionsList
-			if err := elem.Decode(d); err != nil {
-				return err
-			}
-			unwrapped = append(unwrapped, elem)
-			return nil
-		}); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return errors.Wrap(err, "alias")
-	}
-	*s = ListRocketMissionsOKApplicationJSON(unwrapped)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s ListRocketMissionsOKApplicationJSON) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *ListRocketMissionsOKApplicationJSON) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
 // Encode encodes ListRocketOKApplicationJSON as json.
 func (s ListRocketOKApplicationJSON) Encode(e *jx.Encoder) {
 	unwrapped := []RocketList(s)
@@ -3211,7 +3572,11 @@ func (s *MissionCreate) Encode(e *jx.Encoder) {
 func (s *MissionCreate) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -3233,11 +3598,12 @@ func (s *MissionCreate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionCreate = [4]string{
+var jsonFieldsNameOfMissionCreate = [5]string{
 	0: "id",
-	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
+	1: "name",
+	2: "description",
+	3: "min_approvers",
+	4: "possible_approvers",
 }
 
 // Decode decodes MissionCreate from json.
@@ -3252,14 +3618,26 @@ func (s *MissionCreate) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -3272,7 +3650,7 @@ func (s *MissionCreate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
 		case "min_approvers":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -3284,7 +3662,7 @@ func (s *MissionCreate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -3313,7 +3691,7 @@ func (s *MissionCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001101,
+		0b00011011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3370,7 +3748,11 @@ func (s *MissionList) Encode(e *jx.Encoder) {
 func (s *MissionList) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -3392,11 +3774,12 @@ func (s *MissionList) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionList = [4]string{
+var jsonFieldsNameOfMissionList = [5]string{
 	0: "id",
-	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
+	1: "name",
+	2: "description",
+	3: "min_approvers",
+	4: "possible_approvers",
 }
 
 // Decode decodes MissionList from json.
@@ -3411,14 +3794,26 @@ func (s *MissionList) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -3431,7 +3826,7 @@ func (s *MissionList) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
 		case "min_approvers":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -3443,7 +3838,7 @@ func (s *MissionList) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -3472,7 +3867,7 @@ func (s *MissionList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001101,
+		0b00011011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3529,7 +3924,11 @@ func (s *MissionRead) Encode(e *jx.Encoder) {
 func (s *MissionRead) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -3551,11 +3950,12 @@ func (s *MissionRead) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionRead = [4]string{
+var jsonFieldsNameOfMissionRead = [5]string{
 	0: "id",
-	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
+	1: "name",
+	2: "description",
+	3: "min_approvers",
+	4: "possible_approvers",
 }
 
 // Decode decodes MissionRead from json.
@@ -3570,14 +3970,26 @@ func (s *MissionRead) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -3590,7 +4002,7 @@ func (s *MissionRead) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
 		case "min_approvers":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -3602,7 +4014,7 @@ func (s *MissionRead) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -3631,7 +4043,7 @@ func (s *MissionRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001101,
+		0b00011011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3698,17 +4110,12 @@ func (s *MissionRequestsList) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
-	{
-		e.FieldStart("mission_id")
-		e.Str(s.MissionID)
-	}
 }
 
-var jsonFieldsNameOfMissionRequestsList = [4]string{
+var jsonFieldsNameOfMissionRequestsList = [3]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "mission_id",
 }
 
 // Decode decodes MissionRequestsList from json.
@@ -3756,18 +4163,6 @@ func (s *MissionRequestsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "mission_id":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Str()
-				s.MissionID = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"mission_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -3778,7 +4173,7 @@ func (s *MissionRequestsList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3835,7 +4230,11 @@ func (s *MissionRocketsList) Encode(e *jx.Encoder) {
 func (s *MissionRocketsList) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -3844,15 +4243,9 @@ func (s *MissionRocketsList) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.Zip.Set {
-			e.FieldStart("zip")
-			s.Zip.Encode(e)
+		if s.Code.Set {
+			e.FieldStart("code")
+			s.Code.Encode(e)
 		}
 	}
 	{
@@ -3863,9 +4256,9 @@ func (s *MissionRocketsList) encodeFields(e *jx.Encoder) {
 
 var jsonFieldsNameOfMissionRocketsList = [5]string{
 	0: "id",
-	1: "description",
-	2: "image",
-	3: "zip",
+	1: "name",
+	2: "description",
+	3: "code",
 	4: "config",
 }
 
@@ -3881,14 +4274,26 @@ func (s *MissionRocketsList) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -3900,25 +4305,15 @@ func (s *MissionRocketsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "image":
+		case "code":
 			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
+				s.Code.Reset()
+				if err := s.Code.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		case "zip":
-			if err := func() error {
-				s.Zip.Reset()
-				if err := s.Zip.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"zip\"")
+				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "config":
 			requiredBitSet[0] |= 1 << 4
@@ -3940,7 +4335,7 @@ func (s *MissionRocketsList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00010001,
+		0b00010011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -4053,7 +4448,11 @@ func (s *MissionUpdate) Encode(e *jx.Encoder) {
 func (s *MissionUpdate) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -4075,11 +4474,12 @@ func (s *MissionUpdate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionUpdate = [4]string{
+var jsonFieldsNameOfMissionUpdate = [5]string{
 	0: "id",
-	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
+	1: "name",
+	2: "description",
+	3: "min_approvers",
+	4: "possible_approvers",
 }
 
 // Decode decodes MissionUpdate from json.
@@ -4094,14 +4494,26 @@ func (s *MissionUpdate) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -4114,7 +4526,7 @@ func (s *MissionUpdate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
 		case "min_approvers":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -4126,7 +4538,7 @@ func (s *MissionUpdate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -4155,7 +4567,7 @@ func (s *MissionUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001101,
+		0b00011011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -4969,20 +5381,15 @@ func (s *RequestApprovalsList) encodeFields(e *jx.Encoder) {
 			s.RevokedTime.Encode(e, json.EncodeDateTime)
 		}
 	}
-	{
-		e.FieldStart("request_id")
-		json.EncodeUUID(e, s.RequestID)
-	}
 }
 
-var jsonFieldsNameOfRequestApprovalsList = [7]string{
+var jsonFieldsNameOfRequestApprovalsList = [6]string{
 	0: "id",
 	1: "person",
 	2: "approved_time",
 	3: "approved",
 	4: "revoked",
 	5: "revoked_time",
-	6: "request_id",
 }
 
 // Decode decodes RequestApprovalsList from json.
@@ -5064,18 +5471,6 @@ func (s *RequestApprovalsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"revoked_time\"")
 			}
-		case "request_id":
-			requiredBitSet[0] |= 1 << 6
-			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.RequestID = v
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -5086,7 +5481,7 @@ func (s *RequestApprovalsList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b01011111,
+		0b00011111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5153,17 +5548,12 @@ func (s *RequestCreate) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
-	{
-		e.FieldStart("mission_id")
-		e.Str(s.MissionID)
-	}
 }
 
-var jsonFieldsNameOfRequestCreate = [4]string{
+var jsonFieldsNameOfRequestCreate = [3]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "mission_id",
 }
 
 // Decode decodes RequestCreate from json.
@@ -5211,18 +5601,6 @@ func (s *RequestCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "mission_id":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Str()
-				s.MissionID = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"mission_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -5233,7 +5611,7 @@ func (s *RequestCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5300,17 +5678,12 @@ func (s *RequestList) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
-	{
-		e.FieldStart("mission_id")
-		e.Str(s.MissionID)
-	}
 }
 
-var jsonFieldsNameOfRequestList = [4]string{
+var jsonFieldsNameOfRequestList = [3]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "mission_id",
 }
 
 // Decode decodes RequestList from json.
@@ -5358,18 +5731,6 @@ func (s *RequestList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "mission_id":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Str()
-				s.MissionID = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"mission_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -5380,7 +5741,7 @@ func (s *RequestList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5437,7 +5798,11 @@ func (s *RequestMissionRead) Encode(e *jx.Encoder) {
 func (s *RequestMissionRead) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -5459,11 +5824,12 @@ func (s *RequestMissionRead) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfRequestMissionRead = [4]string{
+var jsonFieldsNameOfRequestMissionRead = [5]string{
 	0: "id",
-	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
+	1: "name",
+	2: "description",
+	3: "min_approvers",
+	4: "possible_approvers",
 }
 
 // Decode decodes RequestMissionRead from json.
@@ -5478,14 +5844,26 @@ func (s *RequestMissionRead) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -5498,7 +5876,7 @@ func (s *RequestMissionRead) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
 		case "min_approvers":
-			requiredBitSet[0] |= 1 << 2
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -5510,7 +5888,7 @@ func (s *RequestMissionRead) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -5539,7 +5917,7 @@ func (s *RequestMissionRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001101,
+		0b00011011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5606,17 +5984,12 @@ func (s *RequestRead) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
-	{
-		e.FieldStart("mission_id")
-		e.Str(s.MissionID)
-	}
 }
 
-var jsonFieldsNameOfRequestRead = [4]string{
+var jsonFieldsNameOfRequestRead = [3]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "mission_id",
 }
 
 // Decode decodes RequestRead from json.
@@ -5664,18 +6037,6 @@ func (s *RequestRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "mission_id":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Str()
-				s.MissionID = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"mission_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -5686,7 +6047,7 @@ func (s *RequestRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5753,17 +6114,12 @@ func (s *RequestUpdate) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
-	{
-		e.FieldStart("mission_id")
-		e.Str(s.MissionID)
-	}
 }
 
-var jsonFieldsNameOfRequestUpdate = [4]string{
+var jsonFieldsNameOfRequestUpdate = [3]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
-	3: "mission_id",
 }
 
 // Decode decodes RequestUpdate from json.
@@ -5811,18 +6167,6 @@ func (s *RequestUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
-		case "mission_id":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				v, err := d.Str()
-				s.MissionID = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"mission_id\"")
-			}
 		default:
 			return d.Skip()
 		}
@@ -5833,7 +6177,7 @@ func (s *RequestUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001111,
+		0b00000111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5890,7 +6234,11 @@ func (s *RocketCreate) Encode(e *jx.Encoder) {
 func (s *RocketCreate) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -5899,15 +6247,9 @@ func (s *RocketCreate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.Zip.Set {
-			e.FieldStart("zip")
-			s.Zip.Encode(e)
+		if s.Code.Set {
+			e.FieldStart("code")
+			s.Code.Encode(e)
 		}
 	}
 	{
@@ -5918,9 +6260,9 @@ func (s *RocketCreate) encodeFields(e *jx.Encoder) {
 
 var jsonFieldsNameOfRocketCreate = [5]string{
 	0: "id",
-	1: "description",
-	2: "image",
-	3: "zip",
+	1: "name",
+	2: "description",
+	3: "code",
 	4: "config",
 }
 
@@ -5936,14 +6278,26 @@ func (s *RocketCreate) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -5955,25 +6309,15 @@ func (s *RocketCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "image":
+		case "code":
 			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
+				s.Code.Reset()
+				if err := s.Code.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		case "zip":
-			if err := func() error {
-				s.Zip.Reset()
-				if err := s.Zip.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"zip\"")
+				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "config":
 			requiredBitSet[0] |= 1 << 4
@@ -5995,7 +6339,7 @@ func (s *RocketCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00010001,
+		0b00010011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -6108,7 +6452,11 @@ func (s *RocketList) Encode(e *jx.Encoder) {
 func (s *RocketList) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -6117,15 +6465,9 @@ func (s *RocketList) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.Zip.Set {
-			e.FieldStart("zip")
-			s.Zip.Encode(e)
+		if s.Code.Set {
+			e.FieldStart("code")
+			s.Code.Encode(e)
 		}
 	}
 	{
@@ -6136,9 +6478,9 @@ func (s *RocketList) encodeFields(e *jx.Encoder) {
 
 var jsonFieldsNameOfRocketList = [5]string{
 	0: "id",
-	1: "description",
-	2: "image",
-	3: "zip",
+	1: "name",
+	2: "description",
+	3: "code",
 	4: "config",
 }
 
@@ -6154,14 +6496,26 @@ func (s *RocketList) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -6173,25 +6527,15 @@ func (s *RocketList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "image":
+		case "code":
 			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
+				s.Code.Reset()
+				if err := s.Code.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		case "zip":
-			if err := func() error {
-				s.Zip.Reset()
-				if err := s.Zip.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"zip\"")
+				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "config":
 			requiredBitSet[0] |= 1 << 4
@@ -6213,7 +6557,7 @@ func (s *RocketList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00010001,
+		0b00010011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -6316,165 +6660,6 @@ func (s *RocketListConfig) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s *RocketMissionsList) Encode(e *jx.Encoder) {
-	e.ObjStart()
-	s.encodeFields(e)
-	e.ObjEnd()
-}
-
-// encodeFields encodes fields.
-func (s *RocketMissionsList) encodeFields(e *jx.Encoder) {
-	{
-		e.FieldStart("id")
-		e.Str(s.ID)
-	}
-	{
-		if s.Description.Set {
-			e.FieldStart("description")
-			s.Description.Encode(e)
-		}
-	}
-	{
-		e.FieldStart("min_approvers")
-		e.Int(s.MinApprovers)
-	}
-	{
-		e.FieldStart("possible_approvers")
-		e.ArrStart()
-		for _, elem := range s.PossibleApprovers {
-			e.Str(elem)
-		}
-		e.ArrEnd()
-	}
-}
-
-var jsonFieldsNameOfRocketMissionsList = [4]string{
-	0: "id",
-	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
-}
-
-// Decode decodes RocketMissionsList from json.
-func (s *RocketMissionsList) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode RocketMissionsList to nil")
-	}
-	var requiredBitSet [1]uint8
-
-	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
-		switch string(k) {
-		case "id":
-			requiredBitSet[0] |= 1 << 0
-			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"id\"")
-			}
-		case "description":
-			if err := func() error {
-				s.Description.Reset()
-				if err := s.Description.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"description\"")
-			}
-		case "min_approvers":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Int()
-				s.MinApprovers = int(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"min_approvers\"")
-			}
-		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 3
-			if err := func() error {
-				s.PossibleApprovers = make([]string, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem string
-					v, err := d.Str()
-					elem = string(v)
-					if err != nil {
-						return err
-					}
-					s.PossibleApprovers = append(s.PossibleApprovers, elem)
-					return nil
-				}); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"possible_approvers\"")
-			}
-		default:
-			return d.Skip()
-		}
-		return nil
-	}); err != nil {
-		return errors.Wrap(err, "decode RocketMissionsList")
-	}
-	// Validate required fields.
-	var failures []validate.FieldError
-	for i, mask := range [1]uint8{
-		0b00001101,
-	} {
-		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
-			// Mask only required fields and check equality to mask using XOR.
-			//
-			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
-			// Bits of fields which would be set are actually bits of missed fields.
-			missed := bits.OnesCount8(result)
-			for bitN := 0; bitN < missed; bitN++ {
-				bitIdx := bits.TrailingZeros8(result)
-				fieldIdx := i*8 + bitIdx
-				var name string
-				if fieldIdx < len(jsonFieldsNameOfRocketMissionsList) {
-					name = jsonFieldsNameOfRocketMissionsList[fieldIdx]
-				} else {
-					name = strconv.Itoa(fieldIdx)
-				}
-				failures = append(failures, validate.FieldError{
-					Name:  name,
-					Error: validate.ErrFieldRequired,
-				})
-				// Reset bit.
-				result &^= 1 << bitIdx
-			}
-		}
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s *RocketMissionsList) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *RocketMissionsList) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode implements json.Marshaler.
 func (s *RocketRead) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -6485,7 +6670,11 @@ func (s *RocketRead) Encode(e *jx.Encoder) {
 func (s *RocketRead) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -6494,15 +6683,9 @@ func (s *RocketRead) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.Zip.Set {
-			e.FieldStart("zip")
-			s.Zip.Encode(e)
+		if s.Code.Set {
+			e.FieldStart("code")
+			s.Code.Encode(e)
 		}
 	}
 	{
@@ -6513,9 +6696,9 @@ func (s *RocketRead) encodeFields(e *jx.Encoder) {
 
 var jsonFieldsNameOfRocketRead = [5]string{
 	0: "id",
-	1: "description",
-	2: "image",
-	3: "zip",
+	1: "name",
+	2: "description",
+	3: "code",
 	4: "config",
 }
 
@@ -6531,14 +6714,26 @@ func (s *RocketRead) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -6550,25 +6745,15 @@ func (s *RocketRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "image":
+		case "code":
 			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
+				s.Code.Reset()
+				if err := s.Code.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		case "zip":
-			if err := func() error {
-				s.Zip.Reset()
-				if err := s.Zip.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"zip\"")
+				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "config":
 			requiredBitSet[0] |= 1 << 4
@@ -6590,7 +6775,7 @@ func (s *RocketRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00010001,
+		0b00010011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -6703,7 +6888,11 @@ func (s *RocketUpdate) Encode(e *jx.Encoder) {
 func (s *RocketUpdate) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
-		e.Str(s.ID)
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("name")
+		e.Str(s.Name)
 	}
 	{
 		if s.Description.Set {
@@ -6712,15 +6901,9 @@ func (s *RocketUpdate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.Zip.Set {
-			e.FieldStart("zip")
-			s.Zip.Encode(e)
+		if s.Code.Set {
+			e.FieldStart("code")
+			s.Code.Encode(e)
 		}
 	}
 	{
@@ -6731,9 +6914,9 @@ func (s *RocketUpdate) encodeFields(e *jx.Encoder) {
 
 var jsonFieldsNameOfRocketUpdate = [5]string{
 	0: "id",
-	1: "description",
-	2: "image",
-	3: "zip",
+	1: "name",
+	2: "description",
+	3: "code",
 	4: "config",
 }
 
@@ -6749,14 +6932,26 @@ func (s *RocketUpdate) Decode(d *jx.Decoder) error {
 		case "id":
 			requiredBitSet[0] |= 1 << 0
 			if err := func() error {
-				v, err := d.Str()
-				s.ID = string(v)
+				v, err := json.DecodeUUID(d)
+				s.ID = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "name":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Name = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
 			}
 		case "description":
 			if err := func() error {
@@ -6768,25 +6963,15 @@ func (s *RocketUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "image":
+		case "code":
 			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
+				s.Code.Reset()
+				if err := s.Code.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		case "zip":
-			if err := func() error {
-				s.Zip.Reset()
-				if err := s.Zip.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"zip\"")
+				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "config":
 			requiredBitSet[0] |= 1 << 4
@@ -6808,7 +6993,7 @@ func (s *RocketUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00010001,
+		0b00010011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -6932,15 +7117,19 @@ func (s *UpdateApprovalReq) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.RequestID.Set {
-			e.FieldStart("request_id")
-			s.RequestID.Encode(e)
+		if s.Request.Set {
+			e.FieldStart("request")
+			s.Request.Encode(e)
 		}
 	}
 	{
-		if s.Requests.Set {
-			e.FieldStart("requests")
-			s.Requests.Encode(e)
+		if s.Access != nil {
+			e.FieldStart("access")
+			e.ArrStart()
+			for _, elem := range s.Access {
+				json.EncodeUUID(e, elem)
+			}
+			e.ArrEnd()
 		}
 	}
 }
@@ -6948,8 +7137,8 @@ func (s *UpdateApprovalReq) encodeFields(e *jx.Encoder) {
 var jsonFieldsNameOfUpdateApprovalReq = [4]string{
 	0: "revoked",
 	1: "revoked_time",
-	2: "request_id",
-	3: "requests",
+	2: "request",
+	3: "access",
 }
 
 // Decode decodes UpdateApprovalReq from json.
@@ -6980,25 +7169,34 @@ func (s *UpdateApprovalReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"revoked_time\"")
 			}
-		case "request_id":
+		case "request":
 			if err := func() error {
-				s.RequestID.Reset()
-				if err := s.RequestID.Decode(d); err != nil {
+				s.Request.Reset()
+				if err := s.Request.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
+				return errors.Wrap(err, "decode field \"request\"")
 			}
-		case "requests":
+		case "access":
 			if err := func() error {
-				s.Requests.Reset()
-				if err := s.Requests.Decode(d); err != nil {
+				s.Access = make([]uuid.UUID, 0)
+				if err := d.Arr(func(d *jx.Decoder) error {
+					var elem uuid.UUID
+					v, err := json.DecodeUUID(d)
+					elem = v
+					if err != nil {
+						return err
+					}
+					s.Access = append(s.Access, elem)
+					return nil
+				}); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"requests\"")
+				return errors.Wrap(err, "decode field \"access\"")
 			}
 		default:
 			return d.Skip()
@@ -7034,6 +7232,12 @@ func (s *UpdateMissionReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *UpdateMissionReq) encodeFields(e *jx.Encoder) {
 	{
+		if s.Name.Set {
+			e.FieldStart("name")
+			s.Name.Encode(e)
+		}
+	}
+	{
 		if s.Description.Set {
 			e.FieldStart("description")
 			s.Description.Encode(e)
@@ -7060,7 +7264,7 @@ func (s *UpdateMissionReq) encodeFields(e *jx.Encoder) {
 			e.FieldStart("rockets")
 			e.ArrStart()
 			for _, elem := range s.Rockets {
-				e.Str(elem)
+				json.EncodeUUID(e, elem)
 			}
 			e.ArrEnd()
 		}
@@ -7077,12 +7281,13 @@ func (s *UpdateMissionReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfUpdateMissionReq = [5]string{
-	0: "description",
-	1: "min_approvers",
-	2: "possible_approvers",
-	3: "rockets",
-	4: "requests",
+var jsonFieldsNameOfUpdateMissionReq = [6]string{
+	0: "name",
+	1: "description",
+	2: "min_approvers",
+	3: "possible_approvers",
+	4: "rockets",
+	5: "requests",
 }
 
 // Decode decodes UpdateMissionReq from json.
@@ -7093,6 +7298,16 @@ func (s *UpdateMissionReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
+		case "name":
+			if err := func() error {
+				s.Name.Reset()
+				if err := s.Name.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
 		case "description":
 			if err := func() error {
 				s.Description.Reset()
@@ -7134,11 +7349,11 @@ func (s *UpdateMissionReq) Decode(d *jx.Decoder) error {
 			}
 		case "rockets":
 			if err := func() error {
-				s.Rockets = make([]string, 0)
+				s.Rockets = make([]uuid.UUID, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem string
-					v, err := d.Str()
-					elem = string(v)
+					var elem uuid.UUID
+					v, err := json.DecodeUUID(d)
+					elem = v
 					if err != nil {
 						return err
 					}
@@ -7297,21 +7512,21 @@ func (s *UpdateRocketReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *UpdateRocketReq) encodeFields(e *jx.Encoder) {
 	{
+		if s.Name.Set {
+			e.FieldStart("name")
+			s.Name.Encode(e)
+		}
+	}
+	{
 		if s.Description.Set {
 			e.FieldStart("description")
 			s.Description.Encode(e)
 		}
 	}
 	{
-		if s.Image.Set {
-			e.FieldStart("image")
-			s.Image.Encode(e)
-		}
-	}
-	{
-		if s.Zip.Set {
-			e.FieldStart("zip")
-			s.Zip.Encode(e)
+		if s.Code.Set {
+			e.FieldStart("code")
+			s.Code.Encode(e)
 		}
 	}
 	{
@@ -7320,24 +7535,13 @@ func (s *UpdateRocketReq) encodeFields(e *jx.Encoder) {
 			s.Config.Encode(e)
 		}
 	}
-	{
-		if s.Missions != nil {
-			e.FieldStart("missions")
-			e.ArrStart()
-			for _, elem := range s.Missions {
-				e.Str(elem)
-			}
-			e.ArrEnd()
-		}
-	}
 }
 
-var jsonFieldsNameOfUpdateRocketReq = [5]string{
-	0: "description",
-	1: "image",
-	2: "zip",
+var jsonFieldsNameOfUpdateRocketReq = [4]string{
+	0: "name",
+	1: "description",
+	2: "code",
 	3: "config",
-	4: "missions",
 }
 
 // Decode decodes UpdateRocketReq from json.
@@ -7348,6 +7552,16 @@ func (s *UpdateRocketReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
+		case "name":
+			if err := func() error {
+				s.Name.Reset()
+				if err := s.Name.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"name\"")
+			}
 		case "description":
 			if err := func() error {
 				s.Description.Reset()
@@ -7358,25 +7572,15 @@ func (s *UpdateRocketReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "image":
+		case "code":
 			if err := func() error {
-				s.Image.Reset()
-				if err := s.Image.Decode(d); err != nil {
+				s.Code.Reset()
+				if err := s.Code.Decode(d); err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"image\"")
-			}
-		case "zip":
-			if err := func() error {
-				s.Zip.Reset()
-				if err := s.Zip.Decode(d); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"zip\"")
+				return errors.Wrap(err, "decode field \"code\"")
 			}
 		case "config":
 			if err := func() error {
@@ -7387,25 +7591,6 @@ func (s *UpdateRocketReq) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"config\"")
-			}
-		case "missions":
-			if err := func() error {
-				s.Missions = make([]string, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem string
-					v, err := d.Str()
-					elem = string(v)
-					if err != nil {
-						return err
-					}
-					s.Missions = append(s.Missions, elem)
-					return nil
-				}); err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"missions\"")
 			}
 		default:
 			return d.Skip()

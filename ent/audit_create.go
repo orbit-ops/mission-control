@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/audit"
 )
 
@@ -42,15 +43,15 @@ func (ac *AuditCreate) SetTimestamp(t time.Time) *AuditCreate {
 }
 
 // SetID sets the "id" field.
-func (ac *AuditCreate) SetID(s string) *AuditCreate {
-	ac.mutation.SetID(s)
+func (ac *AuditCreate) SetID(u uuid.UUID) *AuditCreate {
+	ac.mutation.SetID(u)
 	return ac
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (ac *AuditCreate) SetNillableID(s *string) *AuditCreate {
-	if s != nil {
-		ac.SetID(*s)
+func (ac *AuditCreate) SetNillableID(u *uuid.UUID) *AuditCreate {
+	if u != nil {
+		ac.SetID(*u)
 	}
 	return ac
 }
@@ -132,10 +133,10 @@ func (ac *AuditCreate) sqlSave(ctx context.Context) (*Audit, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(string); ok {
-			_node.ID = id
-		} else {
-			return nil, fmt.Errorf("unexpected Audit.ID type: %T", _spec.ID.Value)
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
 		}
 	}
 	ac.mutation.id = &_node.ID
@@ -146,12 +147,12 @@ func (ac *AuditCreate) sqlSave(ctx context.Context) (*Audit, error) {
 func (ac *AuditCreate) createSpec() (*Audit, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Audit{config: ac.config}
-		_spec = sqlgraph.NewCreateSpec(audit.Table, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeString))
+		_spec = sqlgraph.NewCreateSpec(audit.Table, sqlgraph.NewFieldSpec(audit.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = ac.conflict
 	if id, ok := ac.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = id
+		_spec.ID.Value = &id
 	}
 	if value, ok := ac.mutation.Action(); ok {
 		_spec.SetField(audit.FieldAction, field.TypeEnum, value)
@@ -290,7 +291,7 @@ func (u *AuditUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *AuditUpsertOne) ID(ctx context.Context) (id string, err error) {
+func (u *AuditUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -304,7 +305,7 @@ func (u *AuditUpsertOne) ID(ctx context.Context) (id string, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *AuditUpsertOne) IDX(ctx context.Context) string {
+func (u *AuditUpsertOne) IDX(ctx context.Context) uuid.UUID {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)

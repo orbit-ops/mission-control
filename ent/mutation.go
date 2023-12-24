@@ -56,7 +56,8 @@ type AccessMutation struct {
 	end_time            *time.Time
 	request_id          *uuid.UUID
 	clearedFields       map[string]struct{}
-	approvals           *uuid.UUID
+	approvals           map[uuid.UUID]struct{}
+	removedapprovals    map[uuid.UUID]struct{}
 	clearedapprovals    bool
 	accessTokens        map[uuid.UUID]struct{}
 	removedaccessTokens map[uuid.UUID]struct{}
@@ -448,35 +449,49 @@ func (m *AccessMutation) ResetRequestID() {
 	m.request_id = nil
 }
 
-// SetApprovalsID sets the "approvals" edge to the Access entity by id.
-func (m *AccessMutation) SetApprovalsID(id uuid.UUID) {
-	m.approvals = &id
+// AddApprovalIDs adds the "approvals" edge to the Approval entity by ids.
+func (m *AccessMutation) AddApprovalIDs(ids ...uuid.UUID) {
+	if m.approvals == nil {
+		m.approvals = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.approvals[ids[i]] = struct{}{}
+	}
 }
 
-// ClearApprovals clears the "approvals" edge to the Access entity.
+// ClearApprovals clears the "approvals" edge to the Approval entity.
 func (m *AccessMutation) ClearApprovals() {
 	m.clearedapprovals = true
 }
 
-// ApprovalsCleared reports if the "approvals" edge to the Access entity was cleared.
+// ApprovalsCleared reports if the "approvals" edge to the Approval entity was cleared.
 func (m *AccessMutation) ApprovalsCleared() bool {
 	return m.clearedapprovals
 }
 
-// ApprovalsID returns the "approvals" edge ID in the mutation.
-func (m *AccessMutation) ApprovalsID() (id uuid.UUID, exists bool) {
-	if m.approvals != nil {
-		return *m.approvals, true
+// RemoveApprovalIDs removes the "approvals" edge to the Approval entity by IDs.
+func (m *AccessMutation) RemoveApprovalIDs(ids ...uuid.UUID) {
+	if m.removedapprovals == nil {
+		m.removedapprovals = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.approvals, ids[i])
+		m.removedapprovals[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedApprovals returns the removed IDs of the "approvals" edge to the Approval entity.
+func (m *AccessMutation) RemovedApprovalsIDs() (ids []uuid.UUID) {
+	for id := range m.removedapprovals {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // ApprovalsIDs returns the "approvals" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// ApprovalsID instead. It exists only for internal usage by the builders.
 func (m *AccessMutation) ApprovalsIDs() (ids []uuid.UUID) {
-	if id := m.approvals; id != nil {
-		ids = append(ids, *id)
+	for id := range m.approvals {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -485,6 +500,7 @@ func (m *AccessMutation) ApprovalsIDs() (ids []uuid.UUID) {
 func (m *AccessMutation) ResetApprovals() {
 	m.approvals = nil
 	m.clearedapprovals = false
+	m.removedapprovals = nil
 }
 
 // AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by ids.
@@ -806,9 +822,11 @@ func (m *AccessMutation) AddedEdges() []string {
 func (m *AccessMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case access.EdgeApprovals:
-		if id := m.approvals; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.approvals))
+		for id := range m.approvals {
+			ids = append(ids, id)
 		}
+		return ids
 	case access.EdgeAccessTokens:
 		ids := make([]ent.Value, 0, len(m.accessTokens))
 		for id := range m.accessTokens {
@@ -822,6 +840,9 @@ func (m *AccessMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccessMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
+	if m.removedapprovals != nil {
+		edges = append(edges, access.EdgeApprovals)
+	}
 	if m.removedaccessTokens != nil {
 		edges = append(edges, access.EdgeAccessTokens)
 	}
@@ -832,6 +853,12 @@ func (m *AccessMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *AccessMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case access.EdgeApprovals:
+		ids := make([]ent.Value, 0, len(m.removedapprovals))
+		for id := range m.removedapprovals {
+			ids = append(ids, id)
+		}
+		return ids
 	case access.EdgeAccessTokens:
 		ids := make([]ent.Value, 0, len(m.removedaccessTokens))
 		for id := range m.removedaccessTokens {
@@ -870,9 +897,6 @@ func (m *AccessMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *AccessMutation) ClearEdge(name string) error {
 	switch name {
-	case access.EdgeApprovals:
-		m.ClearApprovals()
-		return nil
 	}
 	return fmt.Errorf("unknown Access unique edge %s", name)
 }
@@ -1835,21 +1859,23 @@ func (m *ApiKeyMutation) ResetEdge(name string) error {
 // ApprovalMutation represents an operation that mutates the Approval nodes in the graph.
 type ApprovalMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *uuid.UUID
-	person          *string
-	approved_time   *time.Time
-	approved        *bool
-	revoked         *bool
-	revoked_time    *time.Time
-	request_id      *uuid.UUID
-	clearedFields   map[string]struct{}
-	requests        *uuid.UUID
-	clearedrequests bool
-	done            bool
-	oldValue        func(context.Context) (*Approval, error)
-	predicates      []predicate.Approval
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	person         *string
+	approved_time  *time.Time
+	approved       *bool
+	revoked        *bool
+	revoked_time   *time.Time
+	clearedFields  map[string]struct{}
+	request        *uuid.UUID
+	clearedrequest bool
+	access         map[uuid.UUID]struct{}
+	removedaccess  map[uuid.UUID]struct{}
+	clearedaccess  bool
+	done           bool
+	oldValue       func(context.Context) (*Approval, error)
+	predicates     []predicate.Approval
 }
 
 var _ ent.Mutation = (*ApprovalMutation)(nil)
@@ -2149,79 +2175,97 @@ func (m *ApprovalMutation) ResetRevokedTime() {
 	delete(m.clearedFields, approval.FieldRevokedTime)
 }
 
-// SetRequestID sets the "request_id" field.
-func (m *ApprovalMutation) SetRequestID(u uuid.UUID) {
-	m.request_id = &u
+// SetRequestID sets the "request" edge to the Request entity by id.
+func (m *ApprovalMutation) SetRequestID(id uuid.UUID) {
+	m.request = &id
 }
 
-// RequestID returns the value of the "request_id" field in the mutation.
-func (m *ApprovalMutation) RequestID() (r uuid.UUID, exists bool) {
-	v := m.request_id
-	if v == nil {
-		return
-	}
-	return *v, true
+// ClearRequest clears the "request" edge to the Request entity.
+func (m *ApprovalMutation) ClearRequest() {
+	m.clearedrequest = true
 }
 
-// OldRequestID returns the old "request_id" field's value of the Approval entity.
-// If the Approval object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ApprovalMutation) OldRequestID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldRequestID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
-	}
-	return oldValue.RequestID, nil
+// RequestCleared reports if the "request" edge to the Request entity was cleared.
+func (m *ApprovalMutation) RequestCleared() bool {
+	return m.clearedrequest
 }
 
-// ResetRequestID resets all changes to the "request_id" field.
-func (m *ApprovalMutation) ResetRequestID() {
-	m.request_id = nil
-}
-
-// SetRequestsID sets the "requests" edge to the Request entity by id.
-func (m *ApprovalMutation) SetRequestsID(id uuid.UUID) {
-	m.requests = &id
-}
-
-// ClearRequests clears the "requests" edge to the Request entity.
-func (m *ApprovalMutation) ClearRequests() {
-	m.clearedrequests = true
-}
-
-// RequestsCleared reports if the "requests" edge to the Request entity was cleared.
-func (m *ApprovalMutation) RequestsCleared() bool {
-	return m.clearedrequests
-}
-
-// RequestsID returns the "requests" edge ID in the mutation.
-func (m *ApprovalMutation) RequestsID() (id uuid.UUID, exists bool) {
-	if m.requests != nil {
-		return *m.requests, true
+// RequestID returns the "request" edge ID in the mutation.
+func (m *ApprovalMutation) RequestID() (id uuid.UUID, exists bool) {
+	if m.request != nil {
+		return *m.request, true
 	}
 	return
 }
 
-// RequestsIDs returns the "requests" edge IDs in the mutation.
+// RequestIDs returns the "request" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// RequestsID instead. It exists only for internal usage by the builders.
-func (m *ApprovalMutation) RequestsIDs() (ids []uuid.UUID) {
-	if id := m.requests; id != nil {
+// RequestID instead. It exists only for internal usage by the builders.
+func (m *ApprovalMutation) RequestIDs() (ids []uuid.UUID) {
+	if id := m.request; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetRequests resets all changes to the "requests" edge.
-func (m *ApprovalMutation) ResetRequests() {
-	m.requests = nil
-	m.clearedrequests = false
+// ResetRequest resets all changes to the "request" edge.
+func (m *ApprovalMutation) ResetRequest() {
+	m.request = nil
+	m.clearedrequest = false
+}
+
+// AddAccesIDs adds the "access" edge to the Access entity by ids.
+func (m *ApprovalMutation) AddAccesIDs(ids ...uuid.UUID) {
+	if m.access == nil {
+		m.access = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.access[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAccess clears the "access" edge to the Access entity.
+func (m *ApprovalMutation) ClearAccess() {
+	m.clearedaccess = true
+}
+
+// AccessCleared reports if the "access" edge to the Access entity was cleared.
+func (m *ApprovalMutation) AccessCleared() bool {
+	return m.clearedaccess
+}
+
+// RemoveAccesIDs removes the "access" edge to the Access entity by IDs.
+func (m *ApprovalMutation) RemoveAccesIDs(ids ...uuid.UUID) {
+	if m.removedaccess == nil {
+		m.removedaccess = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.access, ids[i])
+		m.removedaccess[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAccess returns the removed IDs of the "access" edge to the Access entity.
+func (m *ApprovalMutation) RemovedAccessIDs() (ids []uuid.UUID) {
+	for id := range m.removedaccess {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AccessIDs returns the "access" edge IDs in the mutation.
+func (m *ApprovalMutation) AccessIDs() (ids []uuid.UUID) {
+	for id := range m.access {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAccess resets all changes to the "access" edge.
+func (m *ApprovalMutation) ResetAccess() {
+	m.access = nil
+	m.clearedaccess = false
+	m.removedaccess = nil
 }
 
 // Where appends a list predicates to the ApprovalMutation builder.
@@ -2258,7 +2302,7 @@ func (m *ApprovalMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ApprovalMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 5)
 	if m.person != nil {
 		fields = append(fields, approval.FieldPerson)
 	}
@@ -2273,9 +2317,6 @@ func (m *ApprovalMutation) Fields() []string {
 	}
 	if m.revoked_time != nil {
 		fields = append(fields, approval.FieldRevokedTime)
-	}
-	if m.request_id != nil {
-		fields = append(fields, approval.FieldRequestID)
 	}
 	return fields
 }
@@ -2295,8 +2336,6 @@ func (m *ApprovalMutation) Field(name string) (ent.Value, bool) {
 		return m.Revoked()
 	case approval.FieldRevokedTime:
 		return m.RevokedTime()
-	case approval.FieldRequestID:
-		return m.RequestID()
 	}
 	return nil, false
 }
@@ -2316,8 +2355,6 @@ func (m *ApprovalMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldRevoked(ctx)
 	case approval.FieldRevokedTime:
 		return m.OldRevokedTime(ctx)
-	case approval.FieldRequestID:
-		return m.OldRequestID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Approval field %s", name)
 }
@@ -2361,13 +2398,6 @@ func (m *ApprovalMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRevokedTime(v)
-		return nil
-	case approval.FieldRequestID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetRequestID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Approval field %s", name)
@@ -2442,18 +2472,18 @@ func (m *ApprovalMutation) ResetField(name string) error {
 	case approval.FieldRevokedTime:
 		m.ResetRevokedTime()
 		return nil
-	case approval.FieldRequestID:
-		m.ResetRequestID()
-		return nil
 	}
 	return fmt.Errorf("unknown Approval field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ApprovalMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.requests != nil {
-		edges = append(edges, approval.EdgeRequests)
+	edges := make([]string, 0, 2)
+	if m.request != nil {
+		edges = append(edges, approval.EdgeRequest)
+	}
+	if m.access != nil {
+		edges = append(edges, approval.EdgeAccess)
 	}
 	return edges
 }
@@ -2462,31 +2492,51 @@ func (m *ApprovalMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *ApprovalMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case approval.EdgeRequests:
-		if id := m.requests; id != nil {
+	case approval.EdgeRequest:
+		if id := m.request; id != nil {
 			return []ent.Value{*id}
 		}
+	case approval.EdgeAccess:
+		ids := make([]ent.Value, 0, len(m.access))
+		for id := range m.access {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ApprovalMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
+	if m.removedaccess != nil {
+		edges = append(edges, approval.EdgeAccess)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ApprovalMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case approval.EdgeAccess:
+		ids := make([]ent.Value, 0, len(m.removedaccess))
+		for id := range m.removedaccess {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ApprovalMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedrequests {
-		edges = append(edges, approval.EdgeRequests)
+	edges := make([]string, 0, 2)
+	if m.clearedrequest {
+		edges = append(edges, approval.EdgeRequest)
+	}
+	if m.clearedaccess {
+		edges = append(edges, approval.EdgeAccess)
 	}
 	return edges
 }
@@ -2495,8 +2545,10 @@ func (m *ApprovalMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *ApprovalMutation) EdgeCleared(name string) bool {
 	switch name {
-	case approval.EdgeRequests:
-		return m.clearedrequests
+	case approval.EdgeRequest:
+		return m.clearedrequest
+	case approval.EdgeAccess:
+		return m.clearedaccess
 	}
 	return false
 }
@@ -2505,8 +2557,8 @@ func (m *ApprovalMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ApprovalMutation) ClearEdge(name string) error {
 	switch name {
-	case approval.EdgeRequests:
-		m.ClearRequests()
+	case approval.EdgeRequest:
+		m.ClearRequest()
 		return nil
 	}
 	return fmt.Errorf("unknown Approval unique edge %s", name)
@@ -2516,8 +2568,11 @@ func (m *ApprovalMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ApprovalMutation) ResetEdge(name string) error {
 	switch name {
-	case approval.EdgeRequests:
-		m.ResetRequests()
+	case approval.EdgeRequest:
+		m.ResetRequest()
+		return nil
+	case approval.EdgeAccess:
+		m.ResetAccess()
 		return nil
 	}
 	return fmt.Errorf("unknown Approval edge %s", name)
@@ -2528,7 +2583,7 @@ type AuditMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *string
+	id            *uuid.UUID
 	action        *audit.Action
 	author        *string
 	timestamp     *time.Time
@@ -2558,7 +2613,7 @@ func newAuditMutation(c config, op Op, opts ...auditOption) *AuditMutation {
 }
 
 // withAuditID sets the ID field of the mutation.
-func withAuditID(id string) auditOption {
+func withAuditID(id uuid.UUID) auditOption {
 	return func(m *AuditMutation) {
 		var (
 			err   error
@@ -2610,13 +2665,13 @@ func (m AuditMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Audit entities.
-func (m *AuditMutation) SetID(id string) {
+func (m *AuditMutation) SetID(id uuid.UUID) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *AuditMutation) ID() (id string, exists bool) {
+func (m *AuditMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -2627,12 +2682,12 @@ func (m *AuditMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *AuditMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *AuditMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -2968,15 +3023,16 @@ type MissionMutation struct {
 	config
 	op                       Op
 	typ                      string
-	id                       *string
+	id                       *uuid.UUID
+	name                     *string
 	description              *string
 	min_approvers            *int
 	addmin_approvers         *int
 	possible_approvers       *[]string
 	appendpossible_approvers []string
 	clearedFields            map[string]struct{}
-	rockets                  map[string]struct{}
-	removedrockets           map[string]struct{}
+	rockets                  map[uuid.UUID]struct{}
+	removedrockets           map[uuid.UUID]struct{}
 	clearedrockets           bool
 	requests                 map[uuid.UUID]struct{}
 	removedrequests          map[uuid.UUID]struct{}
@@ -3006,7 +3062,7 @@ func newMissionMutation(c config, op Op, opts ...missionOption) *MissionMutation
 }
 
 // withMissionID sets the ID field of the mutation.
-func withMissionID(id string) missionOption {
+func withMissionID(id uuid.UUID) missionOption {
 	return func(m *MissionMutation) {
 		var (
 			err   error
@@ -3058,13 +3114,13 @@ func (m MissionMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Mission entities.
-func (m *MissionMutation) SetID(id string) {
+func (m *MissionMutation) SetID(id uuid.UUID) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *MissionMutation) ID() (id string, exists bool) {
+func (m *MissionMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -3075,12 +3131,12 @@ func (m *MissionMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *MissionMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *MissionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -3088,6 +3144,42 @@ func (m *MissionMutation) IDs(ctx context.Context) ([]string, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetName sets the "name" field.
+func (m *MissionMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *MissionMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Mission entity.
+// If the Mission object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MissionMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *MissionMutation) ResetName() {
+	m.name = nil
 }
 
 // SetDescription sets the "description" field.
@@ -3247,9 +3339,9 @@ func (m *MissionMutation) ResetPossibleApprovers() {
 }
 
 // AddRocketIDs adds the "rockets" edge to the Rocket entity by ids.
-func (m *MissionMutation) AddRocketIDs(ids ...string) {
+func (m *MissionMutation) AddRocketIDs(ids ...uuid.UUID) {
 	if m.rockets == nil {
-		m.rockets = make(map[string]struct{})
+		m.rockets = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		m.rockets[ids[i]] = struct{}{}
@@ -3267,9 +3359,9 @@ func (m *MissionMutation) RocketsCleared() bool {
 }
 
 // RemoveRocketIDs removes the "rockets" edge to the Rocket entity by IDs.
-func (m *MissionMutation) RemoveRocketIDs(ids ...string) {
+func (m *MissionMutation) RemoveRocketIDs(ids ...uuid.UUID) {
 	if m.removedrockets == nil {
-		m.removedrockets = make(map[string]struct{})
+		m.removedrockets = make(map[uuid.UUID]struct{})
 	}
 	for i := range ids {
 		delete(m.rockets, ids[i])
@@ -3278,7 +3370,7 @@ func (m *MissionMutation) RemoveRocketIDs(ids ...string) {
 }
 
 // RemovedRockets returns the removed IDs of the "rockets" edge to the Rocket entity.
-func (m *MissionMutation) RemovedRocketsIDs() (ids []string) {
+func (m *MissionMutation) RemovedRocketsIDs() (ids []uuid.UUID) {
 	for id := range m.removedrockets {
 		ids = append(ids, id)
 	}
@@ -3286,7 +3378,7 @@ func (m *MissionMutation) RemovedRocketsIDs() (ids []string) {
 }
 
 // RocketsIDs returns the "rockets" edge IDs in the mutation.
-func (m *MissionMutation) RocketsIDs() (ids []string) {
+func (m *MissionMutation) RocketsIDs() (ids []uuid.UUID) {
 	for id := range m.rockets {
 		ids = append(ids, id)
 	}
@@ -3388,7 +3480,10 @@ func (m *MissionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MissionMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
+	if m.name != nil {
+		fields = append(fields, mission.FieldName)
+	}
 	if m.description != nil {
 		fields = append(fields, mission.FieldDescription)
 	}
@@ -3406,6 +3501,8 @@ func (m *MissionMutation) Fields() []string {
 // schema.
 func (m *MissionMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case mission.FieldName:
+		return m.Name()
 	case mission.FieldDescription:
 		return m.Description()
 	case mission.FieldMinApprovers:
@@ -3421,6 +3518,8 @@ func (m *MissionMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *MissionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case mission.FieldName:
+		return m.OldName(ctx)
 	case mission.FieldDescription:
 		return m.OldDescription(ctx)
 	case mission.FieldMinApprovers:
@@ -3436,6 +3535,13 @@ func (m *MissionMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *MissionMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case mission.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
 	case mission.FieldDescription:
 		v, ok := value.(string)
 		if !ok {
@@ -3530,6 +3636,9 @@ func (m *MissionMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *MissionMutation) ResetField(name string) error {
 	switch name {
+	case mission.FieldName:
+		m.ResetName()
+		return nil
 	case mission.FieldDescription:
 		m.ResetDescription()
 		return nil
@@ -3665,7 +3774,7 @@ type RequestMutation struct {
 	approvals        map[uuid.UUID]struct{}
 	removedapprovals map[uuid.UUID]struct{}
 	clearedapprovals bool
-	mission          *string
+	mission          *uuid.UUID
 	clearedmission   bool
 	done             bool
 	oldValue         func(context.Context) (*Request, error)
@@ -3848,42 +3957,6 @@ func (m *RequestMutation) ResetRequester() {
 	m.requester = nil
 }
 
-// SetMissionID sets the "mission_id" field.
-func (m *RequestMutation) SetMissionID(s string) {
-	m.mission = &s
-}
-
-// MissionID returns the value of the "mission_id" field in the mutation.
-func (m *RequestMutation) MissionID() (r string, exists bool) {
-	v := m.mission
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldMissionID returns the old "mission_id" field's value of the Request entity.
-// If the Request object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RequestMutation) OldMissionID(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldMissionID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldMissionID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldMissionID: %w", err)
-	}
-	return oldValue.MissionID, nil
-}
-
-// ResetMissionID resets all changes to the "mission_id" field.
-func (m *RequestMutation) ResetMissionID() {
-	m.mission = nil
-}
-
 // AddApprovalIDs adds the "approvals" edge to the Approval entity by ids.
 func (m *RequestMutation) AddApprovalIDs(ids ...uuid.UUID) {
 	if m.approvals == nil {
@@ -3938,10 +4011,14 @@ func (m *RequestMutation) ResetApprovals() {
 	m.removedapprovals = nil
 }
 
+// SetMissionID sets the "mission" edge to the Mission entity by id.
+func (m *RequestMutation) SetMissionID(id uuid.UUID) {
+	m.mission = &id
+}
+
 // ClearMission clears the "mission" edge to the Mission entity.
 func (m *RequestMutation) ClearMission() {
 	m.clearedmission = true
-	m.clearedFields[request.FieldMissionID] = struct{}{}
 }
 
 // MissionCleared reports if the "mission" edge to the Mission entity was cleared.
@@ -3949,10 +4026,18 @@ func (m *RequestMutation) MissionCleared() bool {
 	return m.clearedmission
 }
 
+// MissionID returns the "mission" edge ID in the mutation.
+func (m *RequestMutation) MissionID() (id uuid.UUID, exists bool) {
+	if m.mission != nil {
+		return *m.mission, true
+	}
+	return
+}
+
 // MissionIDs returns the "mission" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // MissionID instead. It exists only for internal usage by the builders.
-func (m *RequestMutation) MissionIDs() (ids []string) {
+func (m *RequestMutation) MissionIDs() (ids []uuid.UUID) {
 	if id := m.mission; id != nil {
 		ids = append(ids, *id)
 	}
@@ -3999,15 +4084,12 @@ func (m *RequestMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RequestMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 2)
 	if m.reason != nil {
 		fields = append(fields, request.FieldReason)
 	}
 	if m.requester != nil {
 		fields = append(fields, request.FieldRequester)
-	}
-	if m.mission != nil {
-		fields = append(fields, request.FieldMissionID)
 	}
 	return fields
 }
@@ -4021,8 +4103,6 @@ func (m *RequestMutation) Field(name string) (ent.Value, bool) {
 		return m.Reason()
 	case request.FieldRequester:
 		return m.Requester()
-	case request.FieldMissionID:
-		return m.MissionID()
 	}
 	return nil, false
 }
@@ -4036,8 +4116,6 @@ func (m *RequestMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldReason(ctx)
 	case request.FieldRequester:
 		return m.OldRequester(ctx)
-	case request.FieldMissionID:
-		return m.OldMissionID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Request field %s", name)
 }
@@ -4060,13 +4138,6 @@ func (m *RequestMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRequester(v)
-		return nil
-	case request.FieldMissionID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetMissionID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Request field %s", name)
@@ -4122,9 +4193,6 @@ func (m *RequestMutation) ResetField(name string) error {
 		return nil
 	case request.FieldRequester:
 		m.ResetRequester()
-		return nil
-	case request.FieldMissionID:
-		m.ResetMissionID()
 		return nil
 	}
 	return fmt.Errorf("unknown Request field %s", name)
@@ -4235,20 +4303,17 @@ func (m *RequestMutation) ResetEdge(name string) error {
 // RocketMutation represents an operation that mutates the Rocket nodes in the graph.
 type RocketMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *string
-	description     *string
-	image           *string
-	zip             *string
-	_config         *map[string]string
-	clearedFields   map[string]struct{}
-	missions        map[string]struct{}
-	removedmissions map[string]struct{}
-	clearedmissions bool
-	done            bool
-	oldValue        func(context.Context) (*Rocket, error)
-	predicates      []predicate.Rocket
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	name          *string
+	description   *string
+	code          *string
+	_config       *map[string]string
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*Rocket, error)
+	predicates    []predicate.Rocket
 }
 
 var _ ent.Mutation = (*RocketMutation)(nil)
@@ -4271,7 +4336,7 @@ func newRocketMutation(c config, op Op, opts ...rocketOption) *RocketMutation {
 }
 
 // withRocketID sets the ID field of the mutation.
-func withRocketID(id string) rocketOption {
+func withRocketID(id uuid.UUID) rocketOption {
 	return func(m *RocketMutation) {
 		var (
 			err   error
@@ -4323,13 +4388,13 @@ func (m RocketMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Rocket entities.
-func (m *RocketMutation) SetID(id string) {
+func (m *RocketMutation) SetID(id uuid.UUID) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *RocketMutation) ID() (id string, exists bool) {
+func (m *RocketMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -4340,12 +4405,12 @@ func (m *RocketMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *RocketMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *RocketMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []string{id}, nil
+			return []uuid.UUID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -4353,6 +4418,42 @@ func (m *RocketMutation) IDs(ctx context.Context) ([]string, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetName sets the "name" field.
+func (m *RocketMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *RocketMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Rocket entity.
+// If the Rocket object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RocketMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *RocketMutation) ResetName() {
+	m.name = nil
 }
 
 // SetDescription sets the "description" field.
@@ -4404,102 +4505,53 @@ func (m *RocketMutation) ResetDescription() {
 	delete(m.clearedFields, rocket.FieldDescription)
 }
 
-// SetImage sets the "image" field.
-func (m *RocketMutation) SetImage(s string) {
-	m.image = &s
+// SetCode sets the "code" field.
+func (m *RocketMutation) SetCode(s string) {
+	m.code = &s
 }
 
-// Image returns the value of the "image" field in the mutation.
-func (m *RocketMutation) Image() (r string, exists bool) {
-	v := m.image
+// Code returns the value of the "code" field in the mutation.
+func (m *RocketMutation) Code() (r string, exists bool) {
+	v := m.code
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldImage returns the old "image" field's value of the Rocket entity.
+// OldCode returns the old "code" field's value of the Rocket entity.
 // If the Rocket object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RocketMutation) OldImage(ctx context.Context) (v string, err error) {
+func (m *RocketMutation) OldCode(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldImage is only allowed on UpdateOne operations")
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldImage requires an ID field in the mutation")
+		return v, errors.New("OldCode requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldImage: %w", err)
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
 	}
-	return oldValue.Image, nil
+	return oldValue.Code, nil
 }
 
-// ClearImage clears the value of the "image" field.
-func (m *RocketMutation) ClearImage() {
-	m.image = nil
-	m.clearedFields[rocket.FieldImage] = struct{}{}
+// ClearCode clears the value of the "code" field.
+func (m *RocketMutation) ClearCode() {
+	m.code = nil
+	m.clearedFields[rocket.FieldCode] = struct{}{}
 }
 
-// ImageCleared returns if the "image" field was cleared in this mutation.
-func (m *RocketMutation) ImageCleared() bool {
-	_, ok := m.clearedFields[rocket.FieldImage]
+// CodeCleared returns if the "code" field was cleared in this mutation.
+func (m *RocketMutation) CodeCleared() bool {
+	_, ok := m.clearedFields[rocket.FieldCode]
 	return ok
 }
 
-// ResetImage resets all changes to the "image" field.
-func (m *RocketMutation) ResetImage() {
-	m.image = nil
-	delete(m.clearedFields, rocket.FieldImage)
-}
-
-// SetZip sets the "zip" field.
-func (m *RocketMutation) SetZip(s string) {
-	m.zip = &s
-}
-
-// Zip returns the value of the "zip" field in the mutation.
-func (m *RocketMutation) Zip() (r string, exists bool) {
-	v := m.zip
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldZip returns the old "zip" field's value of the Rocket entity.
-// If the Rocket object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RocketMutation) OldZip(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldZip is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldZip requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldZip: %w", err)
-	}
-	return oldValue.Zip, nil
-}
-
-// ClearZip clears the value of the "zip" field.
-func (m *RocketMutation) ClearZip() {
-	m.zip = nil
-	m.clearedFields[rocket.FieldZip] = struct{}{}
-}
-
-// ZipCleared returns if the "zip" field was cleared in this mutation.
-func (m *RocketMutation) ZipCleared() bool {
-	_, ok := m.clearedFields[rocket.FieldZip]
-	return ok
-}
-
-// ResetZip resets all changes to the "zip" field.
-func (m *RocketMutation) ResetZip() {
-	m.zip = nil
-	delete(m.clearedFields, rocket.FieldZip)
+// ResetCode resets all changes to the "code" field.
+func (m *RocketMutation) ResetCode() {
+	m.code = nil
+	delete(m.clearedFields, rocket.FieldCode)
 }
 
 // SetConfig sets the "config" field.
@@ -4538,60 +4590,6 @@ func (m *RocketMutation) ResetConfig() {
 	m._config = nil
 }
 
-// AddMissionIDs adds the "missions" edge to the Mission entity by ids.
-func (m *RocketMutation) AddMissionIDs(ids ...string) {
-	if m.missions == nil {
-		m.missions = make(map[string]struct{})
-	}
-	for i := range ids {
-		m.missions[ids[i]] = struct{}{}
-	}
-}
-
-// ClearMissions clears the "missions" edge to the Mission entity.
-func (m *RocketMutation) ClearMissions() {
-	m.clearedmissions = true
-}
-
-// MissionsCleared reports if the "missions" edge to the Mission entity was cleared.
-func (m *RocketMutation) MissionsCleared() bool {
-	return m.clearedmissions
-}
-
-// RemoveMissionIDs removes the "missions" edge to the Mission entity by IDs.
-func (m *RocketMutation) RemoveMissionIDs(ids ...string) {
-	if m.removedmissions == nil {
-		m.removedmissions = make(map[string]struct{})
-	}
-	for i := range ids {
-		delete(m.missions, ids[i])
-		m.removedmissions[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedMissions returns the removed IDs of the "missions" edge to the Mission entity.
-func (m *RocketMutation) RemovedMissionsIDs() (ids []string) {
-	for id := range m.removedmissions {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// MissionsIDs returns the "missions" edge IDs in the mutation.
-func (m *RocketMutation) MissionsIDs() (ids []string) {
-	for id := range m.missions {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetMissions resets all changes to the "missions" edge.
-func (m *RocketMutation) ResetMissions() {
-	m.missions = nil
-	m.clearedmissions = false
-	m.removedmissions = nil
-}
-
 // Where appends a list predicates to the RocketMutation builder.
 func (m *RocketMutation) Where(ps ...predicate.Rocket) {
 	m.predicates = append(m.predicates, ps...)
@@ -4627,14 +4625,14 @@ func (m *RocketMutation) Type() string {
 // AddedFields().
 func (m *RocketMutation) Fields() []string {
 	fields := make([]string, 0, 4)
+	if m.name != nil {
+		fields = append(fields, rocket.FieldName)
+	}
 	if m.description != nil {
 		fields = append(fields, rocket.FieldDescription)
 	}
-	if m.image != nil {
-		fields = append(fields, rocket.FieldImage)
-	}
-	if m.zip != nil {
-		fields = append(fields, rocket.FieldZip)
+	if m.code != nil {
+		fields = append(fields, rocket.FieldCode)
 	}
 	if m._config != nil {
 		fields = append(fields, rocket.FieldConfig)
@@ -4647,12 +4645,12 @@ func (m *RocketMutation) Fields() []string {
 // schema.
 func (m *RocketMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case rocket.FieldName:
+		return m.Name()
 	case rocket.FieldDescription:
 		return m.Description()
-	case rocket.FieldImage:
-		return m.Image()
-	case rocket.FieldZip:
-		return m.Zip()
+	case rocket.FieldCode:
+		return m.Code()
 	case rocket.FieldConfig:
 		return m.Config()
 	}
@@ -4664,12 +4662,12 @@ func (m *RocketMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *RocketMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case rocket.FieldName:
+		return m.OldName(ctx)
 	case rocket.FieldDescription:
 		return m.OldDescription(ctx)
-	case rocket.FieldImage:
-		return m.OldImage(ctx)
-	case rocket.FieldZip:
-		return m.OldZip(ctx)
+	case rocket.FieldCode:
+		return m.OldCode(ctx)
 	case rocket.FieldConfig:
 		return m.OldConfig(ctx)
 	}
@@ -4681,6 +4679,13 @@ func (m *RocketMutation) OldField(ctx context.Context, name string) (ent.Value, 
 // type.
 func (m *RocketMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case rocket.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
 	case rocket.FieldDescription:
 		v, ok := value.(string)
 		if !ok {
@@ -4688,19 +4693,12 @@ func (m *RocketMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDescription(v)
 		return nil
-	case rocket.FieldImage:
+	case rocket.FieldCode:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetImage(v)
-		return nil
-	case rocket.FieldZip:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetZip(v)
+		m.SetCode(v)
 		return nil
 	case rocket.FieldConfig:
 		v, ok := value.(map[string]string)
@@ -4742,11 +4740,8 @@ func (m *RocketMutation) ClearedFields() []string {
 	if m.FieldCleared(rocket.FieldDescription) {
 		fields = append(fields, rocket.FieldDescription)
 	}
-	if m.FieldCleared(rocket.FieldImage) {
-		fields = append(fields, rocket.FieldImage)
-	}
-	if m.FieldCleared(rocket.FieldZip) {
-		fields = append(fields, rocket.FieldZip)
+	if m.FieldCleared(rocket.FieldCode) {
+		fields = append(fields, rocket.FieldCode)
 	}
 	return fields
 }
@@ -4765,11 +4760,8 @@ func (m *RocketMutation) ClearField(name string) error {
 	case rocket.FieldDescription:
 		m.ClearDescription()
 		return nil
-	case rocket.FieldImage:
-		m.ClearImage()
-		return nil
-	case rocket.FieldZip:
-		m.ClearZip()
+	case rocket.FieldCode:
+		m.ClearCode()
 		return nil
 	}
 	return fmt.Errorf("unknown Rocket nullable field %s", name)
@@ -4779,14 +4771,14 @@ func (m *RocketMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *RocketMutation) ResetField(name string) error {
 	switch name {
+	case rocket.FieldName:
+		m.ResetName()
+		return nil
 	case rocket.FieldDescription:
 		m.ResetDescription()
 		return nil
-	case rocket.FieldImage:
-		m.ResetImage()
-		return nil
-	case rocket.FieldZip:
-		m.ResetZip()
+	case rocket.FieldCode:
+		m.ResetCode()
 		return nil
 	case rocket.FieldConfig:
 		m.ResetConfig()
@@ -4797,84 +4789,48 @@ func (m *RocketMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RocketMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.missions != nil {
-		edges = append(edges, rocket.EdgeMissions)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *RocketMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case rocket.EdgeMissions:
-		ids := make([]ent.Value, 0, len(m.missions))
-		for id := range m.missions {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RocketMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.removedmissions != nil {
-		edges = append(edges, rocket.EdgeMissions)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *RocketMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case rocket.EdgeMissions:
-		ids := make([]ent.Value, 0, len(m.removedmissions))
-		for id := range m.removedmissions {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RocketMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
-	if m.clearedmissions {
-		edges = append(edges, rocket.EdgeMissions)
-	}
+	edges := make([]string, 0, 0)
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *RocketMutation) EdgeCleared(name string) bool {
-	switch name {
-	case rocket.EdgeMissions:
-		return m.clearedmissions
-	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *RocketMutation) ClearEdge(name string) error {
-	switch name {
-	}
 	return fmt.Errorf("unknown Rocket unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *RocketMutation) ResetEdge(name string) error {
-	switch name {
-	case rocket.EdgeMissions:
-		m.ResetMissions()
-		return nil
-	}
 	return fmt.Errorf("unknown Rocket edge %s", name)
 }

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/rocket"
 )
 
@@ -16,38 +17,17 @@ import (
 type Rocket struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID string `json:"id,omitempty"`
+	ID uuid.UUID `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
-	// Image holds the value of the "image" field.
-	Image string `json:"image,omitempty"`
-	// Zip holds the value of the "zip" field.
-	Zip string `json:"zip,omitempty"`
+	// Code holds the value of the "code" field.
+	Code string `json:"code,omitempty"`
 	// Config holds the value of the "config" field.
-	Config map[string]string `json:"config,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the RocketQuery when eager-loading is set.
-	Edges        RocketEdges `json:"edges"`
-	selectValues sql.SelectValues
-}
-
-// RocketEdges holds the relations/edges for other nodes in the graph.
-type RocketEdges struct {
-	// Missions holds the value of the missions edge.
-	Missions []*Mission `json:"missions,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes   [1]bool
-	namedMissions map[string][]*Mission
-}
-
-// MissionsOrErr returns the Missions value or an error if the edge
-// was not loaded in eager-loading.
-func (e RocketEdges) MissionsOrErr() ([]*Mission, error) {
-	if e.loadedTypes[0] {
-		return e.Missions, nil
-	}
-	return nil, &NotLoadedError{edge: "missions"}
+	Config          map[string]string `json:"config,omitempty"`
+	mission_rockets *uuid.UUID
+	selectValues    sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -57,8 +37,12 @@ func (*Rocket) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case rocket.FieldConfig:
 			values[i] = new([]byte)
-		case rocket.FieldID, rocket.FieldDescription, rocket.FieldImage, rocket.FieldZip:
+		case rocket.FieldName, rocket.FieldDescription, rocket.FieldCode:
 			values[i] = new(sql.NullString)
+		case rocket.FieldID:
+			values[i] = new(uuid.UUID)
+		case rocket.ForeignKeys[0]: // mission_rockets
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -75,10 +59,16 @@ func (r *Rocket) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case rocket.FieldID:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value != nil {
+				r.ID = *value
+			}
+		case rocket.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				r.ID = value.String
+				r.Name = value.String
 			}
 		case rocket.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -86,17 +76,11 @@ func (r *Rocket) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.Description = value.String
 			}
-		case rocket.FieldImage:
+		case rocket.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field image", values[i])
+				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				r.Image = value.String
-			}
-		case rocket.FieldZip:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field zip", values[i])
-			} else if value.Valid {
-				r.Zip = value.String
+				r.Code = value.String
 			}
 		case rocket.FieldConfig:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -105,6 +89,13 @@ func (r *Rocket) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &r.Config); err != nil {
 					return fmt.Errorf("unmarshal field config: %w", err)
 				}
+			}
+		case rocket.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field mission_rockets", values[i])
+			} else if value.Valid {
+				r.mission_rockets = new(uuid.UUID)
+				*r.mission_rockets = *value.S.(*uuid.UUID)
 			}
 		default:
 			r.selectValues.Set(columns[i], values[i])
@@ -117,11 +108,6 @@ func (r *Rocket) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (r *Rocket) Value(name string) (ent.Value, error) {
 	return r.selectValues.Get(name)
-}
-
-// QueryMissions queries the "missions" edge of the Rocket entity.
-func (r *Rocket) QueryMissions() *MissionQuery {
-	return NewRocketClient(r.config).QueryMissions(r)
 }
 
 // Update returns a builder for updating this Rocket.
@@ -147,43 +133,19 @@ func (r *Rocket) String() string {
 	var builder strings.Builder
 	builder.WriteString("Rocket(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", r.ID))
+	builder.WriteString("name=")
+	builder.WriteString(r.Name)
+	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(r.Description)
 	builder.WriteString(", ")
-	builder.WriteString("image=")
-	builder.WriteString(r.Image)
-	builder.WriteString(", ")
-	builder.WriteString("zip=")
-	builder.WriteString(r.Zip)
+	builder.WriteString("code=")
+	builder.WriteString(r.Code)
 	builder.WriteString(", ")
 	builder.WriteString("config=")
 	builder.WriteString(fmt.Sprintf("%v", r.Config))
 	builder.WriteByte(')')
 	return builder.String()
-}
-
-// NamedMissions returns the Missions named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (r *Rocket) NamedMissions(name string) ([]*Mission, error) {
-	if r.Edges.namedMissions == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := r.Edges.namedMissions[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (r *Rocket) appendNamedMissions(name string, edges ...*Mission) {
-	if r.Edges.namedMissions == nil {
-		r.Edges.namedMissions = make(map[string][]*Mission)
-	}
-	if len(edges) == 0 {
-		r.Edges.namedMissions[name] = []*Mission{}
-	} else {
-		r.Edges.namedMissions[name] = append(r.Edges.namedMissions[name], edges...)
-	}
 }
 
 // Rockets is a parsable slice of Rocket.

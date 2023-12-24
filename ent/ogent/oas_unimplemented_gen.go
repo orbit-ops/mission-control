@@ -112,6 +112,15 @@ func (UnimplementedHandler) ListAccessAccessTokens(ctx context.Context, params L
 	return r, ht.ErrNotImplemented
 }
 
+// ListAccessApprovals implements listAccessApprovals operation.
+//
+// List attached Approvals.
+//
+// GET /accesses/{id}/approvals
+func (UnimplementedHandler) ListAccessApprovals(ctx context.Context, params ListAccessApprovalsParams) (r ListAccessApprovalsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListApiKey implements listApiKey operation.
 //
 // List ApiKeys.
@@ -127,6 +136,15 @@ func (UnimplementedHandler) ListApiKey(ctx context.Context, params ListApiKeyPar
 //
 // GET /approvals
 func (UnimplementedHandler) ListApproval(ctx context.Context, params ListApprovalParams) (r ListApprovalRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListApprovalAccess implements listApprovalAccess operation.
+//
+// List attached Accesses.
+//
+// GET /approvals/{id}/access
+func (UnimplementedHandler) ListApprovalAccess(ctx context.Context, params ListApprovalAccessParams) (r ListApprovalAccessRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -190,15 +208,6 @@ func (UnimplementedHandler) ListRequestApprovals(ctx context.Context, params Lis
 //
 // GET /rockets
 func (UnimplementedHandler) ListRocket(ctx context.Context, params ListRocketParams) (r ListRocketRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
-// ListRocketMissions implements listRocketMissions operation.
-//
-// List attached Missions.
-//
-// GET /rockets/{id}/missions
-func (UnimplementedHandler) ListRocketMissions(ctx context.Context, params ListRocketMissionsParams) (r ListRocketMissionsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

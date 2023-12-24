@@ -23,19 +23,24 @@ const (
 	FieldRevoked = "revoked"
 	// FieldRevokedTime holds the string denoting the revoked_time field in the database.
 	FieldRevokedTime = "revoked_time"
-	// FieldRequestID holds the string denoting the request_id field in the database.
-	FieldRequestID = "request_id"
-	// EdgeRequests holds the string denoting the requests edge name in mutations.
-	EdgeRequests = "requests"
+	// EdgeRequest holds the string denoting the request edge name in mutations.
+	EdgeRequest = "request"
+	// EdgeAccess holds the string denoting the access edge name in mutations.
+	EdgeAccess = "access"
 	// Table holds the table name of the approval in the database.
 	Table = "approvals"
-	// RequestsTable is the table that holds the requests relation/edge.
-	RequestsTable = "approvals"
-	// RequestsInverseTable is the table name for the Request entity.
+	// RequestTable is the table that holds the request relation/edge.
+	RequestTable = "approvals"
+	// RequestInverseTable is the table name for the Request entity.
 	// It exists in this package in order to avoid circular dependency with the "request" package.
-	RequestsInverseTable = "requests"
-	// RequestsColumn is the table column denoting the requests relation/edge.
-	RequestsColumn = "approval_requests"
+	RequestInverseTable = "requests"
+	// RequestColumn is the table column denoting the request relation/edge.
+	RequestColumn = "approval_request"
+	// AccessTable is the table that holds the access relation/edge. The primary key declared below.
+	AccessTable = "access_approvals"
+	// AccessInverseTable is the table name for the Access entity.
+	// It exists in this package in order to avoid circular dependency with the "access" package.
+	AccessInverseTable = "accesses"
 )
 
 // Columns holds all SQL columns for approval fields.
@@ -46,14 +51,19 @@ var Columns = []string{
 	FieldApproved,
 	FieldRevoked,
 	FieldRevokedTime,
-	FieldRequestID,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "approvals"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"approval_requests",
+	"approval_request",
 }
+
+var (
+	// AccessPrimaryKey and AccessColumn2 are the table columns denoting the
+	// primary key for the access relation (M2M).
+	AccessPrimaryKey = []string{"access_id", "approval_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -110,21 +120,37 @@ func ByRevokedTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRevokedTime, opts...).ToFunc()
 }
 
-// ByRequestID orders the results by the request_id field.
-func ByRequestID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRequestID, opts...).ToFunc()
-}
-
-// ByRequestsField orders the results by requests field.
-func ByRequestsField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByRequestField orders the results by request field.
+func ByRequestField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newRequestsStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newRequestStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newRequestsStep() *sqlgraph.Step {
+
+// ByAccessCount orders the results by access count.
+func ByAccessCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAccessStep(), opts...)
+	}
+}
+
+// ByAccess orders the results by access terms.
+func ByAccess(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccessStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newRequestStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(RequestsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, RequestsTable, RequestsColumn),
+		sqlgraph.To(RequestInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, RequestTable, RequestColumn),
+	)
+}
+func newAccessStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccessInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, AccessTable, AccessPrimaryKey...),
 	)
 }

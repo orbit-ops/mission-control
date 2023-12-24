@@ -99,9 +99,6 @@ var scopes map[string]authz.Scopes = map[string]authz.Scopes{
   "createRocket": {
     "admin",
   },
-  "createRocketMissions": {
-    "admin",
-  },
   "deleteApiKey": {
     "admin",
   },
@@ -115,9 +112,6 @@ var scopes map[string]authz.Scopes = map[string]authz.Scopes{
     "admin",
   },
   "deleteRocket": {
-    "admin",
-  },
-  "deleteRocketMissions": {
     "admin",
   },
   "listApiKey": {
@@ -135,9 +129,6 @@ var scopes map[string]authz.Scopes = map[string]authz.Scopes{
   "listRocket": {
     "admin",
   },
-  "listRocketMissions": {
-    "admin",
-  },
   "readApiKey": {
     "admin",
   },
@@ -153,9 +144,6 @@ var scopes map[string]authz.Scopes = map[string]authz.Scopes{
   "readRocket": {
     "admin",
   },
-  "readRocketMissions": {
-    "admin",
-  },
   "updateApiKey": {
     "admin",
   },
@@ -169,9 +157,6 @@ var scopes map[string]authz.Scopes = map[string]authz.Scopes{
     "admin",
   },
   "updateRocket": {
-    "admin",
-  },
-  "updateRocketMissions": {
     "admin",
   },
 }

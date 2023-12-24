@@ -29,35 +29,45 @@ type Approval struct {
 	Revoked bool `json:"revoked,omitempty"`
 	// RevokedTime holds the value of the "revoked_time" field.
 	RevokedTime time.Time `json:"revoked_time,omitempty"`
-	// RequestID holds the value of the "request_id" field.
-	RequestID uuid.UUID `json:"request_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ApprovalQuery when eager-loading is set.
-	Edges             ApprovalEdges `json:"edges"`
-	approval_requests *uuid.UUID
-	selectValues      sql.SelectValues
+	Edges            ApprovalEdges `json:"edges"`
+	approval_request *uuid.UUID
+	selectValues     sql.SelectValues
 }
 
 // ApprovalEdges holds the relations/edges for other nodes in the graph.
 type ApprovalEdges struct {
-	// Requests holds the value of the requests edge.
-	Requests *Request `json:"requests,omitempty"`
+	// Request holds the value of the request edge.
+	Request *Request `json:"request,omitempty"`
+	// Access holds the value of the access edge.
+	Access []*Access `json:"access,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
+	namedAccess map[string][]*Access
 }
 
-// RequestsOrErr returns the Requests value or an error if the edge
+// RequestOrErr returns the Request value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e ApprovalEdges) RequestsOrErr() (*Request, error) {
+func (e ApprovalEdges) RequestOrErr() (*Request, error) {
 	if e.loadedTypes[0] {
-		if e.Requests == nil {
+		if e.Request == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: request.Label}
 		}
-		return e.Requests, nil
+		return e.Request, nil
 	}
-	return nil, &NotLoadedError{edge: "requests"}
+	return nil, &NotLoadedError{edge: "request"}
+}
+
+// AccessOrErr returns the Access value or an error if the edge
+// was not loaded in eager-loading.
+func (e ApprovalEdges) AccessOrErr() ([]*Access, error) {
+	if e.loadedTypes[1] {
+		return e.Access, nil
+	}
+	return nil, &NotLoadedError{edge: "access"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -71,9 +81,9 @@ func (*Approval) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case approval.FieldApprovedTime, approval.FieldRevokedTime:
 			values[i] = new(sql.NullTime)
-		case approval.FieldID, approval.FieldRequestID:
+		case approval.FieldID:
 			values[i] = new(uuid.UUID)
-		case approval.ForeignKeys[0]: // approval_requests
+		case approval.ForeignKeys[0]: // approval_request
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -126,18 +136,12 @@ func (a *Approval) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.RevokedTime = value.Time
 			}
-		case approval.FieldRequestID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field request_id", values[i])
-			} else if value != nil {
-				a.RequestID = *value
-			}
 		case approval.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field approval_requests", values[i])
+				return fmt.Errorf("unexpected type %T for field approval_request", values[i])
 			} else if value.Valid {
-				a.approval_requests = new(uuid.UUID)
-				*a.approval_requests = *value.S.(*uuid.UUID)
+				a.approval_request = new(uuid.UUID)
+				*a.approval_request = *value.S.(*uuid.UUID)
 			}
 		default:
 			a.selectValues.Set(columns[i], values[i])
@@ -152,9 +156,14 @@ func (a *Approval) Value(name string) (ent.Value, error) {
 	return a.selectValues.Get(name)
 }
 
-// QueryRequests queries the "requests" edge of the Approval entity.
-func (a *Approval) QueryRequests() *RequestQuery {
-	return NewApprovalClient(a.config).QueryRequests(a)
+// QueryRequest queries the "request" edge of the Approval entity.
+func (a *Approval) QueryRequest() *RequestQuery {
+	return NewApprovalClient(a.config).QueryRequest(a)
+}
+
+// QueryAccess queries the "access" edge of the Approval entity.
+func (a *Approval) QueryAccess() *AccessQuery {
+	return NewApprovalClient(a.config).QueryAccess(a)
 }
 
 // Update returns a builder for updating this Approval.
@@ -194,11 +203,32 @@ func (a *Approval) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("revoked_time=")
 	builder.WriteString(a.RevokedTime.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("request_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.RequestID))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+// NamedAccess returns the Access named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (a *Approval) NamedAccess(name string) ([]*Access, error) {
+	if a.Edges.namedAccess == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := a.Edges.namedAccess[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (a *Approval) appendNamedAccess(name string, edges ...*Access) {
+	if a.Edges.namedAccess == nil {
+		a.Edges.namedAccess = make(map[string][]*Access)
+	}
+	if len(edges) == 0 {
+		a.Edges.namedAccess[name] = []*Access{}
+	} else {
+		a.Edges.namedAccess[name] = append(a.Edges.namedAccess[name], edges...)
+	}
 }
 
 // Approvals is a parsable slice of Approval.

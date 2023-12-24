@@ -22,16 +22,16 @@ func (Approval) Fields() []ent.Field {
 		field.Bool("approved").Immutable(),
 		field.Bool("revoked").Default(false),
 		field.Time("revoked_time").Optional(),
-		field.UUID("request_id", uuid.UUID{}),
 	}
 }
 
 // Edges of the Approval.
 func (Approval) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("requests", Request.Type).Unique().Required().
+		edge.To("request", Request.Type).Unique().Required().
 			Annotations(
 				entoas.ReadOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
 			),
+		edge.From("access", Access.Type).Ref("approvals"),
 	}
 }

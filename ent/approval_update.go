@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
+	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 	"github.com/orbit-ops/launchpad-core/ent/request"
@@ -64,29 +65,30 @@ func (au *ApprovalUpdate) ClearRevokedTime() *ApprovalUpdate {
 	return au
 }
 
-// SetRequestID sets the "request_id" field.
-func (au *ApprovalUpdate) SetRequestID(u uuid.UUID) *ApprovalUpdate {
-	au.mutation.SetRequestID(u)
+// SetRequestID sets the "request" edge to the Request entity by ID.
+func (au *ApprovalUpdate) SetRequestID(id uuid.UUID) *ApprovalUpdate {
+	au.mutation.SetRequestID(id)
 	return au
 }
 
-// SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (au *ApprovalUpdate) SetNillableRequestID(u *uuid.UUID) *ApprovalUpdate {
-	if u != nil {
-		au.SetRequestID(*u)
+// SetRequest sets the "request" edge to the Request entity.
+func (au *ApprovalUpdate) SetRequest(r *Request) *ApprovalUpdate {
+	return au.SetRequestID(r.ID)
+}
+
+// AddAccesIDs adds the "access" edge to the Access entity by IDs.
+func (au *ApprovalUpdate) AddAccesIDs(ids ...uuid.UUID) *ApprovalUpdate {
+	au.mutation.AddAccesIDs(ids...)
+	return au
+}
+
+// AddAccess adds the "access" edges to the Access entity.
+func (au *ApprovalUpdate) AddAccess(a ...*Access) *ApprovalUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return au
-}
-
-// SetRequestsID sets the "requests" edge to the Request entity by ID.
-func (au *ApprovalUpdate) SetRequestsID(id uuid.UUID) *ApprovalUpdate {
-	au.mutation.SetRequestsID(id)
-	return au
-}
-
-// SetRequests sets the "requests" edge to the Request entity.
-func (au *ApprovalUpdate) SetRequests(r *Request) *ApprovalUpdate {
-	return au.SetRequestsID(r.ID)
+	return au.AddAccesIDs(ids...)
 }
 
 // Mutation returns the ApprovalMutation object of the builder.
@@ -94,10 +96,31 @@ func (au *ApprovalUpdate) Mutation() *ApprovalMutation {
 	return au.mutation
 }
 
-// ClearRequests clears the "requests" edge to the Request entity.
-func (au *ApprovalUpdate) ClearRequests() *ApprovalUpdate {
-	au.mutation.ClearRequests()
+// ClearRequest clears the "request" edge to the Request entity.
+func (au *ApprovalUpdate) ClearRequest() *ApprovalUpdate {
+	au.mutation.ClearRequest()
 	return au
+}
+
+// ClearAccess clears all "access" edges to the Access entity.
+func (au *ApprovalUpdate) ClearAccess() *ApprovalUpdate {
+	au.mutation.ClearAccess()
+	return au
+}
+
+// RemoveAccesIDs removes the "access" edge to Access entities by IDs.
+func (au *ApprovalUpdate) RemoveAccesIDs(ids ...uuid.UUID) *ApprovalUpdate {
+	au.mutation.RemoveAccesIDs(ids...)
+	return au
+}
+
+// RemoveAccess removes "access" edges to Access entities.
+func (au *ApprovalUpdate) RemoveAccess(a ...*Access) *ApprovalUpdate {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.RemoveAccesIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -129,8 +152,8 @@ func (au *ApprovalUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (au *ApprovalUpdate) check() error {
-	if _, ok := au.mutation.RequestsID(); au.mutation.RequestsCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Approval.requests"`)
+	if _, ok := au.mutation.RequestID(); au.mutation.RequestCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Approval.request"`)
 	}
 	return nil
 }
@@ -156,15 +179,12 @@ func (au *ApprovalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if au.mutation.RevokedTimeCleared() {
 		_spec.ClearField(approval.FieldRevokedTime, field.TypeTime)
 	}
-	if value, ok := au.mutation.RequestID(); ok {
-		_spec.SetField(approval.FieldRequestID, field.TypeUUID, value)
-	}
-	if au.mutation.RequestsCleared() {
+	if au.mutation.RequestCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   approval.RequestsTable,
-			Columns: []string{approval.RequestsColumn},
+			Table:   approval.RequestTable,
+			Columns: []string{approval.RequestColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeUUID),
@@ -172,15 +192,60 @@ func (au *ApprovalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.RequestsIDs(); len(nodes) > 0 {
+	if nodes := au.mutation.RequestIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   approval.RequestsTable,
-			Columns: []string{approval.RequestsColumn},
+			Table:   approval.RequestTable,
+			Columns: []string{approval.RequestColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if au.mutation.AccessCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   approval.AccessTable,
+			Columns: approval.AccessPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedAccessIDs(); len(nodes) > 0 && !au.mutation.AccessCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   approval.AccessTable,
+			Columns: approval.AccessPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.AccessIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   approval.AccessTable,
+			Columns: approval.AccessPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -242,29 +307,30 @@ func (auo *ApprovalUpdateOne) ClearRevokedTime() *ApprovalUpdateOne {
 	return auo
 }
 
-// SetRequestID sets the "request_id" field.
-func (auo *ApprovalUpdateOne) SetRequestID(u uuid.UUID) *ApprovalUpdateOne {
-	auo.mutation.SetRequestID(u)
+// SetRequestID sets the "request" edge to the Request entity by ID.
+func (auo *ApprovalUpdateOne) SetRequestID(id uuid.UUID) *ApprovalUpdateOne {
+	auo.mutation.SetRequestID(id)
 	return auo
 }
 
-// SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (auo *ApprovalUpdateOne) SetNillableRequestID(u *uuid.UUID) *ApprovalUpdateOne {
-	if u != nil {
-		auo.SetRequestID(*u)
+// SetRequest sets the "request" edge to the Request entity.
+func (auo *ApprovalUpdateOne) SetRequest(r *Request) *ApprovalUpdateOne {
+	return auo.SetRequestID(r.ID)
+}
+
+// AddAccesIDs adds the "access" edge to the Access entity by IDs.
+func (auo *ApprovalUpdateOne) AddAccesIDs(ids ...uuid.UUID) *ApprovalUpdateOne {
+	auo.mutation.AddAccesIDs(ids...)
+	return auo
+}
+
+// AddAccess adds the "access" edges to the Access entity.
+func (auo *ApprovalUpdateOne) AddAccess(a ...*Access) *ApprovalUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return auo
-}
-
-// SetRequestsID sets the "requests" edge to the Request entity by ID.
-func (auo *ApprovalUpdateOne) SetRequestsID(id uuid.UUID) *ApprovalUpdateOne {
-	auo.mutation.SetRequestsID(id)
-	return auo
-}
-
-// SetRequests sets the "requests" edge to the Request entity.
-func (auo *ApprovalUpdateOne) SetRequests(r *Request) *ApprovalUpdateOne {
-	return auo.SetRequestsID(r.ID)
+	return auo.AddAccesIDs(ids...)
 }
 
 // Mutation returns the ApprovalMutation object of the builder.
@@ -272,10 +338,31 @@ func (auo *ApprovalUpdateOne) Mutation() *ApprovalMutation {
 	return auo.mutation
 }
 
-// ClearRequests clears the "requests" edge to the Request entity.
-func (auo *ApprovalUpdateOne) ClearRequests() *ApprovalUpdateOne {
-	auo.mutation.ClearRequests()
+// ClearRequest clears the "request" edge to the Request entity.
+func (auo *ApprovalUpdateOne) ClearRequest() *ApprovalUpdateOne {
+	auo.mutation.ClearRequest()
 	return auo
+}
+
+// ClearAccess clears all "access" edges to the Access entity.
+func (auo *ApprovalUpdateOne) ClearAccess() *ApprovalUpdateOne {
+	auo.mutation.ClearAccess()
+	return auo
+}
+
+// RemoveAccesIDs removes the "access" edge to Access entities by IDs.
+func (auo *ApprovalUpdateOne) RemoveAccesIDs(ids ...uuid.UUID) *ApprovalUpdateOne {
+	auo.mutation.RemoveAccesIDs(ids...)
+	return auo
+}
+
+// RemoveAccess removes "access" edges to Access entities.
+func (auo *ApprovalUpdateOne) RemoveAccess(a ...*Access) *ApprovalUpdateOne {
+	ids := make([]uuid.UUID, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.RemoveAccesIDs(ids...)
 }
 
 // Where appends a list predicates to the ApprovalUpdate builder.
@@ -320,8 +407,8 @@ func (auo *ApprovalUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (auo *ApprovalUpdateOne) check() error {
-	if _, ok := auo.mutation.RequestsID(); auo.mutation.RequestsCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Approval.requests"`)
+	if _, ok := auo.mutation.RequestID(); auo.mutation.RequestCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Approval.request"`)
 	}
 	return nil
 }
@@ -364,15 +451,12 @@ func (auo *ApprovalUpdateOne) sqlSave(ctx context.Context) (_node *Approval, err
 	if auo.mutation.RevokedTimeCleared() {
 		_spec.ClearField(approval.FieldRevokedTime, field.TypeTime)
 	}
-	if value, ok := auo.mutation.RequestID(); ok {
-		_spec.SetField(approval.FieldRequestID, field.TypeUUID, value)
-	}
-	if auo.mutation.RequestsCleared() {
+	if auo.mutation.RequestCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   approval.RequestsTable,
-			Columns: []string{approval.RequestsColumn},
+			Table:   approval.RequestTable,
+			Columns: []string{approval.RequestColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeUUID),
@@ -380,15 +464,60 @@ func (auo *ApprovalUpdateOne) sqlSave(ctx context.Context) (_node *Approval, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.RequestsIDs(); len(nodes) > 0 {
+	if nodes := auo.mutation.RequestIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   approval.RequestsTable,
-			Columns: []string{approval.RequestsColumn},
+			Table:   approval.RequestTable,
+			Columns: []string{approval.RequestColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.AccessCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   approval.AccessTable,
+			Columns: approval.AccessPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedAccessIDs(); len(nodes) > 0 && !auo.mutation.AccessCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   approval.AccessTable,
+			Columns: approval.AccessPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.AccessIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   approval.AccessTable,
+			Columns: approval.AccessPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

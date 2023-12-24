@@ -40,7 +40,7 @@ func (rd *RocketDelete) ExecX(ctx context.Context) int {
 }
 
 func (rd *RocketDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(rocket.Table, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeString))
+	_spec := sqlgraph.NewDeleteSpec(rocket.Table, sqlgraph.NewFieldSpec(rocket.FieldID, field.TypeUUID))
 	if ps := rd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

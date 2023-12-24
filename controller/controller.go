@@ -2,18 +2,14 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/orbit-ops/launchpad-core/ent"
-	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
-	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/audit"
-	"github.com/orbit-ops/launchpad-core/ent/hook"
 	"github.com/orbit-ops/launchpad-core/ent/ogent"
 	"github.com/orbit-ops/launchpad-core/ent/request"
 	"github.com/orbit-ops/launchpad-core/internal/notifications"
@@ -32,14 +28,18 @@ type AccessController struct {
 
 func NewAccessController(prov providers.Provider, client *ent.Client) (*AccessController, error) {
 	ac := &AccessController{
-		client:   client,
-		provider: prov,
+		OgentHandler: ogent.NewOgentHandler(client),
+		client:       client,
+		provider:     prov,
 		// mc:     missions.NewMissionController(),
 	}
 
 	// logs and audits all mutation operations of all types
 	client.Use(func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (val ent.Value, err error) {
+			if _, ok := m.(*ent.AuditMutation); ok {
+				return next.Mutate(ctx, m)
+			}
 			start := time.Now()
 
 			defer func() {
@@ -64,87 +64,12 @@ func NewAccessController(prov providers.Provider, client *ent.Client) (*AccessCo
 		})
 	})
 
-	client.Approval.Use(hook.On(func(next ent.Mutator) ent.Mutator {
-		return hook.ApprovalFunc(func(ctx context.Context, am *ent.ApprovalMutation) (ent.Value, error) {
-			reqID, ok := am.RequestID()
-			if !ok {
-				return nil, errors.New("request ID not set")
-			}
-			person, ok := am.Person()
-			if !ok {
-				return nil, errors.New("person not set")
-			}
-			exists, err := am.Client().Approval.Query().Where(approval.RequestIDEQ(reqID), approval.PersonEQ(person)).Exist(ctx)
-			if exists {
-				return nil, fmt.Errorf("%s already approved %s", person, reqID)
-			}
-			if err != nil {
-				return nil, fmt.Errorf("checking approval exists: %w", err)
-			}
+	ac.setAccessHooks()
+	ac.setRequestHooks()
+	ac.setApprovalHooks()
+	ac.setAuditHooks()
+	ac.setMissionHooks()
 
-			return next.Mutate(ctx, am)
-		})
-	}, ent.OpCreate))
-
-	client.Approval.Use(hook.On(func(next ent.Mutator) ent.Mutator {
-		return hook.ApprovalFunc(func(ctx context.Context, am *ent.ApprovalMutation) (ent.Value, error) {
-			reqID, ok := am.RequestID()
-			if !ok {
-				return nil, errors.New("request ID not set")
-			}
-
-			req, err := am.Client().Request.Query().
-				Where(request.IDEQ(reqID)).
-				WithMission().
-				WithApprovals().First(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("checking approval exists: %w", err)
-			}
-			if len(req.Edges.Approvals) >= req.Edges.Mission.MinApprovers {
-				go ac.CreateAccess(ctx, req.Edges.Mission, req)
-			}
-
-			return next.Mutate(ctx, am)
-		})
-	}, ent.OpCreate))
-
-	client.Approval.Use(hook.On(func(next ent.Mutator) ent.Mutator {
-		return hook.ApprovalFunc(func(ctx context.Context, am *ent.ApprovalMutation) (ent.Value, error) {
-			reqID, ok := am.RequestID()
-			if !ok {
-				return nil, errors.New("request ID not set")
-			}
-
-			exists, err := am.Client().Access.Query().
-				Where(access.RequestIDEQ(reqID)).Exist(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("checking access exists: %w", err)
-			}
-			if exists {
-				return nil, fmt.Errorf("cannot update approval once access provisioned")
-			}
-
-			return next.Mutate(ctx, am)
-		})
-	}, ent.OpUpdate))
-
-	client.Request.Use(hook.On(func(next ent.Mutator) ent.Mutator {
-		return hook.RequestFunc(func(ctx context.Context, am *ent.RequestMutation) (ent.Value, error) {
-			return nil, fmt.Errorf("requests cannot be updated")
-		})
-	}, ent.OpUpdate))
-
-	client.Access.Use(hook.On(func(next ent.Mutator) ent.Mutator {
-		return hook.AccessFunc(func(ctx context.Context, am *ent.AccessMutation) (ent.Value, error) {
-			return nil, fmt.Errorf("accesses cannot be deleted")
-		})
-	}, ent.OpDelete))
-
-	client.Audit.Use(hook.On(func(next ent.Mutator) ent.Mutator {
-		return hook.AuditFunc(func(ctx context.Context, am *ent.AuditMutation) (ent.Value, error) {
-			return nil, fmt.Errorf("audit entries cannot be deleted")
-		})
-	}, ent.OpDelete))
 	return ac, nil
 }
 
