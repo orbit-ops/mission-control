@@ -3,6 +3,8 @@
 package approval
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
@@ -36,11 +38,13 @@ const (
 	RequestInverseTable = "requests"
 	// RequestColumn is the table column denoting the request relation/edge.
 	RequestColumn = "approval_request"
-	// AccessTable is the table that holds the access relation/edge. The primary key declared below.
-	AccessTable = "access_approvals"
+	// AccessTable is the table that holds the access relation/edge.
+	AccessTable = "approvals"
 	// AccessInverseTable is the table name for the Access entity.
 	// It exists in this package in order to avoid circular dependency with the "access" package.
 	AccessInverseTable = "accesses"
+	// AccessColumn is the table column denoting the access relation/edge.
+	AccessColumn = "access_approvals"
 )
 
 // Columns holds all SQL columns for approval fields.
@@ -56,14 +60,9 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "approvals"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"access_approvals",
 	"approval_request",
 }
-
-var (
-	// AccessPrimaryKey and AccessColumn2 are the table columns denoting the
-	// primary key for the access relation (M2M).
-	AccessPrimaryKey = []string{"access_id", "approval_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -81,6 +80,10 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// PersonValidator is a validator for the "person" field. It is called by the builders before save.
+	PersonValidator func(string) error
+	// DefaultApprovedTime holds the default value on creation for the "approved_time" field.
+	DefaultApprovedTime func() time.Time
 	// DefaultRevoked holds the default value on creation for the "revoked" field.
 	DefaultRevoked bool
 	// DefaultID holds the default value on creation for the "id" field.
@@ -127,17 +130,10 @@ func ByRequestField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByAccessCount orders the results by access count.
-func ByAccessCount(opts ...sql.OrderTermOption) OrderOption {
+// ByAccessField orders the results by access field.
+func ByAccessField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAccessStep(), opts...)
-	}
-}
-
-// ByAccess orders the results by access terms.
-func ByAccess(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAccessStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newAccessStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newRequestStep() *sqlgraph.Step {
@@ -151,6 +147,6 @@ func newAccessStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccessInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, AccessTable, AccessPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, true, AccessTable, AccessColumn),
 	)
 }

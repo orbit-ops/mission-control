@@ -64,6 +64,27 @@ func (mu *MissionUpdate) ClearDescription() *MissionUpdate {
 	return mu
 }
 
+// SetDuration sets the "duration" field.
+func (mu *MissionUpdate) SetDuration(i int) *MissionUpdate {
+	mu.mutation.ResetDuration()
+	mu.mutation.SetDuration(i)
+	return mu
+}
+
+// SetNillableDuration sets the "duration" field if the given value is not nil.
+func (mu *MissionUpdate) SetNillableDuration(i *int) *MissionUpdate {
+	if i != nil {
+		mu.SetDuration(*i)
+	}
+	return mu
+}
+
+// AddDuration adds i to the "duration" field.
+func (mu *MissionUpdate) AddDuration(i int) *MissionUpdate {
+	mu.mutation.AddDuration(i)
+	return mu
+}
+
 // SetMinApprovers sets the "min_approvers" field.
 func (mu *MissionUpdate) SetMinApprovers(i int) *MissionUpdate {
 	mu.mutation.ResetMinApprovers()
@@ -172,6 +193,11 @@ func (mu *MissionUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Mission.name": %w`, err)}
 		}
 	}
+	if v, ok := mu.mutation.Duration(); ok {
+		if err := mission.DurationValidator(v); err != nil {
+			return &ValidationError{Name: "duration", err: fmt.Errorf(`ent: validator failed for field "Mission.duration": %w`, err)}
+		}
+	}
 	if v, ok := mu.mutation.MinApprovers(); ok {
 		if err := mission.MinApproversValidator(v); err != nil {
 			return &ValidationError{Name: "min_approvers", err: fmt.Errorf(`ent: validator failed for field "Mission.min_approvers": %w`, err)}
@@ -200,6 +226,12 @@ func (mu *MissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if mu.mutation.DescriptionCleared() {
 		_spec.ClearField(mission.FieldDescription, field.TypeString)
+	}
+	if value, ok := mu.mutation.Duration(); ok {
+		_spec.SetField(mission.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := mu.mutation.AddedDuration(); ok {
+		_spec.AddField(mission.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := mu.mutation.MinApprovers(); ok {
 		_spec.SetField(mission.FieldMinApprovers, field.TypeInt, value)
@@ -311,6 +343,27 @@ func (muo *MissionUpdateOne) SetNillableDescription(s *string) *MissionUpdateOne
 // ClearDescription clears the value of the "description" field.
 func (muo *MissionUpdateOne) ClearDescription() *MissionUpdateOne {
 	muo.mutation.ClearDescription()
+	return muo
+}
+
+// SetDuration sets the "duration" field.
+func (muo *MissionUpdateOne) SetDuration(i int) *MissionUpdateOne {
+	muo.mutation.ResetDuration()
+	muo.mutation.SetDuration(i)
+	return muo
+}
+
+// SetNillableDuration sets the "duration" field if the given value is not nil.
+func (muo *MissionUpdateOne) SetNillableDuration(i *int) *MissionUpdateOne {
+	if i != nil {
+		muo.SetDuration(*i)
+	}
+	return muo
+}
+
+// AddDuration adds i to the "duration" field.
+func (muo *MissionUpdateOne) AddDuration(i int) *MissionUpdateOne {
+	muo.mutation.AddDuration(i)
 	return muo
 }
 
@@ -435,6 +488,11 @@ func (muo *MissionUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Mission.name": %w`, err)}
 		}
 	}
+	if v, ok := muo.mutation.Duration(); ok {
+		if err := mission.DurationValidator(v); err != nil {
+			return &ValidationError{Name: "duration", err: fmt.Errorf(`ent: validator failed for field "Mission.duration": %w`, err)}
+		}
+	}
 	if v, ok := muo.mutation.MinApprovers(); ok {
 		if err := mission.MinApproversValidator(v); err != nil {
 			return &ValidationError{Name: "min_approvers", err: fmt.Errorf(`ent: validator failed for field "Mission.min_approvers": %w`, err)}
@@ -480,6 +538,12 @@ func (muo *MissionUpdateOne) sqlSave(ctx context.Context) (_node *Mission, err e
 	}
 	if muo.mutation.DescriptionCleared() {
 		_spec.ClearField(mission.FieldDescription, field.TypeString)
+	}
+	if value, ok := muo.mutation.Duration(); ok {
+		_spec.SetField(mission.FieldDuration, field.TypeInt, value)
+	}
+	if value, ok := muo.mutation.AddedDuration(); ok {
+		_spec.AddField(mission.FieldDuration, field.TypeInt, value)
 	}
 	if value, ok := muo.mutation.MinApprovers(); ok {
 		_spec.SetField(mission.FieldMinApprovers, field.TypeInt, value)

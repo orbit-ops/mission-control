@@ -91,8 +91,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						break
 					}
 					switch elem[0] {
-					case '/': // Prefix: "/a"
-						if l := len("/a"); len(elem) >= l && elem[0:l] == "/a" {
+					case '/': // Prefix: "/"
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
 							break
@@ -102,28 +102,60 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							break
 						}
 						switch elem[0] {
-						case 'c': // Prefix: "ccess-tokens"
-							if l := len("ccess-tokens"); len(elem) >= l && elem[0:l] == "ccess-tokens" {
+						case 'a': // Prefix: "a"
+							if l := len("a"); len(elem) >= l && elem[0:l] == "a" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
 							if len(elem) == 0 {
-								// Leaf node.
-								switch r.Method {
-								case "GET":
-									s.handleListAccessAccessTokensRequest([1]string{
-										args[0],
-									}, elemIsEscaped, w, r)
-								default:
-									s.notAllowed(w, r, "GET")
+								break
+							}
+							switch elem[0] {
+							case 'c': // Prefix: "ccess-tokens"
+								if l := len("ccess-tokens"); len(elem) >= l && elem[0:l] == "ccess-tokens" {
+									elem = elem[l:]
+								} else {
+									break
 								}
 
-								return
+								if len(elem) == 0 {
+									// Leaf node.
+									switch r.Method {
+									case "GET":
+										s.handleListAccessAccessTokensRequest([1]string{
+											args[0],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
+								}
+							case 'p': // Prefix: "pprovals"
+								if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									// Leaf node.
+									switch r.Method {
+									case "GET":
+										s.handleListAccessApprovalsRequest([1]string{
+											args[0],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
+								}
 							}
-						case 'p': // Prefix: "pprovals"
-							if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
+						case 'r': // Prefix: "request"
+							if l := len("request"); len(elem) >= l && elem[0:l] == "request" {
 								elem = elem[l:]
 							} else {
 								break
@@ -133,7 +165,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								// Leaf node.
 								switch r.Method {
 								case "GET":
-									s.handleListAccessApprovalsRequest([1]string{
+									s.handleReadAccessRequestRequest([1]string{
 										args[0],
 									}, elemIsEscaped, w, r)
 								default:
@@ -273,7 +305,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 									// Leaf node.
 									switch r.Method {
 									case "GET":
-										s.handleListApprovalAccessRequest([1]string{
+										s.handleReadApprovalAccessRequest([1]string{
 											args[0],
 										}, elemIsEscaped, w, r)
 									default:
@@ -741,8 +773,8 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						break
 					}
 					switch elem[0] {
-					case '/': // Prefix: "/a"
-						if l := len("/a"); len(elem) >= l && elem[0:l] == "/a" {
+					case '/': // Prefix: "/"
+						if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 							elem = elem[l:]
 						} else {
 							break
@@ -752,30 +784,64 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							break
 						}
 						switch elem[0] {
-						case 'c': // Prefix: "ccess-tokens"
-							if l := len("ccess-tokens"); len(elem) >= l && elem[0:l] == "ccess-tokens" {
+						case 'a': // Prefix: "a"
+							if l := len("a"); len(elem) >= l && elem[0:l] == "a" {
 								elem = elem[l:]
 							} else {
 								break
 							}
 
 							if len(elem) == 0 {
-								switch method {
-								case "GET":
-									// Leaf: ListAccessAccessTokens
-									r.name = "ListAccessAccessTokens"
-									r.summary = "List attached AccessTokens"
-									r.operationID = "listAccessAccessTokens"
-									r.pathPattern = "/accesses/{id}/access-tokens"
-									r.args = args
-									r.count = 1
-									return r, true
-								default:
-									return
+								break
+							}
+							switch elem[0] {
+							case 'c': // Prefix: "ccess-tokens"
+								if l := len("ccess-tokens"); len(elem) >= l && elem[0:l] == "ccess-tokens" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									switch method {
+									case "GET":
+										// Leaf: ListAccessAccessTokens
+										r.name = "ListAccessAccessTokens"
+										r.summary = "List attached AccessTokens"
+										r.operationID = "listAccessAccessTokens"
+										r.pathPattern = "/accesses/{id}/access-tokens"
+										r.args = args
+										r.count = 1
+										return r, true
+									default:
+										return
+									}
+								}
+							case 'p': // Prefix: "pprovals"
+								if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
+									elem = elem[l:]
+								} else {
+									break
+								}
+
+								if len(elem) == 0 {
+									switch method {
+									case "GET":
+										// Leaf: ListAccessApprovals
+										r.name = "ListAccessApprovals"
+										r.summary = "List attached Approvals"
+										r.operationID = "listAccessApprovals"
+										r.pathPattern = "/accesses/{id}/approvals"
+										r.args = args
+										r.count = 1
+										return r, true
+									default:
+										return
+									}
 								}
 							}
-						case 'p': // Prefix: "pprovals"
-							if l := len("pprovals"); len(elem) >= l && elem[0:l] == "pprovals" {
+						case 'r': // Prefix: "request"
+							if l := len("request"); len(elem) >= l && elem[0:l] == "request" {
 								elem = elem[l:]
 							} else {
 								break
@@ -784,11 +850,11 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							if len(elem) == 0 {
 								switch method {
 								case "GET":
-									// Leaf: ListAccessApprovals
-									r.name = "ListAccessApprovals"
-									r.summary = "List attached Approvals"
-									r.operationID = "listAccessApprovals"
-									r.pathPattern = "/accesses/{id}/approvals"
+									// Leaf: ReadAccessRequest
+									r.name = "ReadAccessRequest"
+									r.summary = "Find the attached Request"
+									r.operationID = "readAccessRequest"
+									r.pathPattern = "/accesses/{id}/request"
 									r.args = args
 									r.count = 1
 									return r, true
@@ -963,10 +1029,10 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								if len(elem) == 0 {
 									switch method {
 									case "GET":
-										// Leaf: ListApprovalAccess
-										r.name = "ListApprovalAccess"
-										r.summary = "List attached Accesses"
-										r.operationID = "listApprovalAccess"
+										// Leaf: ReadApprovalAccess
+										r.name = "ReadApprovalAccess"
+										r.summary = "Find the attached Access"
+										r.operationID = "readApprovalAccess"
 										r.pathPattern = "/approvals/{id}/access"
 										r.args = args
 										r.count = 1

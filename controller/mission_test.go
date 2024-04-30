@@ -18,6 +18,7 @@ func (ctrl *testAccessController) getValidMissionWithXRockets(x int) *ogent.Crea
 		Name:              "test-" + utils.RandomSeq(6),
 		Rockets:           rockets,
 		MinApprovers:      1,
+		Duration:          1,
 		PossibleApprovers: []string{"test"},
 	}
 }

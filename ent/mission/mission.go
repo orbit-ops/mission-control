@@ -17,6 +17,8 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldDuration holds the string denoting the duration field in the database.
+	FieldDuration = "duration"
 	// FieldMinApprovers holds the string denoting the min_approvers field in the database.
 	FieldMinApprovers = "min_approvers"
 	// FieldPossibleApprovers holds the string denoting the possible_approvers field in the database.
@@ -48,6 +50,7 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldDescription,
+	FieldDuration,
 	FieldMinApprovers,
 	FieldPossibleApprovers,
 }
@@ -65,6 +68,8 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	DurationValidator func(int) error
 	// MinApproversValidator is a validator for the "min_approvers" field. It is called by the builders before save.
 	MinApproversValidator func(int) error
 	// DefaultID holds the default value on creation for the "id" field.
@@ -87,6 +92,11 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByDescription orders the results by the description field.
 func ByDescription(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDescription, opts...).ToFunc()
+}
+
+// ByDuration orders the results by the duration field.
+func ByDuration(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDuration, opts...).ToFunc()
 }
 
 // ByMinApprovers orders the results by the min_approvers field.

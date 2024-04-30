@@ -49,16 +49,16 @@ type AccessMutation struct {
 	typ                 string
 	id                  *uuid.UUID
 	start_time          *time.Time
-	approved            *bool
 	rolled_back         *bool
 	rollback_time       *time.Time
 	rollback_reason     *string
-	end_time            *time.Time
-	request_id          *uuid.UUID
+	expiration          *time.Time
 	clearedFields       map[string]struct{}
 	approvals           map[uuid.UUID]struct{}
 	removedapprovals    map[uuid.UUID]struct{}
 	clearedapprovals    bool
+	request             *uuid.UUID
+	clearedrequest      bool
 	accessTokens        map[uuid.UUID]struct{}
 	removedaccessTokens map[uuid.UUID]struct{}
 	clearedaccessTokens bool
@@ -207,42 +207,6 @@ func (m *AccessMutation) ResetStartTime() {
 	m.start_time = nil
 }
 
-// SetApproved sets the "approved" field.
-func (m *AccessMutation) SetApproved(b bool) {
-	m.approved = &b
-}
-
-// Approved returns the value of the "approved" field in the mutation.
-func (m *AccessMutation) Approved() (r bool, exists bool) {
-	v := m.approved
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldApproved returns the old "approved" field's value of the Access entity.
-// If the Access object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccessMutation) OldApproved(ctx context.Context) (v bool, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldApproved is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldApproved requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldApproved: %w", err)
-	}
-	return oldValue.Approved, nil
-}
-
-// ResetApproved resets all changes to the "approved" field.
-func (m *AccessMutation) ResetApproved() {
-	m.approved = nil
-}
-
 // SetRolledBack sets the "rolled_back" field.
 func (m *AccessMutation) SetRolledBack(b bool) {
 	m.rolled_back = &b
@@ -296,7 +260,7 @@ func (m *AccessMutation) RollbackTime() (r time.Time, exists bool) {
 // OldRollbackTime returns the old "rollback_time" field's value of the Access entity.
 // If the Access object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccessMutation) OldRollbackTime(ctx context.Context) (v time.Time, err error) {
+func (m *AccessMutation) OldRollbackTime(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRollbackTime is only allowed on UpdateOne operations")
 	}
@@ -310,22 +274,9 @@ func (m *AccessMutation) OldRollbackTime(ctx context.Context) (v time.Time, err 
 	return oldValue.RollbackTime, nil
 }
 
-// ClearRollbackTime clears the value of the "rollback_time" field.
-func (m *AccessMutation) ClearRollbackTime() {
-	m.rollback_time = nil
-	m.clearedFields[access.FieldRollbackTime] = struct{}{}
-}
-
-// RollbackTimeCleared returns if the "rollback_time" field was cleared in this mutation.
-func (m *AccessMutation) RollbackTimeCleared() bool {
-	_, ok := m.clearedFields[access.FieldRollbackTime]
-	return ok
-}
-
 // ResetRollbackTime resets all changes to the "rollback_time" field.
 func (m *AccessMutation) ResetRollbackTime() {
 	m.rollback_time = nil
-	delete(m.clearedFields, access.FieldRollbackTime)
 }
 
 // SetRollbackReason sets the "rollback_reason" field.
@@ -345,7 +296,7 @@ func (m *AccessMutation) RollbackReason() (r string, exists bool) {
 // OldRollbackReason returns the old "rollback_reason" field's value of the Access entity.
 // If the Access object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccessMutation) OldRollbackReason(ctx context.Context) (v string, err error) {
+func (m *AccessMutation) OldRollbackReason(ctx context.Context) (v *string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRollbackReason is only allowed on UpdateOne operations")
 	}
@@ -377,76 +328,40 @@ func (m *AccessMutation) ResetRollbackReason() {
 	delete(m.clearedFields, access.FieldRollbackReason)
 }
 
-// SetEndTime sets the "end_time" field.
-func (m *AccessMutation) SetEndTime(t time.Time) {
-	m.end_time = &t
+// SetExpiration sets the "expiration" field.
+func (m *AccessMutation) SetExpiration(t time.Time) {
+	m.expiration = &t
 }
 
-// EndTime returns the value of the "end_time" field in the mutation.
-func (m *AccessMutation) EndTime() (r time.Time, exists bool) {
-	v := m.end_time
+// Expiration returns the value of the "expiration" field in the mutation.
+func (m *AccessMutation) Expiration() (r time.Time, exists bool) {
+	v := m.expiration
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldEndTime returns the old "end_time" field's value of the Access entity.
+// OldExpiration returns the old "expiration" field's value of the Access entity.
 // If the Access object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccessMutation) OldEndTime(ctx context.Context) (v time.Time, err error) {
+func (m *AccessMutation) OldExpiration(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldEndTime is only allowed on UpdateOne operations")
+		return v, errors.New("OldExpiration is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldEndTime requires an ID field in the mutation")
+		return v, errors.New("OldExpiration requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldEndTime: %w", err)
+		return v, fmt.Errorf("querying old value for OldExpiration: %w", err)
 	}
-	return oldValue.EndTime, nil
+	return oldValue.Expiration, nil
 }
 
-// ResetEndTime resets all changes to the "end_time" field.
-func (m *AccessMutation) ResetEndTime() {
-	m.end_time = nil
-}
-
-// SetRequestID sets the "request_id" field.
-func (m *AccessMutation) SetRequestID(u uuid.UUID) {
-	m.request_id = &u
-}
-
-// RequestID returns the value of the "request_id" field in the mutation.
-func (m *AccessMutation) RequestID() (r uuid.UUID, exists bool) {
-	v := m.request_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldRequestID returns the old "request_id" field's value of the Access entity.
-// If the Access object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AccessMutation) OldRequestID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldRequestID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldRequestID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldRequestID: %w", err)
-	}
-	return oldValue.RequestID, nil
-}
-
-// ResetRequestID resets all changes to the "request_id" field.
-func (m *AccessMutation) ResetRequestID() {
-	m.request_id = nil
+// ResetExpiration resets all changes to the "expiration" field.
+func (m *AccessMutation) ResetExpiration() {
+	m.expiration = nil
 }
 
 // AddApprovalIDs adds the "approvals" edge to the Approval entity by ids.
@@ -501,6 +416,45 @@ func (m *AccessMutation) ResetApprovals() {
 	m.approvals = nil
 	m.clearedapprovals = false
 	m.removedapprovals = nil
+}
+
+// SetRequestID sets the "request" edge to the Request entity by id.
+func (m *AccessMutation) SetRequestID(id uuid.UUID) {
+	m.request = &id
+}
+
+// ClearRequest clears the "request" edge to the Request entity.
+func (m *AccessMutation) ClearRequest() {
+	m.clearedrequest = true
+}
+
+// RequestCleared reports if the "request" edge to the Request entity was cleared.
+func (m *AccessMutation) RequestCleared() bool {
+	return m.clearedrequest
+}
+
+// RequestID returns the "request" edge ID in the mutation.
+func (m *AccessMutation) RequestID() (id uuid.UUID, exists bool) {
+	if m.request != nil {
+		return *m.request, true
+	}
+	return
+}
+
+// RequestIDs returns the "request" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RequestID instead. It exists only for internal usage by the builders.
+func (m *AccessMutation) RequestIDs() (ids []uuid.UUID) {
+	if id := m.request; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRequest resets all changes to the "request" edge.
+func (m *AccessMutation) ResetRequest() {
+	m.request = nil
+	m.clearedrequest = false
 }
 
 // AddAccessTokenIDs adds the "accessTokens" edge to the ActionTokens entity by ids.
@@ -591,12 +545,9 @@ func (m *AccessMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccessMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 5)
 	if m.start_time != nil {
 		fields = append(fields, access.FieldStartTime)
-	}
-	if m.approved != nil {
-		fields = append(fields, access.FieldApproved)
 	}
 	if m.rolled_back != nil {
 		fields = append(fields, access.FieldRolledBack)
@@ -607,11 +558,8 @@ func (m *AccessMutation) Fields() []string {
 	if m.rollback_reason != nil {
 		fields = append(fields, access.FieldRollbackReason)
 	}
-	if m.end_time != nil {
-		fields = append(fields, access.FieldEndTime)
-	}
-	if m.request_id != nil {
-		fields = append(fields, access.FieldRequestID)
+	if m.expiration != nil {
+		fields = append(fields, access.FieldExpiration)
 	}
 	return fields
 }
@@ -623,18 +571,14 @@ func (m *AccessMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case access.FieldStartTime:
 		return m.StartTime()
-	case access.FieldApproved:
-		return m.Approved()
 	case access.FieldRolledBack:
 		return m.RolledBack()
 	case access.FieldRollbackTime:
 		return m.RollbackTime()
 	case access.FieldRollbackReason:
 		return m.RollbackReason()
-	case access.FieldEndTime:
-		return m.EndTime()
-	case access.FieldRequestID:
-		return m.RequestID()
+	case access.FieldExpiration:
+		return m.Expiration()
 	}
 	return nil, false
 }
@@ -646,18 +590,14 @@ func (m *AccessMutation) OldField(ctx context.Context, name string) (ent.Value, 
 	switch name {
 	case access.FieldStartTime:
 		return m.OldStartTime(ctx)
-	case access.FieldApproved:
-		return m.OldApproved(ctx)
 	case access.FieldRolledBack:
 		return m.OldRolledBack(ctx)
 	case access.FieldRollbackTime:
 		return m.OldRollbackTime(ctx)
 	case access.FieldRollbackReason:
 		return m.OldRollbackReason(ctx)
-	case access.FieldEndTime:
-		return m.OldEndTime(ctx)
-	case access.FieldRequestID:
-		return m.OldRequestID(ctx)
+	case access.FieldExpiration:
+		return m.OldExpiration(ctx)
 	}
 	return nil, fmt.Errorf("unknown Access field %s", name)
 }
@@ -673,13 +613,6 @@ func (m *AccessMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStartTime(v)
-		return nil
-	case access.FieldApproved:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetApproved(v)
 		return nil
 	case access.FieldRolledBack:
 		v, ok := value.(bool)
@@ -702,19 +635,12 @@ func (m *AccessMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRollbackReason(v)
 		return nil
-	case access.FieldEndTime:
+	case access.FieldExpiration:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetEndTime(v)
-		return nil
-	case access.FieldRequestID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetRequestID(v)
+		m.SetExpiration(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Access field %s", name)
@@ -746,9 +672,6 @@ func (m *AccessMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *AccessMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(access.FieldRollbackTime) {
-		fields = append(fields, access.FieldRollbackTime)
-	}
 	if m.FieldCleared(access.FieldRollbackReason) {
 		fields = append(fields, access.FieldRollbackReason)
 	}
@@ -766,9 +689,6 @@ func (m *AccessMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *AccessMutation) ClearField(name string) error {
 	switch name {
-	case access.FieldRollbackTime:
-		m.ClearRollbackTime()
-		return nil
 	case access.FieldRollbackReason:
 		m.ClearRollbackReason()
 		return nil
@@ -783,9 +703,6 @@ func (m *AccessMutation) ResetField(name string) error {
 	case access.FieldStartTime:
 		m.ResetStartTime()
 		return nil
-	case access.FieldApproved:
-		m.ResetApproved()
-		return nil
 	case access.FieldRolledBack:
 		m.ResetRolledBack()
 		return nil
@@ -795,11 +712,8 @@ func (m *AccessMutation) ResetField(name string) error {
 	case access.FieldRollbackReason:
 		m.ResetRollbackReason()
 		return nil
-	case access.FieldEndTime:
-		m.ResetEndTime()
-		return nil
-	case access.FieldRequestID:
-		m.ResetRequestID()
+	case access.FieldExpiration:
+		m.ResetExpiration()
 		return nil
 	}
 	return fmt.Errorf("unknown Access field %s", name)
@@ -807,9 +721,12 @@ func (m *AccessMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AccessMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.approvals != nil {
 		edges = append(edges, access.EdgeApprovals)
+	}
+	if m.request != nil {
+		edges = append(edges, access.EdgeRequest)
 	}
 	if m.accessTokens != nil {
 		edges = append(edges, access.EdgeAccessTokens)
@@ -827,6 +744,10 @@ func (m *AccessMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case access.EdgeRequest:
+		if id := m.request; id != nil {
+			return []ent.Value{*id}
+		}
 	case access.EdgeAccessTokens:
 		ids := make([]ent.Value, 0, len(m.accessTokens))
 		for id := range m.accessTokens {
@@ -839,7 +760,7 @@ func (m *AccessMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccessMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedapprovals != nil {
 		edges = append(edges, access.EdgeApprovals)
 	}
@@ -871,9 +792,12 @@ func (m *AccessMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AccessMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedapprovals {
 		edges = append(edges, access.EdgeApprovals)
+	}
+	if m.clearedrequest {
+		edges = append(edges, access.EdgeRequest)
 	}
 	if m.clearedaccessTokens {
 		edges = append(edges, access.EdgeAccessTokens)
@@ -887,6 +811,8 @@ func (m *AccessMutation) EdgeCleared(name string) bool {
 	switch name {
 	case access.EdgeApprovals:
 		return m.clearedapprovals
+	case access.EdgeRequest:
+		return m.clearedrequest
 	case access.EdgeAccessTokens:
 		return m.clearedaccessTokens
 	}
@@ -897,6 +823,9 @@ func (m *AccessMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *AccessMutation) ClearEdge(name string) error {
 	switch name {
+	case access.EdgeRequest:
+		m.ClearRequest()
+		return nil
 	}
 	return fmt.Errorf("unknown Access unique edge %s", name)
 }
@@ -907,6 +836,9 @@ func (m *AccessMutation) ResetEdge(name string) error {
 	switch name {
 	case access.EdgeApprovals:
 		m.ResetApprovals()
+		return nil
+	case access.EdgeRequest:
+		m.ResetRequest()
 		return nil
 	case access.EdgeAccessTokens:
 		m.ResetAccessTokens()
@@ -1870,8 +1802,7 @@ type ApprovalMutation struct {
 	clearedFields  map[string]struct{}
 	request        *uuid.UUID
 	clearedrequest bool
-	access         map[uuid.UUID]struct{}
-	removedaccess  map[uuid.UUID]struct{}
+	access         *uuid.UUID
 	clearedaccess  bool
 	done           bool
 	oldValue       func(context.Context) (*Approval, error)
@@ -2214,14 +2145,9 @@ func (m *ApprovalMutation) ResetRequest() {
 	m.clearedrequest = false
 }
 
-// AddAccesIDs adds the "access" edge to the Access entity by ids.
-func (m *ApprovalMutation) AddAccesIDs(ids ...uuid.UUID) {
-	if m.access == nil {
-		m.access = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		m.access[ids[i]] = struct{}{}
-	}
+// SetAccessID sets the "access" edge to the Access entity by id.
+func (m *ApprovalMutation) SetAccessID(id uuid.UUID) {
+	m.access = &id
 }
 
 // ClearAccess clears the "access" edge to the Access entity.
@@ -2234,29 +2160,20 @@ func (m *ApprovalMutation) AccessCleared() bool {
 	return m.clearedaccess
 }
 
-// RemoveAccesIDs removes the "access" edge to the Access entity by IDs.
-func (m *ApprovalMutation) RemoveAccesIDs(ids ...uuid.UUID) {
-	if m.removedaccess == nil {
-		m.removedaccess = make(map[uuid.UUID]struct{})
-	}
-	for i := range ids {
-		delete(m.access, ids[i])
-		m.removedaccess[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedAccess returns the removed IDs of the "access" edge to the Access entity.
-func (m *ApprovalMutation) RemovedAccessIDs() (ids []uuid.UUID) {
-	for id := range m.removedaccess {
-		ids = append(ids, id)
+// AccessID returns the "access" edge ID in the mutation.
+func (m *ApprovalMutation) AccessID() (id uuid.UUID, exists bool) {
+	if m.access != nil {
+		return *m.access, true
 	}
 	return
 }
 
 // AccessIDs returns the "access" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AccessID instead. It exists only for internal usage by the builders.
 func (m *ApprovalMutation) AccessIDs() (ids []uuid.UUID) {
-	for id := range m.access {
-		ids = append(ids, id)
+	if id := m.access; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -2265,7 +2182,6 @@ func (m *ApprovalMutation) AccessIDs() (ids []uuid.UUID) {
 func (m *ApprovalMutation) ResetAccess() {
 	m.access = nil
 	m.clearedaccess = false
-	m.removedaccess = nil
 }
 
 // Where appends a list predicates to the ApprovalMutation builder.
@@ -2497,11 +2413,9 @@ func (m *ApprovalMutation) AddedIDs(name string) []ent.Value {
 			return []ent.Value{*id}
 		}
 	case approval.EdgeAccess:
-		ids := make([]ent.Value, 0, len(m.access))
-		for id := range m.access {
-			ids = append(ids, id)
+		if id := m.access; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -2509,23 +2423,12 @@ func (m *ApprovalMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ApprovalMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedaccess != nil {
-		edges = append(edges, approval.EdgeAccess)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ApprovalMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case approval.EdgeAccess:
-		ids := make([]ent.Value, 0, len(m.removedaccess))
-		for id := range m.removedaccess {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -2559,6 +2462,9 @@ func (m *ApprovalMutation) ClearEdge(name string) error {
 	switch name {
 	case approval.EdgeRequest:
 		m.ClearRequest()
+		return nil
+	case approval.EdgeAccess:
+		m.ClearAccess()
 		return nil
 	}
 	return fmt.Errorf("unknown Approval unique edge %s", name)
@@ -3026,6 +2932,8 @@ type MissionMutation struct {
 	id                       *uuid.UUID
 	name                     *string
 	description              *string
+	duration                 *int
+	addduration              *int
 	min_approvers            *int
 	addmin_approvers         *int
 	possible_approvers       *[]string
@@ -3229,6 +3137,62 @@ func (m *MissionMutation) DescriptionCleared() bool {
 func (m *MissionMutation) ResetDescription() {
 	m.description = nil
 	delete(m.clearedFields, mission.FieldDescription)
+}
+
+// SetDuration sets the "duration" field.
+func (m *MissionMutation) SetDuration(i int) {
+	m.duration = &i
+	m.addduration = nil
+}
+
+// Duration returns the value of the "duration" field in the mutation.
+func (m *MissionMutation) Duration() (r int, exists bool) {
+	v := m.duration
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDuration returns the old "duration" field's value of the Mission entity.
+// If the Mission object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MissionMutation) OldDuration(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDuration is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDuration requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDuration: %w", err)
+	}
+	return oldValue.Duration, nil
+}
+
+// AddDuration adds i to the "duration" field.
+func (m *MissionMutation) AddDuration(i int) {
+	if m.addduration != nil {
+		*m.addduration += i
+	} else {
+		m.addduration = &i
+	}
+}
+
+// AddedDuration returns the value that was added to the "duration" field in this mutation.
+func (m *MissionMutation) AddedDuration() (r int, exists bool) {
+	v := m.addduration
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetDuration resets all changes to the "duration" field.
+func (m *MissionMutation) ResetDuration() {
+	m.duration = nil
+	m.addduration = nil
 }
 
 // SetMinApprovers sets the "min_approvers" field.
@@ -3480,12 +3444,15 @@ func (m *MissionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *MissionMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.name != nil {
 		fields = append(fields, mission.FieldName)
 	}
 	if m.description != nil {
 		fields = append(fields, mission.FieldDescription)
+	}
+	if m.duration != nil {
+		fields = append(fields, mission.FieldDuration)
 	}
 	if m.min_approvers != nil {
 		fields = append(fields, mission.FieldMinApprovers)
@@ -3505,6 +3472,8 @@ func (m *MissionMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case mission.FieldDescription:
 		return m.Description()
+	case mission.FieldDuration:
+		return m.Duration()
 	case mission.FieldMinApprovers:
 		return m.MinApprovers()
 	case mission.FieldPossibleApprovers:
@@ -3522,6 +3491,8 @@ func (m *MissionMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldName(ctx)
 	case mission.FieldDescription:
 		return m.OldDescription(ctx)
+	case mission.FieldDuration:
+		return m.OldDuration(ctx)
 	case mission.FieldMinApprovers:
 		return m.OldMinApprovers(ctx)
 	case mission.FieldPossibleApprovers:
@@ -3549,6 +3520,13 @@ func (m *MissionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDescription(v)
 		return nil
+	case mission.FieldDuration:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDuration(v)
+		return nil
 	case mission.FieldMinApprovers:
 		v, ok := value.(int)
 		if !ok {
@@ -3571,6 +3549,9 @@ func (m *MissionMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *MissionMutation) AddedFields() []string {
 	var fields []string
+	if m.addduration != nil {
+		fields = append(fields, mission.FieldDuration)
+	}
 	if m.addmin_approvers != nil {
 		fields = append(fields, mission.FieldMinApprovers)
 	}
@@ -3582,6 +3563,8 @@ func (m *MissionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *MissionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case mission.FieldDuration:
+		return m.AddedDuration()
 	case mission.FieldMinApprovers:
 		return m.AddedMinApprovers()
 	}
@@ -3593,6 +3576,13 @@ func (m *MissionMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *MissionMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case mission.FieldDuration:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDuration(v)
+		return nil
 	case mission.FieldMinApprovers:
 		v, ok := value.(int)
 		if !ok {
@@ -3641,6 +3631,9 @@ func (m *MissionMutation) ResetField(name string) error {
 		return nil
 	case mission.FieldDescription:
 		m.ResetDescription()
+		return nil
+	case mission.FieldDuration:
+		m.ResetDuration()
 		return nil
 	case mission.FieldMinApprovers:
 		m.ResetMinApprovers()
@@ -3770,6 +3763,9 @@ type RequestMutation struct {
 	id               *uuid.UUID
 	reason           *string
 	requester        *string
+	timestamp        *time.Time
+	cancelled_time   *time.Time
+	cancelled        *bool
 	clearedFields    map[string]struct{}
 	approvals        map[uuid.UUID]struct{}
 	removedapprovals map[uuid.UUID]struct{}
@@ -3957,6 +3953,127 @@ func (m *RequestMutation) ResetRequester() {
 	m.requester = nil
 }
 
+// SetTimestamp sets the "timestamp" field.
+func (m *RequestMutation) SetTimestamp(t time.Time) {
+	m.timestamp = &t
+}
+
+// Timestamp returns the value of the "timestamp" field in the mutation.
+func (m *RequestMutation) Timestamp() (r time.Time, exists bool) {
+	v := m.timestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimestamp returns the old "timestamp" field's value of the Request entity.
+// If the Request object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RequestMutation) OldTimestamp(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimestamp is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimestamp requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimestamp: %w", err)
+	}
+	return oldValue.Timestamp, nil
+}
+
+// ResetTimestamp resets all changes to the "timestamp" field.
+func (m *RequestMutation) ResetTimestamp() {
+	m.timestamp = nil
+}
+
+// SetCancelledTime sets the "cancelled_time" field.
+func (m *RequestMutation) SetCancelledTime(t time.Time) {
+	m.cancelled_time = &t
+}
+
+// CancelledTime returns the value of the "cancelled_time" field in the mutation.
+func (m *RequestMutation) CancelledTime() (r time.Time, exists bool) {
+	v := m.cancelled_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCancelledTime returns the old "cancelled_time" field's value of the Request entity.
+// If the Request object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RequestMutation) OldCancelledTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCancelledTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCancelledTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCancelledTime: %w", err)
+	}
+	return oldValue.CancelledTime, nil
+}
+
+// ClearCancelledTime clears the value of the "cancelled_time" field.
+func (m *RequestMutation) ClearCancelledTime() {
+	m.cancelled_time = nil
+	m.clearedFields[request.FieldCancelledTime] = struct{}{}
+}
+
+// CancelledTimeCleared returns if the "cancelled_time" field was cleared in this mutation.
+func (m *RequestMutation) CancelledTimeCleared() bool {
+	_, ok := m.clearedFields[request.FieldCancelledTime]
+	return ok
+}
+
+// ResetCancelledTime resets all changes to the "cancelled_time" field.
+func (m *RequestMutation) ResetCancelledTime() {
+	m.cancelled_time = nil
+	delete(m.clearedFields, request.FieldCancelledTime)
+}
+
+// SetCancelled sets the "cancelled" field.
+func (m *RequestMutation) SetCancelled(b bool) {
+	m.cancelled = &b
+}
+
+// Cancelled returns the value of the "cancelled" field in the mutation.
+func (m *RequestMutation) Cancelled() (r bool, exists bool) {
+	v := m.cancelled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCancelled returns the old "cancelled" field's value of the Request entity.
+// If the Request object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RequestMutation) OldCancelled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCancelled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCancelled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCancelled: %w", err)
+	}
+	return oldValue.Cancelled, nil
+}
+
+// ResetCancelled resets all changes to the "cancelled" field.
+func (m *RequestMutation) ResetCancelled() {
+	m.cancelled = nil
+}
+
 // AddApprovalIDs adds the "approvals" edge to the Approval entity by ids.
 func (m *RequestMutation) AddApprovalIDs(ids ...uuid.UUID) {
 	if m.approvals == nil {
@@ -4084,12 +4201,21 @@ func (m *RequestMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RequestMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 5)
 	if m.reason != nil {
 		fields = append(fields, request.FieldReason)
 	}
 	if m.requester != nil {
 		fields = append(fields, request.FieldRequester)
+	}
+	if m.timestamp != nil {
+		fields = append(fields, request.FieldTimestamp)
+	}
+	if m.cancelled_time != nil {
+		fields = append(fields, request.FieldCancelledTime)
+	}
+	if m.cancelled != nil {
+		fields = append(fields, request.FieldCancelled)
 	}
 	return fields
 }
@@ -4103,6 +4229,12 @@ func (m *RequestMutation) Field(name string) (ent.Value, bool) {
 		return m.Reason()
 	case request.FieldRequester:
 		return m.Requester()
+	case request.FieldTimestamp:
+		return m.Timestamp()
+	case request.FieldCancelledTime:
+		return m.CancelledTime()
+	case request.FieldCancelled:
+		return m.Cancelled()
 	}
 	return nil, false
 }
@@ -4116,6 +4248,12 @@ func (m *RequestMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldReason(ctx)
 	case request.FieldRequester:
 		return m.OldRequester(ctx)
+	case request.FieldTimestamp:
+		return m.OldTimestamp(ctx)
+	case request.FieldCancelledTime:
+		return m.OldCancelledTime(ctx)
+	case request.FieldCancelled:
+		return m.OldCancelled(ctx)
 	}
 	return nil, fmt.Errorf("unknown Request field %s", name)
 }
@@ -4138,6 +4276,27 @@ func (m *RequestMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRequester(v)
+		return nil
+	case request.FieldTimestamp:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimestamp(v)
+		return nil
+	case request.FieldCancelledTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCancelledTime(v)
+		return nil
+	case request.FieldCancelled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCancelled(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Request field %s", name)
@@ -4168,7 +4327,11 @@ func (m *RequestMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *RequestMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(request.FieldCancelledTime) {
+		fields = append(fields, request.FieldCancelledTime)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -4181,6 +4344,11 @@ func (m *RequestMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *RequestMutation) ClearField(name string) error {
+	switch name {
+	case request.FieldCancelledTime:
+		m.ClearCancelledTime()
+		return nil
+	}
 	return fmt.Errorf("unknown Request nullable field %s", name)
 }
 
@@ -4193,6 +4361,15 @@ func (m *RequestMutation) ResetField(name string) error {
 		return nil
 	case request.FieldRequester:
 		m.ResetRequester()
+		return nil
+	case request.FieldTimestamp:
+		m.ResetTimestamp()
+		return nil
+	case request.FieldCancelledTime:
+		m.ResetCancelledTime()
+		return nil
+	case request.FieldCancelled:
+		m.ResetCancelled()
 		return nil
 	}
 	return fmt.Errorf("unknown Request field %s", name)

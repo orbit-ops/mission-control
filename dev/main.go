@@ -8,6 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/orbit-ops/launchpad-core/config"
 	"github.com/orbit-ops/launchpad-core/ent"
+	_ "github.com/orbit-ops/launchpad-core/ent/runtime"
 	"github.com/orbit-ops/launchpad-core/httpserver"
 	"github.com/orbit-ops/launchpad-core/providers"
 	"github.com/orbit-ops/launchpad-core/providers/local"

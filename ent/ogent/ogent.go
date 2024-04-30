@@ -68,6 +68,32 @@ func (h *OgentHandler) ListAccessApprovals(ctx context.Context, params ListAcces
 	return (*ListAccessApprovalsOKApplicationJSON)(&r), nil
 }
 
+// ReadAccessRequest handles GET /accesses/{id}/request requests.
+func (h *OgentHandler) ReadAccessRequest(ctx context.Context, params ReadAccessRequestParams) (ReadAccessRequestRes, error) {
+	q := h.client.Access.Query().Where(access.IDEQ(params.ID)).QueryRequest()
+	e, err := q.Only(ctx)
+	if err != nil {
+		switch {
+		case ent.IsNotFound(err):
+			return &R404{
+				Code:   http.StatusNotFound,
+				Status: http.StatusText(http.StatusNotFound),
+				Errors: rawError(err),
+			}, nil
+		case ent.IsNotSingular(err):
+			return &R409{
+				Code:   http.StatusConflict,
+				Status: http.StatusText(http.StatusConflict),
+				Errors: rawError(err),
+			}, nil
+		default:
+			// Let the server handle the error.
+			return nil, err
+		}
+	}
+	return NewAccessRequestRead(e), nil
+}
+
 // ListAccessAccessTokens handles GET /accesses/{id}/access-tokens requests.
 func (h *OgentHandler) ListAccessAccessTokens(ctx context.Context, params ListAccessAccessTokensParams) (ListAccessAccessTokensRes, error) {
 	q := h.client.Access.Query().Where(access.IDEQ(params.ID)).QueryAccessTokens()
@@ -244,7 +270,9 @@ func (h *OgentHandler) CreateApproval(ctx context.Context, req *CreateApprovalRe
 	}
 	// Add all edges.
 	b.SetRequestID(req.Request)
-	b.AddAccesIDs(req.Access...)
+	if v, ok := req.Access.Get(); ok {
+		b.SetAccessID(v)
+	}
 	// Persist to storage.
 	e, err := b.Save(ctx)
 	if err != nil {
@@ -315,9 +343,6 @@ func (h *OgentHandler) UpdateApproval(ctx context.Context, req *UpdateApprovalRe
 	// Add all edges.
 	if v, ok := req.Request.Get(); ok {
 		b.SetRequestID(v)
-	}
-	if req.Access != nil {
-		b.ClearAccess().AddAccesIDs(req.Access...)
 	}
 	// Persist to storage.
 	e, err := b.Save(ctx)
@@ -413,19 +438,10 @@ func (h *OgentHandler) ListApproval(ctx context.Context, params ListApprovalPara
 	return (*ListApprovalOKApplicationJSON)(&r), nil
 }
 
-// ListApprovalAccess handles GET /approvals/{id}/access requests.
-func (h *OgentHandler) ListApprovalAccess(ctx context.Context, params ListApprovalAccessParams) (ListApprovalAccessRes, error) {
+// ReadApprovalAccess handles GET /approvals/{id}/access requests.
+func (h *OgentHandler) ReadApprovalAccess(ctx context.Context, params ReadApprovalAccessParams) (ReadApprovalAccessRes, error) {
 	q := h.client.Approval.Query().Where(approval.IDEQ(params.ID)).QueryAccess()
-	page := 1
-	if v, ok := params.Page.Get(); ok {
-		page = v
-	}
-	itemsPerPage := 30
-	if v, ok := params.ItemsPerPage.Get(); ok {
-		itemsPerPage = v
-	}
-	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
-	es, err := q.All(ctx)
+	e, err := q.Only(ctx)
 	if err != nil {
 		switch {
 		case ent.IsNotFound(err):
@@ -445,8 +461,7 @@ func (h *OgentHandler) ListApprovalAccess(ctx context.Context, params ListApprov
 			return nil, err
 		}
 	}
-	r := NewApprovalAccessLists(es)
-	return (*ListApprovalAccessOKApplicationJSON)(&r), nil
+	return NewApprovalAccessRead(e), nil
 }
 
 // ListAudit handles GET /audits requests.
@@ -520,6 +535,7 @@ func (h *OgentHandler) CreateMission(ctx context.Context, req *CreateMissionReq)
 	if v, ok := req.Description.Get(); ok {
 		b.SetDescription(v)
 	}
+	b.SetDuration(req.Duration)
 	b.SetMinApprovers(req.MinApprovers)
 	b.SetPossibleApprovers(req.PossibleApprovers)
 	// Add all edges.
@@ -591,6 +607,9 @@ func (h *OgentHandler) UpdateMission(ctx context.Context, req *UpdateMissionReq,
 	}
 	if v, ok := req.Description.Get(); ok {
 		b.SetDescription(v)
+	}
+	if v, ok := req.Duration.Get(); ok {
+		b.SetDuration(v)
 	}
 	if v, ok := req.MinApprovers.Get(); ok {
 		b.SetMinApprovers(v)
@@ -774,6 +793,11 @@ func (h *OgentHandler) CreateRequest(ctx context.Context, req *CreateRequestReq)
 	// Add all fields.
 	b.SetReason(req.Reason)
 	b.SetRequester(req.Requester)
+	b.SetTimestamp(req.Timestamp)
+	if v, ok := req.CancelledTime.Get(); ok {
+		b.SetCancelledTime(v)
+	}
+	b.SetCancelled(req.Cancelled)
 	// Add all edges.
 	b.AddApprovalIDs(req.Approvals...)
 	b.SetMissionID(req.Mission)
@@ -838,6 +862,12 @@ func (h *OgentHandler) ReadRequest(ctx context.Context, params ReadRequestParams
 func (h *OgentHandler) UpdateRequest(ctx context.Context, req *UpdateRequestReq, params UpdateRequestParams) (UpdateRequestRes, error) {
 	b := h.client.Request.UpdateOneID(params.ID)
 	// Add all fields.
+	if v, ok := req.CancelledTime.Get(); ok {
+		b.SetCancelledTime(v)
+	}
+	if v, ok := req.Cancelled.Get(); ok {
+		b.SetCancelled(v)
+	}
 	// Add all edges.
 	// Persist to storage.
 	e, err := b.Save(ctx)

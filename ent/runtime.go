@@ -3,6 +3,8 @@
 package ent
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/actiontokens"
@@ -22,9 +24,13 @@ func init() {
 	accessFields := schema.Access{}.Fields()
 	_ = accessFields
 	// accessDescRolledBack is the schema descriptor for rolled_back field.
-	accessDescRolledBack := accessFields[3].Descriptor()
+	accessDescRolledBack := accessFields[2].Descriptor()
 	// access.DefaultRolledBack holds the default value on creation for the rolled_back field.
 	access.DefaultRolledBack = accessDescRolledBack.Default.(bool)
+	// accessDescRollbackTime is the schema descriptor for rollback_time field.
+	accessDescRollbackTime := accessFields[3].Descriptor()
+	// access.DefaultRollbackTime holds the default value on creation for the rollback_time field.
+	access.DefaultRollbackTime = accessDescRollbackTime.Default.(func() time.Time)
 	// accessDescID is the schema descriptor for id field.
 	accessDescID := accessFields[0].Descriptor()
 	// access.DefaultID holds the default value on creation for the id field.
@@ -43,6 +49,14 @@ func init() {
 	apikey.NameValidator = apikeyDescName.Validators[0].(func(string) error)
 	approvalFields := schema.Approval{}.Fields()
 	_ = approvalFields
+	// approvalDescPerson is the schema descriptor for person field.
+	approvalDescPerson := approvalFields[1].Descriptor()
+	// approval.PersonValidator is a validator for the "person" field. It is called by the builders before save.
+	approval.PersonValidator = approvalDescPerson.Validators[0].(func(string) error)
+	// approvalDescApprovedTime is the schema descriptor for approved_time field.
+	approvalDescApprovedTime := approvalFields[2].Descriptor()
+	// approval.DefaultApprovedTime holds the default value on creation for the approved_time field.
+	approval.DefaultApprovedTime = approvalDescApprovedTime.Default.(func() time.Time)
 	// approvalDescRevoked is the schema descriptor for revoked field.
 	approvalDescRevoked := approvalFields[4].Descriptor()
 	// approval.DefaultRevoked holds the default value on creation for the revoked field.
@@ -67,8 +81,12 @@ func init() {
 	missionDescName := missionFields[1].Descriptor()
 	// mission.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	mission.NameValidator = missionDescName.Validators[0].(func(string) error)
+	// missionDescDuration is the schema descriptor for duration field.
+	missionDescDuration := missionFields[3].Descriptor()
+	// mission.DurationValidator is a validator for the "duration" field. It is called by the builders before save.
+	mission.DurationValidator = missionDescDuration.Validators[0].(func(int) error)
 	// missionDescMinApprovers is the schema descriptor for min_approvers field.
-	missionDescMinApprovers := missionFields[3].Descriptor()
+	missionDescMinApprovers := missionFields[4].Descriptor()
 	// mission.MinApproversValidator is a validator for the "min_approvers" field. It is called by the builders before save.
 	mission.MinApproversValidator = missionDescMinApprovers.Validators[0].(func(int) error)
 	// missionDescID is the schema descriptor for id field.
@@ -77,6 +95,22 @@ func init() {
 	mission.DefaultID = missionDescID.Default.(func() uuid.UUID)
 	requestFields := schema.Request{}.Fields()
 	_ = requestFields
+	// requestDescReason is the schema descriptor for reason field.
+	requestDescReason := requestFields[1].Descriptor()
+	// request.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	request.ReasonValidator = requestDescReason.Validators[0].(func(string) error)
+	// requestDescRequester is the schema descriptor for requester field.
+	requestDescRequester := requestFields[2].Descriptor()
+	// request.RequesterValidator is a validator for the "requester" field. It is called by the builders before save.
+	request.RequesterValidator = requestDescRequester.Validators[0].(func(string) error)
+	// requestDescTimestamp is the schema descriptor for timestamp field.
+	requestDescTimestamp := requestFields[3].Descriptor()
+	// request.DefaultTimestamp holds the default value on creation for the timestamp field.
+	request.DefaultTimestamp = requestDescTimestamp.Default.(func() time.Time)
+	// requestDescCancelled is the schema descriptor for cancelled field.
+	requestDescCancelled := requestFields[5].Descriptor()
+	// request.DefaultCancelled holds the default value on creation for the cancelled field.
+	request.DefaultCancelled = requestDescCancelled.Default.(bool)
 	// requestDescID is the schema descriptor for id field.
 	requestDescID := requestFields[0].Descriptor()
 	// request.DefaultID holds the default value on creation for the id field.

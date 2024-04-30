@@ -380,7 +380,23 @@ func (c *AccessClient) QueryApprovals(a *Access) *ApprovalQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(access.Table, access.FieldID, id),
 			sqlgraph.To(approval.Table, approval.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, access.ApprovalsTable, access.ApprovalsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, access.ApprovalsTable, access.ApprovalsColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRequest queries the request edge of a Access.
+func (c *AccessClient) QueryRequest(a *Access) *RequestQuery {
+	query := (&RequestClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(access.Table, access.FieldID, id),
+			sqlgraph.To(request.Table, request.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, access.RequestTable, access.RequestColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -843,7 +859,7 @@ func (c *ApprovalClient) QueryAccess(a *Approval) *AccessQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(approval.Table, approval.FieldID, id),
 			sqlgraph.To(access.Table, access.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, approval.AccessTable, approval.AccessPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, approval.AccessTable, approval.AccessColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil

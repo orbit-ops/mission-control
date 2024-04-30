@@ -399,6 +399,187 @@ func (s *AccessApprovalsList) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
+func (s *AccessRequestRead) Encode(e *jx.Encoder) {
+	e.ObjStart()
+	s.encodeFields(e)
+	e.ObjEnd()
+}
+
+// encodeFields encodes fields.
+func (s *AccessRequestRead) encodeFields(e *jx.Encoder) {
+	{
+		e.FieldStart("id")
+		json.EncodeUUID(e, s.ID)
+	}
+	{
+		e.FieldStart("reason")
+		e.Str(s.Reason)
+	}
+	{
+		e.FieldStart("requester")
+		e.Str(s.Requester)
+	}
+	{
+		e.FieldStart("timestamp")
+		json.EncodeDateTime(e, s.Timestamp)
+	}
+	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("cancelled")
+		e.Bool(s.Cancelled)
+	}
+}
+
+var jsonFieldsNameOfAccessRequestRead = [6]string{
+	0: "id",
+	1: "reason",
+	2: "requester",
+	3: "timestamp",
+	4: "cancelled_time",
+	5: "cancelled",
+}
+
+// Decode decodes AccessRequestRead from json.
+func (s *AccessRequestRead) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode AccessRequestRead to nil")
+	}
+	var requiredBitSet [1]uint8
+
+	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
+		switch string(k) {
+		case "id":
+			requiredBitSet[0] |= 1 << 0
+			if err := func() error {
+				v, err := json.DecodeUUID(d)
+				s.ID = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"id\"")
+			}
+		case "reason":
+			requiredBitSet[0] |= 1 << 1
+			if err := func() error {
+				v, err := d.Str()
+				s.Reason = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"reason\"")
+			}
+		case "requester":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Str()
+				s.Requester = string(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"requester\"")
+			}
+		case "timestamp":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.Timestamp = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"timestamp\"")
+			}
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Cancelled = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
+		default:
+			return d.Skip()
+		}
+		return nil
+	}); err != nil {
+		return errors.Wrap(err, "decode AccessRequestRead")
+	}
+	// Validate required fields.
+	var failures []validate.FieldError
+	for i, mask := range [1]uint8{
+		0b00101111,
+	} {
+		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
+			// Mask only required fields and check equality to mask using XOR.
+			//
+			// If XOR result is not zero, result is not equal to expected, so some fields are missed.
+			// Bits of fields which would be set are actually bits of missed fields.
+			missed := bits.OnesCount8(result)
+			for bitN := 0; bitN < missed; bitN++ {
+				bitIdx := bits.TrailingZeros8(result)
+				fieldIdx := i*8 + bitIdx
+				var name string
+				if fieldIdx < len(jsonFieldsNameOfAccessRequestRead) {
+					name = jsonFieldsNameOfAccessRequestRead[fieldIdx]
+				} else {
+					name = strconv.Itoa(fieldIdx)
+				}
+				failures = append(failures, validate.FieldError{
+					Name:  name,
+					Error: validate.ErrFieldRequired,
+				})
+				// Reset bit.
+				result &^= 1 << bitIdx
+			}
+		}
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s *AccessRequestRead) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *AccessRequestRead) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode implements json.Marshaler.
 func (s *ApiKeyCreate) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
@@ -738,14 +919,14 @@ func (s *ApiKeyRead) UnmarshalJSON(data []byte) error {
 }
 
 // Encode implements json.Marshaler.
-func (s *ApprovalAccessList) Encode(e *jx.Encoder) {
+func (s *ApprovalAccessRead) Encode(e *jx.Encoder) {
 	e.ObjStart()
 	s.encodeFields(e)
 	e.ObjEnd()
 }
 
 // encodeFields encodes fields.
-func (s *ApprovalAccessList) encodeFields(e *jx.Encoder) {
+func (s *ApprovalAccessRead) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("id")
 		json.EncodeUUID(e, s.ID)
@@ -753,10 +934,6 @@ func (s *ApprovalAccessList) encodeFields(e *jx.Encoder) {
 	{
 		e.FieldStart("start_time")
 		json.EncodeDateTime(e, s.StartTime)
-	}
-	{
-		e.FieldStart("approved")
-		e.Bool(s.Approved)
 	}
 	{
 		e.FieldStart("rolled_back")
@@ -775,30 +952,24 @@ func (s *ApprovalAccessList) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		e.FieldStart("end_time")
-		json.EncodeDateTime(e, s.EndTime)
-	}
-	{
-		e.FieldStart("request_id")
-		json.EncodeUUID(e, s.RequestID)
+		e.FieldStart("expiration")
+		json.EncodeDateTime(e, s.Expiration)
 	}
 }
 
-var jsonFieldsNameOfApprovalAccessList = [8]string{
+var jsonFieldsNameOfApprovalAccessRead = [6]string{
 	0: "id",
 	1: "start_time",
-	2: "approved",
-	3: "rolled_back",
-	4: "rollback_time",
-	5: "rollback_reason",
-	6: "end_time",
-	7: "request_id",
+	2: "rolled_back",
+	3: "rollback_time",
+	4: "rollback_reason",
+	5: "expiration",
 }
 
-// Decode decodes ApprovalAccessList from json.
-func (s *ApprovalAccessList) Decode(d *jx.Decoder) error {
+// Decode decodes ApprovalAccessRead from json.
+func (s *ApprovalAccessRead) Decode(d *jx.Decoder) error {
 	if s == nil {
-		return errors.New("invalid: unable to decode ApprovalAccessList to nil")
+		return errors.New("invalid: unable to decode ApprovalAccessRead to nil")
 	}
 	var requiredBitSet [1]uint8
 
@@ -828,20 +999,8 @@ func (s *ApprovalAccessList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"start_time\"")
 			}
-		case "approved":
-			requiredBitSet[0] |= 1 << 2
-			if err := func() error {
-				v, err := d.Bool()
-				s.Approved = bool(v)
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"approved\"")
-			}
 		case "rolled_back":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 2
 			if err := func() error {
 				v, err := d.Bool()
 				s.RolledBack = bool(v)
@@ -872,41 +1031,29 @@ func (s *ApprovalAccessList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"rollback_reason\"")
 			}
-		case "end_time":
-			requiredBitSet[0] |= 1 << 6
+		case "expiration":
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				v, err := json.DecodeDateTime(d)
-				s.EndTime = v
+				s.Expiration = v
 				if err != nil {
 					return err
 				}
 				return nil
 			}(); err != nil {
-				return errors.Wrap(err, "decode field \"end_time\"")
-			}
-		case "request_id":
-			requiredBitSet[0] |= 1 << 7
-			if err := func() error {
-				v, err := json.DecodeUUID(d)
-				s.RequestID = v
-				if err != nil {
-					return err
-				}
-				return nil
-			}(); err != nil {
-				return errors.Wrap(err, "decode field \"request_id\"")
+				return errors.Wrap(err, "decode field \"expiration\"")
 			}
 		default:
 			return d.Skip()
 		}
 		return nil
 	}); err != nil {
-		return errors.Wrap(err, "decode ApprovalAccessList")
+		return errors.Wrap(err, "decode ApprovalAccessRead")
 	}
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b11001111,
+		0b00100111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -918,8 +1065,8 @@ func (s *ApprovalAccessList) Decode(d *jx.Decoder) error {
 				bitIdx := bits.TrailingZeros8(result)
 				fieldIdx := i*8 + bitIdx
 				var name string
-				if fieldIdx < len(jsonFieldsNameOfApprovalAccessList) {
-					name = jsonFieldsNameOfApprovalAccessList[fieldIdx]
+				if fieldIdx < len(jsonFieldsNameOfApprovalAccessRead) {
+					name = jsonFieldsNameOfApprovalAccessRead[fieldIdx]
 				} else {
 					name = strconv.Itoa(fieldIdx)
 				}
@@ -940,14 +1087,14 @@ func (s *ApprovalAccessList) Decode(d *jx.Decoder) error {
 }
 
 // MarshalJSON implements stdjson.Marshaler.
-func (s *ApprovalAccessList) MarshalJSON() ([]byte, error) {
+func (s *ApprovalAccessRead) MarshalJSON() ([]byte, error) {
 	e := jx.Encoder{}
 	s.Encode(&e)
 	return e.Bytes(), nil
 }
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *ApprovalAccessList) UnmarshalJSON(data []byte) error {
+func (s *ApprovalAccessRead) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -2207,13 +2354,9 @@ func (s *CreateApprovalReq) encodeFields(e *jx.Encoder) {
 		json.EncodeUUID(e, s.Request)
 	}
 	{
-		if s.Access != nil {
+		if s.Access.Set {
 			e.FieldStart("access")
-			e.ArrStart()
-			for _, elem := range s.Access {
-				json.EncodeUUID(e, elem)
-			}
-			e.ArrEnd()
+			s.Access.Encode(e)
 		}
 	}
 }
@@ -2309,17 +2452,8 @@ func (s *CreateApprovalReq) Decode(d *jx.Decoder) error {
 			}
 		case "access":
 			if err := func() error {
-				s.Access = make([]uuid.UUID, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem uuid.UUID
-					v, err := json.DecodeUUID(d)
-					elem = v
-					if err != nil {
-						return err
-					}
-					s.Access = append(s.Access, elem)
-					return nil
-				}); err != nil {
+				s.Access.Reset()
+				if err := s.Access.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -2402,6 +2536,10 @@ func (s *CreateMissionReq) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		e.FieldStart("duration")
+		e.Int(s.Duration)
+	}
+	{
 		e.FieldStart("min_approvers")
 		e.Int(s.MinApprovers)
 	}
@@ -2433,13 +2571,14 @@ func (s *CreateMissionReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCreateMissionReq = [6]string{
+var jsonFieldsNameOfCreateMissionReq = [7]string{
 	0: "name",
 	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
-	4: "rockets",
-	5: "requests",
+	2: "duration",
+	3: "min_approvers",
+	4: "possible_approvers",
+	5: "rockets",
+	6: "requests",
 }
 
 // Decode decodes CreateMissionReq from json.
@@ -2473,8 +2612,20 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "min_approvers":
+		case "duration":
 			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := d.Int()
+				s.Duration = int(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"duration\"")
+			}
+		case "min_approvers":
+			requiredBitSet[0] |= 1 << 3
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -2486,7 +2637,7 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -2506,7 +2657,7 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"possible_approvers\"")
 			}
 		case "rockets":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				s.Rockets = make([]uuid.UUID, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -2554,7 +2705,7 @@ func (s *CreateMissionReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011101,
+		0b00111101,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -2618,6 +2769,20 @@ func (s *CreateRequestReq) encodeFields(e *jx.Encoder) {
 		e.Str(s.Requester)
 	}
 	{
+		e.FieldStart("timestamp")
+		json.EncodeDateTime(e, s.Timestamp)
+	}
+	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("cancelled")
+		e.Bool(s.Cancelled)
+	}
+	{
 		if s.Approvals != nil {
 			e.FieldStart("approvals")
 			e.ArrStart()
@@ -2633,11 +2798,14 @@ func (s *CreateRequestReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfCreateRequestReq = [4]string{
+var jsonFieldsNameOfCreateRequestReq = [7]string{
 	0: "reason",
 	1: "requester",
-	2: "approvals",
-	3: "mission",
+	2: "timestamp",
+	3: "cancelled_time",
+	4: "cancelled",
+	5: "approvals",
+	6: "mission",
 }
 
 // Decode decodes CreateRequestReq from json.
@@ -2673,6 +2841,40 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
+		case "timestamp":
+			requiredBitSet[0] |= 1 << 2
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.Timestamp = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"timestamp\"")
+			}
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			requiredBitSet[0] |= 1 << 4
+			if err := func() error {
+				v, err := d.Bool()
+				s.Cancelled = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
 		case "approvals":
 			if err := func() error {
 				s.Approvals = make([]uuid.UUID, 0)
@@ -2693,7 +2895,7 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"approvals\"")
 			}
 		case "mission":
-			requiredBitSet[0] |= 1 << 3
+			requiredBitSet[0] |= 1 << 6
 			if err := func() error {
 				v, err := json.DecodeUUID(d)
 				s.Mission = v
@@ -2714,7 +2916,7 @@ func (s *CreateRequestReq) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00001011,
+		0b01010111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3107,56 +3309,6 @@ func (s ListApiKeyOKApplicationJSON) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *ListApiKeyOKApplicationJSON) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ListApprovalAccessOKApplicationJSON as json.
-func (s ListApprovalAccessOKApplicationJSON) Encode(e *jx.Encoder) {
-	unwrapped := []ApprovalAccessList(s)
-
-	e.ArrStart()
-	for _, elem := range unwrapped {
-		elem.Encode(e)
-	}
-	e.ArrEnd()
-}
-
-// Decode decodes ListApprovalAccessOKApplicationJSON from json.
-func (s *ListApprovalAccessOKApplicationJSON) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode ListApprovalAccessOKApplicationJSON to nil")
-	}
-	var unwrapped []ApprovalAccessList
-	if err := func() error {
-		unwrapped = make([]ApprovalAccessList, 0)
-		if err := d.Arr(func(d *jx.Decoder) error {
-			var elem ApprovalAccessList
-			if err := elem.Decode(d); err != nil {
-				return err
-			}
-			unwrapped = append(unwrapped, elem)
-			return nil
-		}); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		return errors.Wrap(err, "alias")
-	}
-	*s = ListApprovalAccessOKApplicationJSON(unwrapped)
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s ListApprovalAccessOKApplicationJSON) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *ListApprovalAccessOKApplicationJSON) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
@@ -3585,6 +3737,10 @@ func (s *MissionCreate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		e.FieldStart("duration")
+		e.Int(s.Duration)
+	}
+	{
 		e.FieldStart("min_approvers")
 		e.Int(s.MinApprovers)
 	}
@@ -3598,12 +3754,13 @@ func (s *MissionCreate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionCreate = [5]string{
+var jsonFieldsNameOfMissionCreate = [6]string{
 	0: "id",
 	1: "name",
 	2: "description",
-	3: "min_approvers",
-	4: "possible_approvers",
+	3: "duration",
+	4: "min_approvers",
+	5: "possible_approvers",
 }
 
 // Decode decodes MissionCreate from json.
@@ -3649,8 +3806,20 @@ func (s *MissionCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "min_approvers":
+		case "duration":
 			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int()
+				s.Duration = int(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"duration\"")
+			}
+		case "min_approvers":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -3662,7 +3831,7 @@ func (s *MissionCreate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -3691,7 +3860,7 @@ func (s *MissionCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011011,
+		0b00111011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3761,6 +3930,10 @@ func (s *MissionList) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		e.FieldStart("duration")
+		e.Int(s.Duration)
+	}
+	{
 		e.FieldStart("min_approvers")
 		e.Int(s.MinApprovers)
 	}
@@ -3774,12 +3947,13 @@ func (s *MissionList) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionList = [5]string{
+var jsonFieldsNameOfMissionList = [6]string{
 	0: "id",
 	1: "name",
 	2: "description",
-	3: "min_approvers",
-	4: "possible_approvers",
+	3: "duration",
+	4: "min_approvers",
+	5: "possible_approvers",
 }
 
 // Decode decodes MissionList from json.
@@ -3825,8 +3999,20 @@ func (s *MissionList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "min_approvers":
+		case "duration":
 			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int()
+				s.Duration = int(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"duration\"")
+			}
+		case "min_approvers":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -3838,7 +4024,7 @@ func (s *MissionList) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -3867,7 +4053,7 @@ func (s *MissionList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011011,
+		0b00111011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -3937,6 +4123,10 @@ func (s *MissionRead) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		e.FieldStart("duration")
+		e.Int(s.Duration)
+	}
+	{
 		e.FieldStart("min_approvers")
 		e.Int(s.MinApprovers)
 	}
@@ -3950,12 +4140,13 @@ func (s *MissionRead) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionRead = [5]string{
+var jsonFieldsNameOfMissionRead = [6]string{
 	0: "id",
 	1: "name",
 	2: "description",
-	3: "min_approvers",
-	4: "possible_approvers",
+	3: "duration",
+	4: "min_approvers",
+	5: "possible_approvers",
 }
 
 // Decode decodes MissionRead from json.
@@ -4001,8 +4192,20 @@ func (s *MissionRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "min_approvers":
+		case "duration":
 			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int()
+				s.Duration = int(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"duration\"")
+			}
+		case "min_approvers":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -4014,7 +4217,7 @@ func (s *MissionRead) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -4043,7 +4246,7 @@ func (s *MissionRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011011,
+		0b00111011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -4110,12 +4313,29 @@ func (s *MissionRequestsList) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
+	{
+		e.FieldStart("timestamp")
+		json.EncodeDateTime(e, s.Timestamp)
+	}
+	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("cancelled")
+		e.Bool(s.Cancelled)
+	}
 }
 
-var jsonFieldsNameOfMissionRequestsList = [3]string{
+var jsonFieldsNameOfMissionRequestsList = [6]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
+	3: "timestamp",
+	4: "cancelled_time",
+	5: "cancelled",
 }
 
 // Decode decodes MissionRequestsList from json.
@@ -4163,6 +4383,40 @@ func (s *MissionRequestsList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
+		case "timestamp":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.Timestamp = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"timestamp\"")
+			}
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Cancelled = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -4173,7 +4427,7 @@ func (s *MissionRequestsList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000111,
+		0b00101111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -4461,6 +4715,10 @@ func (s *MissionUpdate) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		e.FieldStart("duration")
+		e.Int(s.Duration)
+	}
+	{
 		e.FieldStart("min_approvers")
 		e.Int(s.MinApprovers)
 	}
@@ -4474,12 +4732,13 @@ func (s *MissionUpdate) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfMissionUpdate = [5]string{
+var jsonFieldsNameOfMissionUpdate = [6]string{
 	0: "id",
 	1: "name",
 	2: "description",
-	3: "min_approvers",
-	4: "possible_approvers",
+	3: "duration",
+	4: "min_approvers",
+	5: "possible_approvers",
 }
 
 // Decode decodes MissionUpdate from json.
@@ -4525,8 +4784,20 @@ func (s *MissionUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "min_approvers":
+		case "duration":
 			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int()
+				s.Duration = int(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"duration\"")
+			}
+		case "min_approvers":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -4538,7 +4809,7 @@ func (s *MissionUpdate) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -4567,7 +4838,7 @@ func (s *MissionUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011011,
+		0b00111011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5548,12 +5819,29 @@ func (s *RequestCreate) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
+	{
+		e.FieldStart("timestamp")
+		json.EncodeDateTime(e, s.Timestamp)
+	}
+	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("cancelled")
+		e.Bool(s.Cancelled)
+	}
 }
 
-var jsonFieldsNameOfRequestCreate = [3]string{
+var jsonFieldsNameOfRequestCreate = [6]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
+	3: "timestamp",
+	4: "cancelled_time",
+	5: "cancelled",
 }
 
 // Decode decodes RequestCreate from json.
@@ -5601,6 +5889,40 @@ func (s *RequestCreate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
+		case "timestamp":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.Timestamp = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"timestamp\"")
+			}
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Cancelled = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -5611,7 +5933,7 @@ func (s *RequestCreate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000111,
+		0b00101111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5678,12 +6000,29 @@ func (s *RequestList) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
+	{
+		e.FieldStart("timestamp")
+		json.EncodeDateTime(e, s.Timestamp)
+	}
+	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("cancelled")
+		e.Bool(s.Cancelled)
+	}
 }
 
-var jsonFieldsNameOfRequestList = [3]string{
+var jsonFieldsNameOfRequestList = [6]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
+	3: "timestamp",
+	4: "cancelled_time",
+	5: "cancelled",
 }
 
 // Decode decodes RequestList from json.
@@ -5731,6 +6070,40 @@ func (s *RequestList) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
+		case "timestamp":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.Timestamp = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"timestamp\"")
+			}
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Cancelled = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -5741,7 +6114,7 @@ func (s *RequestList) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000111,
+		0b00101111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5811,6 +6184,10 @@ func (s *RequestMissionRead) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		e.FieldStart("duration")
+		e.Int(s.Duration)
+	}
+	{
 		e.FieldStart("min_approvers")
 		e.Int(s.MinApprovers)
 	}
@@ -5824,12 +6201,13 @@ func (s *RequestMissionRead) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfRequestMissionRead = [5]string{
+var jsonFieldsNameOfRequestMissionRead = [6]string{
 	0: "id",
 	1: "name",
 	2: "description",
-	3: "min_approvers",
-	4: "possible_approvers",
+	3: "duration",
+	4: "min_approvers",
+	5: "possible_approvers",
 }
 
 // Decode decodes RequestMissionRead from json.
@@ -5875,8 +6253,20 @@ func (s *RequestMissionRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
 			}
-		case "min_approvers":
+		case "duration":
 			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := d.Int()
+				s.Duration = int(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"duration\"")
+			}
+		case "min_approvers":
+			requiredBitSet[0] |= 1 << 4
 			if err := func() error {
 				v, err := d.Int()
 				s.MinApprovers = int(v)
@@ -5888,7 +6278,7 @@ func (s *RequestMissionRead) Decode(d *jx.Decoder) error {
 				return errors.Wrap(err, "decode field \"min_approvers\"")
 			}
 		case "possible_approvers":
-			requiredBitSet[0] |= 1 << 4
+			requiredBitSet[0] |= 1 << 5
 			if err := func() error {
 				s.PossibleApprovers = make([]string, 0)
 				if err := d.Arr(func(d *jx.Decoder) error {
@@ -5917,7 +6307,7 @@ func (s *RequestMissionRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00011011,
+		0b00111011,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -5984,12 +6374,29 @@ func (s *RequestRead) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
+	{
+		e.FieldStart("timestamp")
+		json.EncodeDateTime(e, s.Timestamp)
+	}
+	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("cancelled")
+		e.Bool(s.Cancelled)
+	}
 }
 
-var jsonFieldsNameOfRequestRead = [3]string{
+var jsonFieldsNameOfRequestRead = [6]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
+	3: "timestamp",
+	4: "cancelled_time",
+	5: "cancelled",
 }
 
 // Decode decodes RequestRead from json.
@@ -6037,6 +6444,40 @@ func (s *RequestRead) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
+		case "timestamp":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.Timestamp = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"timestamp\"")
+			}
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Cancelled = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -6047,7 +6488,7 @@ func (s *RequestRead) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000111,
+		0b00101111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -6114,12 +6555,29 @@ func (s *RequestUpdate) encodeFields(e *jx.Encoder) {
 		e.FieldStart("requester")
 		e.Str(s.Requester)
 	}
+	{
+		e.FieldStart("timestamp")
+		json.EncodeDateTime(e, s.Timestamp)
+	}
+	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		e.FieldStart("cancelled")
+		e.Bool(s.Cancelled)
+	}
 }
 
-var jsonFieldsNameOfRequestUpdate = [3]string{
+var jsonFieldsNameOfRequestUpdate = [6]string{
 	0: "id",
 	1: "reason",
 	2: "requester",
+	3: "timestamp",
+	4: "cancelled_time",
+	5: "cancelled",
 }
 
 // Decode decodes RequestUpdate from json.
@@ -6167,6 +6625,40 @@ func (s *RequestUpdate) Decode(d *jx.Decoder) error {
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"requester\"")
 			}
+		case "timestamp":
+			requiredBitSet[0] |= 1 << 3
+			if err := func() error {
+				v, err := json.DecodeDateTime(d)
+				s.Timestamp = v
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"timestamp\"")
+			}
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			requiredBitSet[0] |= 1 << 5
+			if err := func() error {
+				v, err := d.Bool()
+				s.Cancelled = bool(v)
+				if err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
 		default:
 			return d.Skip()
 		}
@@ -6177,7 +6669,7 @@ func (s *RequestUpdate) Decode(d *jx.Decoder) error {
 	// Validate required fields.
 	var failures []validate.FieldError
 	for i, mask := range [1]uint8{
-		0b00000111,
+		0b00101111,
 	} {
 		if result := (requiredBitSet[i] & mask) ^ mask; result != 0 {
 			// Mask only required fields and check equality to mask using XOR.
@@ -7123,13 +7615,9 @@ func (s *UpdateApprovalReq) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
-		if s.Access != nil {
+		if s.Access.Set {
 			e.FieldStart("access")
-			e.ArrStart()
-			for _, elem := range s.Access {
-				json.EncodeUUID(e, elem)
-			}
-			e.ArrEnd()
+			s.Access.Encode(e)
 		}
 	}
 }
@@ -7181,17 +7669,8 @@ func (s *UpdateApprovalReq) Decode(d *jx.Decoder) error {
 			}
 		case "access":
 			if err := func() error {
-				s.Access = make([]uuid.UUID, 0)
-				if err := d.Arr(func(d *jx.Decoder) error {
-					var elem uuid.UUID
-					v, err := json.DecodeUUID(d)
-					elem = v
-					if err != nil {
-						return err
-					}
-					s.Access = append(s.Access, elem)
-					return nil
-				}); err != nil {
+				s.Access.Reset()
+				if err := s.Access.Decode(d); err != nil {
 					return err
 				}
 				return nil
@@ -7244,6 +7723,12 @@ func (s *UpdateMissionReq) encodeFields(e *jx.Encoder) {
 		}
 	}
 	{
+		if s.Duration.Set {
+			e.FieldStart("duration")
+			s.Duration.Encode(e)
+		}
+	}
+	{
 		if s.MinApprovers.Set {
 			e.FieldStart("min_approvers")
 			s.MinApprovers.Encode(e)
@@ -7281,13 +7766,14 @@ func (s *UpdateMissionReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfUpdateMissionReq = [6]string{
+var jsonFieldsNameOfUpdateMissionReq = [7]string{
 	0: "name",
 	1: "description",
-	2: "min_approvers",
-	3: "possible_approvers",
-	4: "rockets",
-	5: "requests",
+	2: "duration",
+	3: "min_approvers",
+	4: "possible_approvers",
+	5: "rockets",
+	6: "requests",
 }
 
 // Decode decodes UpdateMissionReq from json.
@@ -7317,6 +7803,16 @@ func (s *UpdateMissionReq) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"description\"")
+			}
+		case "duration":
+			if err := func() error {
+				s.Duration.Reset()
+				if err := s.Duration.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"duration\"")
 			}
 		case "min_approvers":
 			if err := func() error {
@@ -7419,6 +7915,18 @@ func (s *UpdateRequestReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *UpdateRequestReq) encodeFields(e *jx.Encoder) {
 	{
+		if s.CancelledTime.Set {
+			e.FieldStart("cancelled_time")
+			s.CancelledTime.Encode(e, json.EncodeDateTime)
+		}
+	}
+	{
+		if s.Cancelled.Set {
+			e.FieldStart("cancelled")
+			s.Cancelled.Encode(e)
+		}
+	}
+	{
 		if s.Approvals != nil {
 			e.FieldStart("approvals")
 			e.ArrStart()
@@ -7436,9 +7944,11 @@ func (s *UpdateRequestReq) encodeFields(e *jx.Encoder) {
 	}
 }
 
-var jsonFieldsNameOfUpdateRequestReq = [2]string{
-	0: "approvals",
-	1: "mission",
+var jsonFieldsNameOfUpdateRequestReq = [4]string{
+	0: "cancelled_time",
+	1: "cancelled",
+	2: "approvals",
+	3: "mission",
 }
 
 // Decode decodes UpdateRequestReq from json.
@@ -7449,6 +7959,26 @@ func (s *UpdateRequestReq) Decode(d *jx.Decoder) error {
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
+		case "cancelled_time":
+			if err := func() error {
+				s.CancelledTime.Reset()
+				if err := s.CancelledTime.Decode(d, json.DecodeDateTime); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled_time\"")
+			}
+		case "cancelled":
+			if err := func() error {
+				s.Cancelled.Reset()
+				if err := s.Cancelled.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"cancelled\"")
+			}
 		case "approvals":
 			if err := func() error {
 				s.Approvals = make([]uuid.UUID, 0)

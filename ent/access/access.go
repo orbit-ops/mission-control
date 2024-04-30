@@ -3,6 +3,8 @@
 package access
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
@@ -15,29 +17,36 @@ const (
 	FieldID = "id"
 	// FieldStartTime holds the string denoting the start_time field in the database.
 	FieldStartTime = "start_time"
-	// FieldApproved holds the string denoting the approved field in the database.
-	FieldApproved = "approved"
 	// FieldRolledBack holds the string denoting the rolled_back field in the database.
 	FieldRolledBack = "rolled_back"
 	// FieldRollbackTime holds the string denoting the rollback_time field in the database.
 	FieldRollbackTime = "rollback_time"
 	// FieldRollbackReason holds the string denoting the rollback_reason field in the database.
 	FieldRollbackReason = "rollback_reason"
-	// FieldEndTime holds the string denoting the end_time field in the database.
-	FieldEndTime = "end_time"
-	// FieldRequestID holds the string denoting the request_id field in the database.
-	FieldRequestID = "request_id"
+	// FieldExpiration holds the string denoting the expiration field in the database.
+	FieldExpiration = "expiration"
 	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
 	EdgeApprovals = "approvals"
+	// EdgeRequest holds the string denoting the request edge name in mutations.
+	EdgeRequest = "request"
 	// EdgeAccessTokens holds the string denoting the accesstokens edge name in mutations.
 	EdgeAccessTokens = "accessTokens"
 	// Table holds the table name of the access in the database.
 	Table = "accesses"
-	// ApprovalsTable is the table that holds the approvals relation/edge. The primary key declared below.
-	ApprovalsTable = "access_approvals"
+	// ApprovalsTable is the table that holds the approvals relation/edge.
+	ApprovalsTable = "approvals"
 	// ApprovalsInverseTable is the table name for the Approval entity.
 	// It exists in this package in order to avoid circular dependency with the "approval" package.
 	ApprovalsInverseTable = "approvals"
+	// ApprovalsColumn is the table column denoting the approvals relation/edge.
+	ApprovalsColumn = "access_approvals"
+	// RequestTable is the table that holds the request relation/edge.
+	RequestTable = "accesses"
+	// RequestInverseTable is the table name for the Request entity.
+	// It exists in this package in order to avoid circular dependency with the "request" package.
+	RequestInverseTable = "requests"
+	// RequestColumn is the table column denoting the request relation/edge.
+	RequestColumn = "access_request"
 	// AccessTokensTable is the table that holds the accessTokens relation/edge.
 	AccessTokensTable = "action_tokens"
 	// AccessTokensInverseTable is the table name for the ActionTokens entity.
@@ -51,24 +60,27 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldStartTime,
-	FieldApproved,
 	FieldRolledBack,
 	FieldRollbackTime,
 	FieldRollbackReason,
-	FieldEndTime,
-	FieldRequestID,
+	FieldExpiration,
 }
 
-var (
-	// ApprovalsPrimaryKey and ApprovalsColumn2 are the table columns denoting the
-	// primary key for the approvals relation (M2M).
-	ApprovalsPrimaryKey = []string{"access_id", "approval_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "accesses"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"access_request",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -78,6 +90,8 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultRolledBack holds the default value on creation for the "rolled_back" field.
 	DefaultRolledBack bool
+	// DefaultRollbackTime holds the default value on creation for the "rollback_time" field.
+	DefaultRollbackTime func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -95,11 +109,6 @@ func ByStartTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStartTime, opts...).ToFunc()
 }
 
-// ByApproved orders the results by the approved field.
-func ByApproved(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldApproved, opts...).ToFunc()
-}
-
 // ByRolledBack orders the results by the rolled_back field.
 func ByRolledBack(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRolledBack, opts...).ToFunc()
@@ -115,14 +124,9 @@ func ByRollbackReason(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRollbackReason, opts...).ToFunc()
 }
 
-// ByEndTime orders the results by the end_time field.
-func ByEndTime(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEndTime, opts...).ToFunc()
-}
-
-// ByRequestID orders the results by the request_id field.
-func ByRequestID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldRequestID, opts...).ToFunc()
+// ByExpiration orders the results by the expiration field.
+func ByExpiration(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpiration, opts...).ToFunc()
 }
 
 // ByApprovalsCount orders the results by approvals count.
@@ -136,6 +140,13 @@ func ByApprovalsCount(opts ...sql.OrderTermOption) OrderOption {
 func ByApprovals(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newApprovalsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRequestField orders the results by request field.
+func ByRequestField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRequestStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -156,7 +167,14 @@ func newApprovalsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ApprovalsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, ApprovalsTable, ApprovalsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, ApprovalsTable, ApprovalsColumn),
+	)
+}
+func newRequestStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RequestInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, RequestTable, RequestColumn),
 	)
 }
 func newAccessTokensStep() *sqlgraph.Step {

@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
-	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/predicate"
 	"github.com/orbit-ops/launchpad-core/ent/request"
@@ -76,21 +75,6 @@ func (au *ApprovalUpdate) SetRequest(r *Request) *ApprovalUpdate {
 	return au.SetRequestID(r.ID)
 }
 
-// AddAccesIDs adds the "access" edge to the Access entity by IDs.
-func (au *ApprovalUpdate) AddAccesIDs(ids ...uuid.UUID) *ApprovalUpdate {
-	au.mutation.AddAccesIDs(ids...)
-	return au
-}
-
-// AddAccess adds the "access" edges to the Access entity.
-func (au *ApprovalUpdate) AddAccess(a ...*Access) *ApprovalUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return au.AddAccesIDs(ids...)
-}
-
 // Mutation returns the ApprovalMutation object of the builder.
 func (au *ApprovalUpdate) Mutation() *ApprovalMutation {
 	return au.mutation
@@ -100,27 +84,6 @@ func (au *ApprovalUpdate) Mutation() *ApprovalMutation {
 func (au *ApprovalUpdate) ClearRequest() *ApprovalUpdate {
 	au.mutation.ClearRequest()
 	return au
-}
-
-// ClearAccess clears all "access" edges to the Access entity.
-func (au *ApprovalUpdate) ClearAccess() *ApprovalUpdate {
-	au.mutation.ClearAccess()
-	return au
-}
-
-// RemoveAccesIDs removes the "access" edge to Access entities by IDs.
-func (au *ApprovalUpdate) RemoveAccesIDs(ids ...uuid.UUID) *ApprovalUpdate {
-	au.mutation.RemoveAccesIDs(ids...)
-	return au
-}
-
-// RemoveAccess removes "access" edges to Access entities.
-func (au *ApprovalUpdate) RemoveAccess(a ...*Access) *ApprovalUpdate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return au.RemoveAccesIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -208,51 +171,6 @@ func (au *ApprovalUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if au.mutation.AccessCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   approval.AccessTable,
-			Columns: approval.AccessPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.RemovedAccessIDs(); len(nodes) > 0 && !au.mutation.AccessCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   approval.AccessTable,
-			Columns: approval.AccessPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.AccessIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   approval.AccessTable,
-			Columns: approval.AccessPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{approval.Label}
@@ -318,21 +236,6 @@ func (auo *ApprovalUpdateOne) SetRequest(r *Request) *ApprovalUpdateOne {
 	return auo.SetRequestID(r.ID)
 }
 
-// AddAccesIDs adds the "access" edge to the Access entity by IDs.
-func (auo *ApprovalUpdateOne) AddAccesIDs(ids ...uuid.UUID) *ApprovalUpdateOne {
-	auo.mutation.AddAccesIDs(ids...)
-	return auo
-}
-
-// AddAccess adds the "access" edges to the Access entity.
-func (auo *ApprovalUpdateOne) AddAccess(a ...*Access) *ApprovalUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return auo.AddAccesIDs(ids...)
-}
-
 // Mutation returns the ApprovalMutation object of the builder.
 func (auo *ApprovalUpdateOne) Mutation() *ApprovalMutation {
 	return auo.mutation
@@ -342,27 +245,6 @@ func (auo *ApprovalUpdateOne) Mutation() *ApprovalMutation {
 func (auo *ApprovalUpdateOne) ClearRequest() *ApprovalUpdateOne {
 	auo.mutation.ClearRequest()
 	return auo
-}
-
-// ClearAccess clears all "access" edges to the Access entity.
-func (auo *ApprovalUpdateOne) ClearAccess() *ApprovalUpdateOne {
-	auo.mutation.ClearAccess()
-	return auo
-}
-
-// RemoveAccesIDs removes the "access" edge to Access entities by IDs.
-func (auo *ApprovalUpdateOne) RemoveAccesIDs(ids ...uuid.UUID) *ApprovalUpdateOne {
-	auo.mutation.RemoveAccesIDs(ids...)
-	return auo
-}
-
-// RemoveAccess removes "access" edges to Access entities.
-func (auo *ApprovalUpdateOne) RemoveAccess(a ...*Access) *ApprovalUpdateOne {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return auo.RemoveAccesIDs(ids...)
 }
 
 // Where appends a list predicates to the ApprovalUpdate builder.
@@ -473,51 +355,6 @@ func (auo *ApprovalUpdateOne) sqlSave(ctx context.Context) (_node *Approval, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(request.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if auo.mutation.AccessCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   approval.AccessTable,
-			Columns: approval.AccessPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.RemovedAccessIDs(); len(nodes) > 0 && !auo.mutation.AccessCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   approval.AccessTable,
-			Columns: approval.AccessPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.AccessIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   approval.AccessTable,
-			Columns: approval.AccessPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

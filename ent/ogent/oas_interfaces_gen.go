@@ -53,10 +53,6 @@ type ListApiKeyRes interface {
 	listApiKeyRes()
 }
 
-type ListApprovalAccessRes interface {
-	listApprovalAccessRes()
-}
-
 type ListApprovalRes interface {
 	listApprovalRes()
 }
@@ -89,8 +85,16 @@ type ListRocketRes interface {
 	listRocketRes()
 }
 
+type ReadAccessRequestRes interface {
+	readAccessRequestRes()
+}
+
 type ReadApiKeyRes interface {
 	readApiKeyRes()
+}
+
+type ReadApprovalAccessRes interface {
+	readApprovalAccessRes()
 }
 
 type ReadApprovalRes interface {

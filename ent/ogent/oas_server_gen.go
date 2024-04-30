@@ -92,12 +92,6 @@ type Handler interface {
 	//
 	// GET /approvals
 	ListApproval(ctx context.Context, params ListApprovalParams) (ListApprovalRes, error)
-	// ListApprovalAccess implements listApprovalAccess operation.
-	//
-	// List attached Accesses.
-	//
-	// GET /approvals/{id}/access
-	ListApprovalAccess(ctx context.Context, params ListApprovalAccessParams) (ListApprovalAccessRes, error)
 	// ListAudit implements listAudit operation.
 	//
 	// List Audits.
@@ -140,6 +134,12 @@ type Handler interface {
 	//
 	// GET /rockets
 	ListRocket(ctx context.Context, params ListRocketParams) (ListRocketRes, error)
+	// ReadAccessRequest implements readAccessRequest operation.
+	//
+	// Find the attached Request of the Access with the given ID.
+	//
+	// GET /accesses/{id}/request
+	ReadAccessRequest(ctx context.Context, params ReadAccessRequestParams) (ReadAccessRequestRes, error)
 	// ReadApiKey implements readApiKey operation.
 	//
 	// Finds the ApiKey with the requested ID and returns it.
@@ -152,6 +152,12 @@ type Handler interface {
 	//
 	// GET /approvals/{id}
 	ReadApproval(ctx context.Context, params ReadApprovalParams) (ReadApprovalRes, error)
+	// ReadApprovalAccess implements readApprovalAccess operation.
+	//
+	// Find the attached Access of the Approval with the given ID.
+	//
+	// GET /approvals/{id}/access
+	ReadApprovalAccess(ctx context.Context, params ReadApprovalAccessParams) (ReadApprovalAccessRes, error)
 	// ReadAudit implements readAudit operation.
 	//
 	// Finds the Audit with the requested ID and returns it.

@@ -3,6 +3,8 @@
 package request
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
@@ -62,6 +64,21 @@ func Reason(v string) predicate.Request {
 // Requester applies equality check predicate on the "requester" field. It's identical to RequesterEQ.
 func Requester(v string) predicate.Request {
 	return predicate.Request(sql.FieldEQ(FieldRequester, v))
+}
+
+// Timestamp applies equality check predicate on the "timestamp" field. It's identical to TimestampEQ.
+func Timestamp(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldEQ(FieldTimestamp, v))
+}
+
+// CancelledTime applies equality check predicate on the "cancelled_time" field. It's identical to CancelledTimeEQ.
+func CancelledTime(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldEQ(FieldCancelledTime, v))
+}
+
+// Cancelled applies equality check predicate on the "cancelled" field. It's identical to CancelledEQ.
+func Cancelled(v bool) predicate.Request {
+	return predicate.Request(sql.FieldEQ(FieldCancelled, v))
 }
 
 // ReasonEQ applies the EQ predicate on the "reason" field.
@@ -192,6 +209,106 @@ func RequesterEqualFold(v string) predicate.Request {
 // RequesterContainsFold applies the ContainsFold predicate on the "requester" field.
 func RequesterContainsFold(v string) predicate.Request {
 	return predicate.Request(sql.FieldContainsFold(FieldRequester, v))
+}
+
+// TimestampEQ applies the EQ predicate on the "timestamp" field.
+func TimestampEQ(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldEQ(FieldTimestamp, v))
+}
+
+// TimestampNEQ applies the NEQ predicate on the "timestamp" field.
+func TimestampNEQ(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldNEQ(FieldTimestamp, v))
+}
+
+// TimestampIn applies the In predicate on the "timestamp" field.
+func TimestampIn(vs ...time.Time) predicate.Request {
+	return predicate.Request(sql.FieldIn(FieldTimestamp, vs...))
+}
+
+// TimestampNotIn applies the NotIn predicate on the "timestamp" field.
+func TimestampNotIn(vs ...time.Time) predicate.Request {
+	return predicate.Request(sql.FieldNotIn(FieldTimestamp, vs...))
+}
+
+// TimestampGT applies the GT predicate on the "timestamp" field.
+func TimestampGT(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldGT(FieldTimestamp, v))
+}
+
+// TimestampGTE applies the GTE predicate on the "timestamp" field.
+func TimestampGTE(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldGTE(FieldTimestamp, v))
+}
+
+// TimestampLT applies the LT predicate on the "timestamp" field.
+func TimestampLT(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldLT(FieldTimestamp, v))
+}
+
+// TimestampLTE applies the LTE predicate on the "timestamp" field.
+func TimestampLTE(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldLTE(FieldTimestamp, v))
+}
+
+// CancelledTimeEQ applies the EQ predicate on the "cancelled_time" field.
+func CancelledTimeEQ(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldEQ(FieldCancelledTime, v))
+}
+
+// CancelledTimeNEQ applies the NEQ predicate on the "cancelled_time" field.
+func CancelledTimeNEQ(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldNEQ(FieldCancelledTime, v))
+}
+
+// CancelledTimeIn applies the In predicate on the "cancelled_time" field.
+func CancelledTimeIn(vs ...time.Time) predicate.Request {
+	return predicate.Request(sql.FieldIn(FieldCancelledTime, vs...))
+}
+
+// CancelledTimeNotIn applies the NotIn predicate on the "cancelled_time" field.
+func CancelledTimeNotIn(vs ...time.Time) predicate.Request {
+	return predicate.Request(sql.FieldNotIn(FieldCancelledTime, vs...))
+}
+
+// CancelledTimeGT applies the GT predicate on the "cancelled_time" field.
+func CancelledTimeGT(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldGT(FieldCancelledTime, v))
+}
+
+// CancelledTimeGTE applies the GTE predicate on the "cancelled_time" field.
+func CancelledTimeGTE(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldGTE(FieldCancelledTime, v))
+}
+
+// CancelledTimeLT applies the LT predicate on the "cancelled_time" field.
+func CancelledTimeLT(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldLT(FieldCancelledTime, v))
+}
+
+// CancelledTimeLTE applies the LTE predicate on the "cancelled_time" field.
+func CancelledTimeLTE(v time.Time) predicate.Request {
+	return predicate.Request(sql.FieldLTE(FieldCancelledTime, v))
+}
+
+// CancelledTimeIsNil applies the IsNil predicate on the "cancelled_time" field.
+func CancelledTimeIsNil() predicate.Request {
+	return predicate.Request(sql.FieldIsNull(FieldCancelledTime))
+}
+
+// CancelledTimeNotNil applies the NotNil predicate on the "cancelled_time" field.
+func CancelledTimeNotNil() predicate.Request {
+	return predicate.Request(sql.FieldNotNull(FieldCancelledTime))
+}
+
+// CancelledEQ applies the EQ predicate on the "cancelled" field.
+func CancelledEQ(v bool) predicate.Request {
+	return predicate.Request(sql.FieldEQ(FieldCancelled, v))
+}
+
+// CancelledNEQ applies the NEQ predicate on the "cancelled" field.
+func CancelledNEQ(v bool) predicate.Request {
+	return predicate.Request(sql.FieldNEQ(FieldCancelled, v))
 }
 
 // HasApprovals applies the HasEdge predicate on the "approvals" edge.

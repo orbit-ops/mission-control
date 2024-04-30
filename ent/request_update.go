@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +25,40 @@ type RequestUpdate struct {
 // Where appends a list predicates to the RequestUpdate builder.
 func (ru *RequestUpdate) Where(ps ...predicate.Request) *RequestUpdate {
 	ru.mutation.Where(ps...)
+	return ru
+}
+
+// SetCancelledTime sets the "cancelled_time" field.
+func (ru *RequestUpdate) SetCancelledTime(t time.Time) *RequestUpdate {
+	ru.mutation.SetCancelledTime(t)
+	return ru
+}
+
+// SetNillableCancelledTime sets the "cancelled_time" field if the given value is not nil.
+func (ru *RequestUpdate) SetNillableCancelledTime(t *time.Time) *RequestUpdate {
+	if t != nil {
+		ru.SetCancelledTime(*t)
+	}
+	return ru
+}
+
+// ClearCancelledTime clears the value of the "cancelled_time" field.
+func (ru *RequestUpdate) ClearCancelledTime() *RequestUpdate {
+	ru.mutation.ClearCancelledTime()
+	return ru
+}
+
+// SetCancelled sets the "cancelled" field.
+func (ru *RequestUpdate) SetCancelled(b bool) *RequestUpdate {
+	ru.mutation.SetCancelled(b)
+	return ru
+}
+
+// SetNillableCancelled sets the "cancelled" field if the given value is not nil.
+func (ru *RequestUpdate) SetNillableCancelled(b *bool) *RequestUpdate {
+	if b != nil {
+		ru.SetCancelled(*b)
+	}
 	return ru
 }
 
@@ -79,6 +114,15 @@ func (ru *RequestUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := ru.mutation.CancelledTime(); ok {
+		_spec.SetField(request.FieldCancelledTime, field.TypeTime, value)
+	}
+	if ru.mutation.CancelledTimeCleared() {
+		_spec.ClearField(request.FieldCancelledTime, field.TypeTime)
+	}
+	if value, ok := ru.mutation.Cancelled(); ok {
+		_spec.SetField(request.FieldCancelled, field.TypeBool, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{request.Label}
@@ -97,6 +141,40 @@ type RequestUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *RequestMutation
+}
+
+// SetCancelledTime sets the "cancelled_time" field.
+func (ruo *RequestUpdateOne) SetCancelledTime(t time.Time) *RequestUpdateOne {
+	ruo.mutation.SetCancelledTime(t)
+	return ruo
+}
+
+// SetNillableCancelledTime sets the "cancelled_time" field if the given value is not nil.
+func (ruo *RequestUpdateOne) SetNillableCancelledTime(t *time.Time) *RequestUpdateOne {
+	if t != nil {
+		ruo.SetCancelledTime(*t)
+	}
+	return ruo
+}
+
+// ClearCancelledTime clears the value of the "cancelled_time" field.
+func (ruo *RequestUpdateOne) ClearCancelledTime() *RequestUpdateOne {
+	ruo.mutation.ClearCancelledTime()
+	return ruo
+}
+
+// SetCancelled sets the "cancelled" field.
+func (ruo *RequestUpdateOne) SetCancelled(b bool) *RequestUpdateOne {
+	ruo.mutation.SetCancelled(b)
+	return ruo
+}
+
+// SetNillableCancelled sets the "cancelled" field if the given value is not nil.
+func (ruo *RequestUpdateOne) SetNillableCancelled(b *bool) *RequestUpdateOne {
+	if b != nil {
+		ruo.SetCancelled(*b)
+	}
+	return ruo
 }
 
 // Mutation returns the RequestMutation object of the builder.
@@ -180,6 +258,15 @@ func (ruo *RequestUpdateOne) sqlSave(ctx context.Context) (_node *Request, err e
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := ruo.mutation.CancelledTime(); ok {
+		_spec.SetField(request.FieldCancelledTime, field.TypeTime, value)
+	}
+	if ruo.mutation.CancelledTimeCleared() {
+		_spec.ClearField(request.FieldCancelledTime, field.TypeTime)
+	}
+	if value, ok := ruo.mutation.Cancelled(); ok {
+		_spec.SetField(request.FieldCancelled, field.TypeBool, value)
 	}
 	_node = &Request{config: ruo.config}
 	_spec.Assign = _node.assignValues

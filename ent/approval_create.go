@@ -38,6 +38,14 @@ func (ac *ApprovalCreate) SetApprovedTime(t time.Time) *ApprovalCreate {
 	return ac
 }
 
+// SetNillableApprovedTime sets the "approved_time" field if the given value is not nil.
+func (ac *ApprovalCreate) SetNillableApprovedTime(t *time.Time) *ApprovalCreate {
+	if t != nil {
+		ac.SetApprovedTime(*t)
+	}
+	return ac
+}
+
 // SetApproved sets the "approved" field.
 func (ac *ApprovalCreate) SetApproved(b bool) *ApprovalCreate {
 	ac.mutation.SetApproved(b)
@@ -97,19 +105,23 @@ func (ac *ApprovalCreate) SetRequest(r *Request) *ApprovalCreate {
 	return ac.SetRequestID(r.ID)
 }
 
-// AddAccesIDs adds the "access" edge to the Access entity by IDs.
-func (ac *ApprovalCreate) AddAccesIDs(ids ...uuid.UUID) *ApprovalCreate {
-	ac.mutation.AddAccesIDs(ids...)
+// SetAccessID sets the "access" edge to the Access entity by ID.
+func (ac *ApprovalCreate) SetAccessID(id uuid.UUID) *ApprovalCreate {
+	ac.mutation.SetAccessID(id)
 	return ac
 }
 
-// AddAccess adds the "access" edges to the Access entity.
-func (ac *ApprovalCreate) AddAccess(a ...*Access) *ApprovalCreate {
-	ids := make([]uuid.UUID, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableAccessID sets the "access" edge to the Access entity by ID if the given value is not nil.
+func (ac *ApprovalCreate) SetNillableAccessID(id *uuid.UUID) *ApprovalCreate {
+	if id != nil {
+		ac = ac.SetAccessID(*id)
 	}
-	return ac.AddAccesIDs(ids...)
+	return ac
+}
+
+// SetAccess sets the "access" edge to the Access entity.
+func (ac *ApprovalCreate) SetAccess(a *Access) *ApprovalCreate {
+	return ac.SetAccessID(a.ID)
 }
 
 // Mutation returns the ApprovalMutation object of the builder.
@@ -147,6 +159,10 @@ func (ac *ApprovalCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (ac *ApprovalCreate) defaults() {
+	if _, ok := ac.mutation.ApprovedTime(); !ok {
+		v := approval.DefaultApprovedTime()
+		ac.mutation.SetApprovedTime(v)
+	}
 	if _, ok := ac.mutation.Revoked(); !ok {
 		v := approval.DefaultRevoked
 		ac.mutation.SetRevoked(v)
@@ -161,6 +177,11 @@ func (ac *ApprovalCreate) defaults() {
 func (ac *ApprovalCreate) check() error {
 	if _, ok := ac.mutation.Person(); !ok {
 		return &ValidationError{Name: "person", err: errors.New(`ent: missing required field "Approval.person"`)}
+	}
+	if v, ok := ac.mutation.Person(); ok {
+		if err := approval.PersonValidator(v); err != nil {
+			return &ValidationError{Name: "person", err: fmt.Errorf(`ent: validator failed for field "Approval.person": %w`, err)}
+		}
 	}
 	if _, ok := ac.mutation.ApprovedTime(); !ok {
 		return &ValidationError{Name: "approved_time", err: errors.New(`ent: missing required field "Approval.approved_time"`)}
@@ -249,10 +270,10 @@ func (ac *ApprovalCreate) createSpec() (*Approval, *sqlgraph.CreateSpec) {
 	}
 	if nodes := ac.mutation.AccessIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   approval.AccessTable,
-			Columns: approval.AccessPrimaryKey,
+			Columns: []string{approval.AccessColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID),
@@ -261,6 +282,7 @@ func (ac *ApprovalCreate) createSpec() (*Approval, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.access_approvals = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

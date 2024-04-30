@@ -284,7 +284,7 @@ func HasAccess() predicate.Approval {
 	return predicate.Approval(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, AccessTable, AccessPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, AccessTable, AccessColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

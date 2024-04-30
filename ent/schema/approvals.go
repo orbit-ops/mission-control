@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entoas"
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
@@ -17,11 +19,16 @@ type Approval struct {
 func (Approval) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.String("person").Immutable(),
-		field.Time("approved_time").Immutable(),
+		field.String("person").Immutable().NotEmpty(),
+		field.Time("approved_time").Immutable().Default(time.Now),
 		field.Bool("approved").Immutable(),
-		field.Bool("revoked").Default(false),
-		field.Time("revoked_time").Optional(),
+		field.Bool("revoked").Default(false).Annotations(
+			entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+		),
+		field.Time("revoked_time").Optional().Annotations(
+			entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+			entoas.UpdateOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+		),
 	}
 }
 
@@ -32,6 +39,9 @@ func (Approval) Edges() []ent.Edge {
 			Annotations(
 				entoas.ReadOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
 			),
-		edge.From("access", Access.Type).Ref("approvals"),
+		edge.From("access", Access.Type).Ref("approvals").Unique().Immutable().
+			Annotations(
+				entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
+			),
 	}
 }

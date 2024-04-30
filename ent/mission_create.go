@@ -45,6 +45,12 @@ func (mc *MissionCreate) SetNillableDescription(s *string) *MissionCreate {
 	return mc
 }
 
+// SetDuration sets the "duration" field.
+func (mc *MissionCreate) SetDuration(i int) *MissionCreate {
+	mc.mutation.SetDuration(i)
+	return mc
+}
+
 // SetMinApprovers sets the "min_approvers" field.
 func (mc *MissionCreate) SetMinApprovers(i int) *MissionCreate {
 	mc.mutation.SetMinApprovers(i)
@@ -152,6 +158,14 @@ func (mc *MissionCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Mission.name": %w`, err)}
 		}
 	}
+	if _, ok := mc.mutation.Duration(); !ok {
+		return &ValidationError{Name: "duration", err: errors.New(`ent: missing required field "Mission.duration"`)}
+	}
+	if v, ok := mc.mutation.Duration(); ok {
+		if err := mission.DurationValidator(v); err != nil {
+			return &ValidationError{Name: "duration", err: fmt.Errorf(`ent: validator failed for field "Mission.duration": %w`, err)}
+		}
+	}
 	if _, ok := mc.mutation.MinApprovers(); !ok {
 		return &ValidationError{Name: "min_approvers", err: errors.New(`ent: missing required field "Mission.min_approvers"`)}
 	}
@@ -209,6 +223,10 @@ func (mc *MissionCreate) createSpec() (*Mission, *sqlgraph.CreateSpec) {
 	if value, ok := mc.mutation.Description(); ok {
 		_spec.SetField(mission.FieldDescription, field.TypeString, value)
 		_node.Description = value
+	}
+	if value, ok := mc.mutation.Duration(); ok {
+		_spec.SetField(mission.FieldDuration, field.TypeInt, value)
+		_node.Duration = value
 	}
 	if value, ok := mc.mutation.MinApprovers(); ok {
 		_spec.SetField(mission.FieldMinApprovers, field.TypeInt, value)
@@ -332,6 +350,24 @@ func (u *MissionUpsert) ClearDescription() *MissionUpsert {
 	return u
 }
 
+// SetDuration sets the "duration" field.
+func (u *MissionUpsert) SetDuration(v int) *MissionUpsert {
+	u.Set(mission.FieldDuration, v)
+	return u
+}
+
+// UpdateDuration sets the "duration" field to the value that was provided on create.
+func (u *MissionUpsert) UpdateDuration() *MissionUpsert {
+	u.SetExcluded(mission.FieldDuration)
+	return u
+}
+
+// AddDuration adds v to the "duration" field.
+func (u *MissionUpsert) AddDuration(v int) *MissionUpsert {
+	u.Add(mission.FieldDuration, v)
+	return u
+}
+
 // SetMinApprovers sets the "min_approvers" field.
 func (u *MissionUpsert) SetMinApprovers(v int) *MissionUpsert {
 	u.Set(mission.FieldMinApprovers, v)
@@ -442,6 +478,27 @@ func (u *MissionUpsertOne) UpdateDescription() *MissionUpsertOne {
 func (u *MissionUpsertOne) ClearDescription() *MissionUpsertOne {
 	return u.Update(func(s *MissionUpsert) {
 		s.ClearDescription()
+	})
+}
+
+// SetDuration sets the "duration" field.
+func (u *MissionUpsertOne) SetDuration(v int) *MissionUpsertOne {
+	return u.Update(func(s *MissionUpsert) {
+		s.SetDuration(v)
+	})
+}
+
+// AddDuration adds v to the "duration" field.
+func (u *MissionUpsertOne) AddDuration(v int) *MissionUpsertOne {
+	return u.Update(func(s *MissionUpsert) {
+		s.AddDuration(v)
+	})
+}
+
+// UpdateDuration sets the "duration" field to the value that was provided on create.
+func (u *MissionUpsertOne) UpdateDuration() *MissionUpsertOne {
+	return u.Update(func(s *MissionUpsert) {
+		s.UpdateDuration()
 	})
 }
 
@@ -727,6 +784,27 @@ func (u *MissionUpsertBulk) UpdateDescription() *MissionUpsertBulk {
 func (u *MissionUpsertBulk) ClearDescription() *MissionUpsertBulk {
 	return u.Update(func(s *MissionUpsert) {
 		s.ClearDescription()
+	})
+}
+
+// SetDuration sets the "duration" field.
+func (u *MissionUpsertBulk) SetDuration(v int) *MissionUpsertBulk {
+	return u.Update(func(s *MissionUpsert) {
+		s.SetDuration(v)
+	})
+}
+
+// AddDuration adds v to the "duration" field.
+func (u *MissionUpsertBulk) AddDuration(v int) *MissionUpsertBulk {
+	return u.Update(func(s *MissionUpsert) {
+		s.AddDuration(v)
+	})
+}
+
+// UpdateDuration sets the "duration" field to the value that was provided on create.
+func (u *MissionUpsertBulk) UpdateDuration() *MissionUpsertBulk {
+	return u.Update(func(s *MissionUpsert) {
+		s.UpdateDuration()
 	})
 }
 

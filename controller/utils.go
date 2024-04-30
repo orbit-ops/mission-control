@@ -1,6 +1,8 @@
 package controller
 
-import "github.com/go-faster/jx"
+import (
+	"github.com/go-faster/jx"
+)
 
 // rawError renders err as json string.
 func rawError(err error) jx.Raw {

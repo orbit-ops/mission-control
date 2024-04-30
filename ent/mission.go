@@ -22,6 +22,8 @@ type Mission struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// duration in minutes
+	Duration int `json:"duration,omitempty"`
 	// MinApprovers holds the value of the "min_approvers" field.
 	MinApprovers int `json:"min_approvers,omitempty"`
 	// PossibleApprovers holds the value of the "possible_approvers" field.
@@ -70,7 +72,7 @@ func (*Mission) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case mission.FieldPossibleApprovers:
 			values[i] = new([]byte)
-		case mission.FieldMinApprovers:
+		case mission.FieldDuration, mission.FieldMinApprovers:
 			values[i] = new(sql.NullInt64)
 		case mission.FieldName, mission.FieldDescription:
 			values[i] = new(sql.NullString)
@@ -108,6 +110,12 @@ func (m *Mission) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				m.Description = value.String
+			}
+		case mission.FieldDuration:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field duration", values[i])
+			} else if value.Valid {
+				m.Duration = int(value.Int64)
 			}
 		case mission.FieldMinApprovers:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -174,6 +182,9 @@ func (m *Mission) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(m.Description)
+	builder.WriteString(", ")
+	builder.WriteString("duration=")
+	builder.WriteString(fmt.Sprintf("%v", m.Duration))
 	builder.WriteString(", ")
 	builder.WriteString("min_approvers=")
 	builder.WriteString(fmt.Sprintf("%v", m.MinApprovers))

@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/contrib/entoas"
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
@@ -16,16 +18,14 @@ type Access struct {
 
 // Fields of the Access.
 func (Access) Fields() []ent.Field {
-
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
-		field.Time("start_time").Immutable(),
-		field.Bool("approved").Immutable(),
-		field.Bool("rolled_back").Default(false),
-		field.Time("rollback_time").Optional(),
-		field.String("rollback_reason").Optional(),
-		field.Time("end_time").Immutable(),
-		field.UUID("request_id", uuid.UUID{}),
+		field.Time("start_time").Immutable().Annotations(entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude))),
+		field.Bool("provisioned").Default(false).Annotations(entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude))),
+		field.Bool("rolled_back").Default(false).Annotations(entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude))),
+		field.Time("rollback_time").Default(time.Now).Nillable().Annotations(entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude))),
+		field.String("rollback_reason").Optional().Nillable().Annotations(entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude))),
+		field.Time("expiration").Immutable().Annotations(entoas.CreateOperation(entoas.OperationPolicy(entoas.PolicyExclude))),
 	}
 }
 
@@ -47,6 +47,14 @@ func (Access) Edges() []ent.Edge {
 			Annotations(
 				entoas.ReadOperation(entoas.OperationPolicy(entoas.PolicyExclude)),
 			),
+		edge.To("request", Request.Type).Unique().Required().Immutable(),
 		edge.From("accessTokens", ActionTokens.Type).Ref("accessTokens"),
 	}
 }
+
+// // Mixins of the Access.
+// func (Access) Mixin() []ent.Mixin {
+// 	return []ent.Mixin{
+// 		SoftDeleteMixin{},
+// 	}
+// }

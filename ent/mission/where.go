@@ -64,6 +64,11 @@ func Description(v string) predicate.Mission {
 	return predicate.Mission(sql.FieldEQ(FieldDescription, v))
 }
 
+// Duration applies equality check predicate on the "duration" field. It's identical to DurationEQ.
+func Duration(v int) predicate.Mission {
+	return predicate.Mission(sql.FieldEQ(FieldDuration, v))
+}
+
 // MinApprovers applies equality check predicate on the "min_approvers" field. It's identical to MinApproversEQ.
 func MinApprovers(v int) predicate.Mission {
 	return predicate.Mission(sql.FieldEQ(FieldMinApprovers, v))
@@ -207,6 +212,46 @@ func DescriptionEqualFold(v string) predicate.Mission {
 // DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
 func DescriptionContainsFold(v string) predicate.Mission {
 	return predicate.Mission(sql.FieldContainsFold(FieldDescription, v))
+}
+
+// DurationEQ applies the EQ predicate on the "duration" field.
+func DurationEQ(v int) predicate.Mission {
+	return predicate.Mission(sql.FieldEQ(FieldDuration, v))
+}
+
+// DurationNEQ applies the NEQ predicate on the "duration" field.
+func DurationNEQ(v int) predicate.Mission {
+	return predicate.Mission(sql.FieldNEQ(FieldDuration, v))
+}
+
+// DurationIn applies the In predicate on the "duration" field.
+func DurationIn(vs ...int) predicate.Mission {
+	return predicate.Mission(sql.FieldIn(FieldDuration, vs...))
+}
+
+// DurationNotIn applies the NotIn predicate on the "duration" field.
+func DurationNotIn(vs ...int) predicate.Mission {
+	return predicate.Mission(sql.FieldNotIn(FieldDuration, vs...))
+}
+
+// DurationGT applies the GT predicate on the "duration" field.
+func DurationGT(v int) predicate.Mission {
+	return predicate.Mission(sql.FieldGT(FieldDuration, v))
+}
+
+// DurationGTE applies the GTE predicate on the "duration" field.
+func DurationGTE(v int) predicate.Mission {
+	return predicate.Mission(sql.FieldGTE(FieldDuration, v))
+}
+
+// DurationLT applies the LT predicate on the "duration" field.
+func DurationLT(v int) predicate.Mission {
+	return predicate.Mission(sql.FieldLT(FieldDuration, v))
+}
+
+// DurationLTE applies the LTE predicate on the "duration" field.
+func DurationLTE(v int) predicate.Mission {
+	return predicate.Mission(sql.FieldLTE(FieldDuration, v))
 }
 
 // MinApproversEQ applies the EQ predicate on the "min_approvers" field.

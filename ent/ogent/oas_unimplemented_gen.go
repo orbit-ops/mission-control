@@ -139,15 +139,6 @@ func (UnimplementedHandler) ListApproval(ctx context.Context, params ListApprova
 	return r, ht.ErrNotImplemented
 }
 
-// ListApprovalAccess implements listApprovalAccess operation.
-//
-// List attached Accesses.
-//
-// GET /approvals/{id}/access
-func (UnimplementedHandler) ListApprovalAccess(ctx context.Context, params ListApprovalAccessParams) (r ListApprovalAccessRes, _ error) {
-	return r, ht.ErrNotImplemented
-}
-
 // ListAudit implements listAudit operation.
 //
 // List Audits.
@@ -211,6 +202,15 @@ func (UnimplementedHandler) ListRocket(ctx context.Context, params ListRocketPar
 	return r, ht.ErrNotImplemented
 }
 
+// ReadAccessRequest implements readAccessRequest operation.
+//
+// Find the attached Request of the Access with the given ID.
+//
+// GET /accesses/{id}/request
+func (UnimplementedHandler) ReadAccessRequest(ctx context.Context, params ReadAccessRequestParams) (r ReadAccessRequestRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ReadApiKey implements readApiKey operation.
 //
 // Finds the ApiKey with the requested ID and returns it.
@@ -226,6 +226,15 @@ func (UnimplementedHandler) ReadApiKey(ctx context.Context, params ReadApiKeyPar
 //
 // GET /approvals/{id}
 func (UnimplementedHandler) ReadApproval(ctx context.Context, params ReadApprovalParams) (r ReadApprovalRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ReadApprovalAccess implements readApprovalAccess operation.
+//
+// Find the attached Access of the Approval with the given ID.
+//
+// GET /approvals/{id}/access
+func (UnimplementedHandler) ReadApprovalAccess(ctx context.Context, params ReadApprovalAccessParams) (r ReadApprovalAccessRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

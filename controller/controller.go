@@ -12,6 +12,7 @@ import (
 	"github.com/orbit-ops/launchpad-core/ent/audit"
 	"github.com/orbit-ops/launchpad-core/ent/ogent"
 	"github.com/orbit-ops/launchpad-core/ent/request"
+	_ "github.com/orbit-ops/launchpad-core/ent/runtime"
 	"github.com/orbit-ops/launchpad-core/internal/notifications"
 	"github.com/orbit-ops/launchpad-core/providers"
 	"github.com/orbit-ops/launchpad-core/utils"
@@ -152,7 +153,7 @@ func (c *AccessController) removeAccess(ctx context.Context, acc *ent.Access) er
 	}
 
 	// mission, err := c.client.Mission.Query().Select().Where(mission.HasRequestsWith(request.IDEQ(acc.RequestID))).First(ctx)
-	req, err := c.client.Request.Query().Where(request.IDEQ(acc.RequestID)).WithMission(func(mq *ent.MissionQuery) {
+	req, err := c.client.Request.Query().Where(request.IDEQ(acc.Edges.Request.ID)).WithMission(func(mq *ent.MissionQuery) {
 		mq.WithRockets()
 	}).First(ctx)
 	if err != nil {

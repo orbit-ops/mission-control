@@ -59,12 +59,6 @@ func (au *AccessUpdate) SetNillableRollbackTime(t *time.Time) *AccessUpdate {
 	return au
 }
 
-// ClearRollbackTime clears the value of the "rollback_time" field.
-func (au *AccessUpdate) ClearRollbackTime() *AccessUpdate {
-	au.mutation.ClearRollbackTime()
-	return au
-}
-
 // SetRollbackReason sets the "rollback_reason" field.
 func (au *AccessUpdate) SetRollbackReason(s string) *AccessUpdate {
 	au.mutation.SetRollbackReason(s)
@@ -82,20 +76,6 @@ func (au *AccessUpdate) SetNillableRollbackReason(s *string) *AccessUpdate {
 // ClearRollbackReason clears the value of the "rollback_reason" field.
 func (au *AccessUpdate) ClearRollbackReason() *AccessUpdate {
 	au.mutation.ClearRollbackReason()
-	return au
-}
-
-// SetRequestID sets the "request_id" field.
-func (au *AccessUpdate) SetRequestID(u uuid.UUID) *AccessUpdate {
-	au.mutation.SetRequestID(u)
-	return au
-}
-
-// SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (au *AccessUpdate) SetNillableRequestID(u *uuid.UUID) *AccessUpdate {
-	if u != nil {
-		au.SetRequestID(*u)
-	}
 	return au
 }
 
@@ -203,7 +183,18 @@ func (au *AccessUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (au *AccessUpdate) check() error {
+	if _, ok := au.mutation.RequestID(); au.mutation.RequestCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Access.request"`)
+	}
+	return nil
+}
+
 func (au *AccessUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := au.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(access.Table, access.Columns, sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID))
 	if ps := au.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -218,24 +209,18 @@ func (au *AccessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.RollbackTime(); ok {
 		_spec.SetField(access.FieldRollbackTime, field.TypeTime, value)
 	}
-	if au.mutation.RollbackTimeCleared() {
-		_spec.ClearField(access.FieldRollbackTime, field.TypeTime)
-	}
 	if value, ok := au.mutation.RollbackReason(); ok {
 		_spec.SetField(access.FieldRollbackReason, field.TypeString, value)
 	}
 	if au.mutation.RollbackReasonCleared() {
 		_spec.ClearField(access.FieldRollbackReason, field.TypeString)
 	}
-	if value, ok := au.mutation.RequestID(); ok {
-		_spec.SetField(access.FieldRequestID, field.TypeUUID, value)
-	}
 	if au.mutation.ApprovalsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: access.ApprovalsPrimaryKey,
+			Columns: []string{access.ApprovalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
@@ -245,10 +230,10 @@ func (au *AccessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := au.mutation.RemovedApprovalsIDs(); len(nodes) > 0 && !au.mutation.ApprovalsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: access.ApprovalsPrimaryKey,
+			Columns: []string{access.ApprovalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
@@ -261,10 +246,10 @@ func (au *AccessUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := au.mutation.ApprovalsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: access.ApprovalsPrimaryKey,
+			Columns: []string{access.ApprovalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
@@ -368,12 +353,6 @@ func (auo *AccessUpdateOne) SetNillableRollbackTime(t *time.Time) *AccessUpdateO
 	return auo
 }
 
-// ClearRollbackTime clears the value of the "rollback_time" field.
-func (auo *AccessUpdateOne) ClearRollbackTime() *AccessUpdateOne {
-	auo.mutation.ClearRollbackTime()
-	return auo
-}
-
 // SetRollbackReason sets the "rollback_reason" field.
 func (auo *AccessUpdateOne) SetRollbackReason(s string) *AccessUpdateOne {
 	auo.mutation.SetRollbackReason(s)
@@ -391,20 +370,6 @@ func (auo *AccessUpdateOne) SetNillableRollbackReason(s *string) *AccessUpdateOn
 // ClearRollbackReason clears the value of the "rollback_reason" field.
 func (auo *AccessUpdateOne) ClearRollbackReason() *AccessUpdateOne {
 	auo.mutation.ClearRollbackReason()
-	return auo
-}
-
-// SetRequestID sets the "request_id" field.
-func (auo *AccessUpdateOne) SetRequestID(u uuid.UUID) *AccessUpdateOne {
-	auo.mutation.SetRequestID(u)
-	return auo
-}
-
-// SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (auo *AccessUpdateOne) SetNillableRequestID(u *uuid.UUID) *AccessUpdateOne {
-	if u != nil {
-		auo.SetRequestID(*u)
-	}
 	return auo
 }
 
@@ -525,7 +490,18 @@ func (auo *AccessUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (auo *AccessUpdateOne) check() error {
+	if _, ok := auo.mutation.RequestID(); auo.mutation.RequestCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Access.request"`)
+	}
+	return nil
+}
+
 func (auo *AccessUpdateOne) sqlSave(ctx context.Context) (_node *Access, err error) {
+	if err := auo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(access.Table, access.Columns, sqlgraph.NewFieldSpec(access.FieldID, field.TypeUUID))
 	id, ok := auo.mutation.ID()
 	if !ok {
@@ -557,24 +533,18 @@ func (auo *AccessUpdateOne) sqlSave(ctx context.Context) (_node *Access, err err
 	if value, ok := auo.mutation.RollbackTime(); ok {
 		_spec.SetField(access.FieldRollbackTime, field.TypeTime, value)
 	}
-	if auo.mutation.RollbackTimeCleared() {
-		_spec.ClearField(access.FieldRollbackTime, field.TypeTime)
-	}
 	if value, ok := auo.mutation.RollbackReason(); ok {
 		_spec.SetField(access.FieldRollbackReason, field.TypeString, value)
 	}
 	if auo.mutation.RollbackReasonCleared() {
 		_spec.ClearField(access.FieldRollbackReason, field.TypeString)
 	}
-	if value, ok := auo.mutation.RequestID(); ok {
-		_spec.SetField(access.FieldRequestID, field.TypeUUID, value)
-	}
 	if auo.mutation.ApprovalsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: access.ApprovalsPrimaryKey,
+			Columns: []string{access.ApprovalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
@@ -584,10 +554,10 @@ func (auo *AccessUpdateOne) sqlSave(ctx context.Context) (_node *Access, err err
 	}
 	if nodes := auo.mutation.RemovedApprovalsIDs(); len(nodes) > 0 && !auo.mutation.ApprovalsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: access.ApprovalsPrimaryKey,
+			Columns: []string{access.ApprovalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),
@@ -600,10 +570,10 @@ func (auo *AccessUpdateOne) sqlSave(ctx context.Context) (_node *Access, err err
 	}
 	if nodes := auo.mutation.ApprovalsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   access.ApprovalsTable,
-			Columns: access.ApprovalsPrimaryKey,
+			Columns: []string{access.ApprovalsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(approval.FieldID, field.TypeUUID),

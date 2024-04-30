@@ -3,6 +3,8 @@
 package request
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
@@ -17,6 +19,12 @@ const (
 	FieldReason = "reason"
 	// FieldRequester holds the string denoting the requester field in the database.
 	FieldRequester = "requester"
+	// FieldTimestamp holds the string denoting the timestamp field in the database.
+	FieldTimestamp = "timestamp"
+	// FieldCancelledTime holds the string denoting the cancelled_time field in the database.
+	FieldCancelledTime = "cancelled_time"
+	// FieldCancelled holds the string denoting the cancelled field in the database.
+	FieldCancelled = "cancelled"
 	// EdgeApprovals holds the string denoting the approvals edge name in mutations.
 	EdgeApprovals = "approvals"
 	// EdgeMission holds the string denoting the mission edge name in mutations.
@@ -44,6 +52,9 @@ var Columns = []string{
 	FieldID,
 	FieldReason,
 	FieldRequester,
+	FieldTimestamp,
+	FieldCancelledTime,
+	FieldCancelled,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "requests"
@@ -68,6 +79,14 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
+	ReasonValidator func(string) error
+	// RequesterValidator is a validator for the "requester" field. It is called by the builders before save.
+	RequesterValidator func(string) error
+	// DefaultTimestamp holds the default value on creation for the "timestamp" field.
+	DefaultTimestamp func() time.Time
+	// DefaultCancelled holds the default value on creation for the "cancelled" field.
+	DefaultCancelled bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -88,6 +107,21 @@ func ByReason(opts ...sql.OrderTermOption) OrderOption {
 // ByRequester orders the results by the requester field.
 func ByRequester(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRequester, opts...).ToFunc()
+}
+
+// ByTimestamp orders the results by the timestamp field.
+func ByTimestamp(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTimestamp, opts...).ToFunc()
+}
+
+// ByCancelledTime orders the results by the cancelled_time field.
+func ByCancelledTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCancelledTime, opts...).ToFunc()
+}
+
+// ByCancelled orders the results by the cancelled field.
+func ByCancelled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCancelled, opts...).ToFunc()
 }
 
 // ByApprovalsCount orders the results by approvals count.

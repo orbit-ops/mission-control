@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -34,6 +35,48 @@ func (rc *RequestCreate) SetReason(s string) *RequestCreate {
 // SetRequester sets the "requester" field.
 func (rc *RequestCreate) SetRequester(s string) *RequestCreate {
 	rc.mutation.SetRequester(s)
+	return rc
+}
+
+// SetTimestamp sets the "timestamp" field.
+func (rc *RequestCreate) SetTimestamp(t time.Time) *RequestCreate {
+	rc.mutation.SetTimestamp(t)
+	return rc
+}
+
+// SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
+func (rc *RequestCreate) SetNillableTimestamp(t *time.Time) *RequestCreate {
+	if t != nil {
+		rc.SetTimestamp(*t)
+	}
+	return rc
+}
+
+// SetCancelledTime sets the "cancelled_time" field.
+func (rc *RequestCreate) SetCancelledTime(t time.Time) *RequestCreate {
+	rc.mutation.SetCancelledTime(t)
+	return rc
+}
+
+// SetNillableCancelledTime sets the "cancelled_time" field if the given value is not nil.
+func (rc *RequestCreate) SetNillableCancelledTime(t *time.Time) *RequestCreate {
+	if t != nil {
+		rc.SetCancelledTime(*t)
+	}
+	return rc
+}
+
+// SetCancelled sets the "cancelled" field.
+func (rc *RequestCreate) SetCancelled(b bool) *RequestCreate {
+	rc.mutation.SetCancelled(b)
+	return rc
+}
+
+// SetNillableCancelled sets the "cancelled" field if the given value is not nil.
+func (rc *RequestCreate) SetNillableCancelled(b *bool) *RequestCreate {
+	if b != nil {
+		rc.SetCancelled(*b)
+	}
 	return rc
 }
 
@@ -112,6 +155,14 @@ func (rc *RequestCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (rc *RequestCreate) defaults() {
+	if _, ok := rc.mutation.Timestamp(); !ok {
+		v := request.DefaultTimestamp()
+		rc.mutation.SetTimestamp(v)
+	}
+	if _, ok := rc.mutation.Cancelled(); !ok {
+		v := request.DefaultCancelled
+		rc.mutation.SetCancelled(v)
+	}
 	if _, ok := rc.mutation.ID(); !ok {
 		v := request.DefaultID()
 		rc.mutation.SetID(v)
@@ -123,8 +174,24 @@ func (rc *RequestCreate) check() error {
 	if _, ok := rc.mutation.Reason(); !ok {
 		return &ValidationError{Name: "reason", err: errors.New(`ent: missing required field "Request.reason"`)}
 	}
+	if v, ok := rc.mutation.Reason(); ok {
+		if err := request.ReasonValidator(v); err != nil {
+			return &ValidationError{Name: "reason", err: fmt.Errorf(`ent: validator failed for field "Request.reason": %w`, err)}
+		}
+	}
 	if _, ok := rc.mutation.Requester(); !ok {
 		return &ValidationError{Name: "requester", err: errors.New(`ent: missing required field "Request.requester"`)}
+	}
+	if v, ok := rc.mutation.Requester(); ok {
+		if err := request.RequesterValidator(v); err != nil {
+			return &ValidationError{Name: "requester", err: fmt.Errorf(`ent: validator failed for field "Request.requester": %w`, err)}
+		}
+	}
+	if _, ok := rc.mutation.Timestamp(); !ok {
+		return &ValidationError{Name: "timestamp", err: errors.New(`ent: missing required field "Request.timestamp"`)}
+	}
+	if _, ok := rc.mutation.Cancelled(); !ok {
+		return &ValidationError{Name: "cancelled", err: errors.New(`ent: missing required field "Request.cancelled"`)}
 	}
 	if _, ok := rc.mutation.MissionID(); !ok {
 		return &ValidationError{Name: "mission", err: errors.New(`ent: missing required edge "Request.mission"`)}
@@ -172,6 +239,18 @@ func (rc *RequestCreate) createSpec() (*Request, *sqlgraph.CreateSpec) {
 	if value, ok := rc.mutation.Requester(); ok {
 		_spec.SetField(request.FieldRequester, field.TypeString, value)
 		_node.Requester = value
+	}
+	if value, ok := rc.mutation.Timestamp(); ok {
+		_spec.SetField(request.FieldTimestamp, field.TypeTime, value)
+		_node.Timestamp = value
+	}
+	if value, ok := rc.mutation.CancelledTime(); ok {
+		_spec.SetField(request.FieldCancelledTime, field.TypeTime, value)
+		_node.CancelledTime = value
+	}
+	if value, ok := rc.mutation.Cancelled(); ok {
+		_spec.SetField(request.FieldCancelled, field.TypeBool, value)
+		_node.Cancelled = value
 	}
 	if nodes := rc.mutation.ApprovalsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -258,6 +337,36 @@ type (
 	}
 )
 
+// SetCancelledTime sets the "cancelled_time" field.
+func (u *RequestUpsert) SetCancelledTime(v time.Time) *RequestUpsert {
+	u.Set(request.FieldCancelledTime, v)
+	return u
+}
+
+// UpdateCancelledTime sets the "cancelled_time" field to the value that was provided on create.
+func (u *RequestUpsert) UpdateCancelledTime() *RequestUpsert {
+	u.SetExcluded(request.FieldCancelledTime)
+	return u
+}
+
+// ClearCancelledTime clears the value of the "cancelled_time" field.
+func (u *RequestUpsert) ClearCancelledTime() *RequestUpsert {
+	u.SetNull(request.FieldCancelledTime)
+	return u
+}
+
+// SetCancelled sets the "cancelled" field.
+func (u *RequestUpsert) SetCancelled(v bool) *RequestUpsert {
+	u.Set(request.FieldCancelled, v)
+	return u
+}
+
+// UpdateCancelled sets the "cancelled" field to the value that was provided on create.
+func (u *RequestUpsert) UpdateCancelled() *RequestUpsert {
+	u.SetExcluded(request.FieldCancelled)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -280,6 +389,9 @@ func (u *RequestUpsertOne) UpdateNewValues() *RequestUpsertOne {
 		}
 		if _, exists := u.create.mutation.Requester(); exists {
 			s.SetIgnore(request.FieldRequester)
+		}
+		if _, exists := u.create.mutation.Timestamp(); exists {
+			s.SetIgnore(request.FieldTimestamp)
 		}
 	}))
 	return u
@@ -310,6 +422,41 @@ func (u *RequestUpsertOne) Update(set func(*RequestUpsert)) *RequestUpsertOne {
 		set(&RequestUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetCancelledTime sets the "cancelled_time" field.
+func (u *RequestUpsertOne) SetCancelledTime(v time.Time) *RequestUpsertOne {
+	return u.Update(func(s *RequestUpsert) {
+		s.SetCancelledTime(v)
+	})
+}
+
+// UpdateCancelledTime sets the "cancelled_time" field to the value that was provided on create.
+func (u *RequestUpsertOne) UpdateCancelledTime() *RequestUpsertOne {
+	return u.Update(func(s *RequestUpsert) {
+		s.UpdateCancelledTime()
+	})
+}
+
+// ClearCancelledTime clears the value of the "cancelled_time" field.
+func (u *RequestUpsertOne) ClearCancelledTime() *RequestUpsertOne {
+	return u.Update(func(s *RequestUpsert) {
+		s.ClearCancelledTime()
+	})
+}
+
+// SetCancelled sets the "cancelled" field.
+func (u *RequestUpsertOne) SetCancelled(v bool) *RequestUpsertOne {
+	return u.Update(func(s *RequestUpsert) {
+		s.SetCancelled(v)
+	})
+}
+
+// UpdateCancelled sets the "cancelled" field to the value that was provided on create.
+func (u *RequestUpsertOne) UpdateCancelled() *RequestUpsertOne {
+	return u.Update(func(s *RequestUpsert) {
+		s.UpdateCancelled()
+	})
 }
 
 // Exec executes the query.
@@ -501,6 +648,9 @@ func (u *RequestUpsertBulk) UpdateNewValues() *RequestUpsertBulk {
 			if _, exists := b.mutation.Requester(); exists {
 				s.SetIgnore(request.FieldRequester)
 			}
+			if _, exists := b.mutation.Timestamp(); exists {
+				s.SetIgnore(request.FieldTimestamp)
+			}
 		}
 	}))
 	return u
@@ -531,6 +681,41 @@ func (u *RequestUpsertBulk) Update(set func(*RequestUpsert)) *RequestUpsertBulk 
 		set(&RequestUpsert{UpdateSet: update})
 	}))
 	return u
+}
+
+// SetCancelledTime sets the "cancelled_time" field.
+func (u *RequestUpsertBulk) SetCancelledTime(v time.Time) *RequestUpsertBulk {
+	return u.Update(func(s *RequestUpsert) {
+		s.SetCancelledTime(v)
+	})
+}
+
+// UpdateCancelledTime sets the "cancelled_time" field to the value that was provided on create.
+func (u *RequestUpsertBulk) UpdateCancelledTime() *RequestUpsertBulk {
+	return u.Update(func(s *RequestUpsert) {
+		s.UpdateCancelledTime()
+	})
+}
+
+// ClearCancelledTime clears the value of the "cancelled_time" field.
+func (u *RequestUpsertBulk) ClearCancelledTime() *RequestUpsertBulk {
+	return u.Update(func(s *RequestUpsert) {
+		s.ClearCancelledTime()
+	})
+}
+
+// SetCancelled sets the "cancelled" field.
+func (u *RequestUpsertBulk) SetCancelled(v bool) *RequestUpsertBulk {
+	return u.Update(func(s *RequestUpsert) {
+		s.SetCancelled(v)
+	})
+}
+
+// UpdateCancelled sets the "cancelled" field to the value that was provided on create.
+func (u *RequestUpsertBulk) UpdateCancelled() *RequestUpsertBulk {
+	return u.Update(func(s *RequestUpsert) {
+		s.UpdateCancelled()
+	})
 }
 
 // Exec executes the query.

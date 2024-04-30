@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
+	"github.com/orbit-ops/launchpad-core/ent/access"
 	"github.com/orbit-ops/launchpad-core/ent/approval"
 	"github.com/orbit-ops/launchpad-core/ent/request"
 )
@@ -32,6 +33,7 @@ type Approval struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ApprovalQuery when eager-loading is set.
 	Edges            ApprovalEdges `json:"edges"`
+	access_approvals *uuid.UUID
 	approval_request *uuid.UUID
 	selectValues     sql.SelectValues
 }
@@ -41,11 +43,10 @@ type ApprovalEdges struct {
 	// Request holds the value of the request edge.
 	Request *Request `json:"request,omitempty"`
 	// Access holds the value of the access edge.
-	Access []*Access `json:"access,omitempty"`
+	Access *Access `json:"access,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
-	namedAccess map[string][]*Access
 }
 
 // RequestOrErr returns the Request value or an error if the edge
@@ -62,9 +63,13 @@ func (e ApprovalEdges) RequestOrErr() (*Request, error) {
 }
 
 // AccessOrErr returns the Access value or an error if the edge
-// was not loaded in eager-loading.
-func (e ApprovalEdges) AccessOrErr() ([]*Access, error) {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ApprovalEdges) AccessOrErr() (*Access, error) {
 	if e.loadedTypes[1] {
+		if e.Access == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: access.Label}
+		}
 		return e.Access, nil
 	}
 	return nil, &NotLoadedError{edge: "access"}
@@ -83,7 +88,9 @@ func (*Approval) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case approval.FieldID:
 			values[i] = new(uuid.UUID)
-		case approval.ForeignKeys[0]: // approval_request
+		case approval.ForeignKeys[0]: // access_approvals
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+		case approval.ForeignKeys[1]: // approval_request
 			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
@@ -137,6 +144,13 @@ func (a *Approval) assignValues(columns []string, values []any) error {
 				a.RevokedTime = value.Time
 			}
 		case approval.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field access_approvals", values[i])
+			} else if value.Valid {
+				a.access_approvals = new(uuid.UUID)
+				*a.access_approvals = *value.S.(*uuid.UUID)
+			}
+		case approval.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
 				return fmt.Errorf("unexpected type %T for field approval_request", values[i])
 			} else if value.Valid {
@@ -205,30 +219,6 @@ func (a *Approval) String() string {
 	builder.WriteString(a.RevokedTime.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
-}
-
-// NamedAccess returns the Access named value or an error if the edge was not
-// loaded in eager-loading with this name.
-func (a *Approval) NamedAccess(name string) ([]*Access, error) {
-	if a.Edges.namedAccess == nil {
-		return nil, &NotLoadedError{edge: name}
-	}
-	nodes, ok := a.Edges.namedAccess[name]
-	if !ok {
-		return nil, &NotLoadedError{edge: name}
-	}
-	return nodes, nil
-}
-
-func (a *Approval) appendNamedAccess(name string, edges ...*Access) {
-	if a.Edges.namedAccess == nil {
-		a.Edges.namedAccess = make(map[string][]*Access)
-	}
-	if len(edges) == 0 {
-		a.Edges.namedAccess[name] = []*Access{}
-	} else {
-		a.Edges.namedAccess[name] = append(a.Edges.namedAccess[name], edges...)
-	}
 }
 
 // Approvals is a parsable slice of Approval.

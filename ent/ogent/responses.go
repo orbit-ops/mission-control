@@ -67,6 +67,38 @@ func (a *AccessApprovalsList) Elem() AccessApprovalsList {
 	return *a
 }
 
+func NewAccessRequestRead(e *ent.Request) *AccessRequestRead {
+	if e == nil {
+		return nil
+	}
+	var ret AccessRequestRead
+	ret.ID = e.ID
+	ret.Reason = e.Reason
+	ret.Requester = e.Requester
+	ret.Timestamp = e.Timestamp
+	ret.CancelledTime = NewOptDateTime(e.CancelledTime)
+	ret.Cancelled = e.Cancelled
+	return &ret
+}
+
+func NewAccessRequestReads(es []*ent.Request) []AccessRequestRead {
+	if len(es) == 0 {
+		return nil
+	}
+	r := make([]AccessRequestRead, len(es))
+	for i, e := range es {
+		r[i] = NewAccessRequestRead(e).Elem()
+	}
+	return r
+}
+
+func (r *AccessRequestRead) Elem() AccessRequestRead {
+	if r == nil {
+		return AccessRequestRead{}
+	}
+	return *r
+}
+
 func NewApiKeyCreate(e *ent.ApiKey) *ApiKeyCreate {
 	if e == nil {
 		return nil
@@ -279,36 +311,40 @@ func (a *ApprovalUpdate) Elem() ApprovalUpdate {
 	return *a
 }
 
-func NewApprovalAccessList(e *ent.Access) *ApprovalAccessList {
+func NewApprovalAccessRead(e *ent.Access) *ApprovalAccessRead {
 	if e == nil {
 		return nil
 	}
-	var ret ApprovalAccessList
+	var ret ApprovalAccessRead
 	ret.ID = e.ID
 	ret.StartTime = e.StartTime
-	ret.Approved = e.Approved
 	ret.RolledBack = e.RolledBack
-	ret.RollbackTime = NewOptDateTime(e.RollbackTime)
-	ret.RollbackReason = NewOptString(e.RollbackReason)
-	ret.EndTime = e.EndTime
-	ret.RequestID = e.RequestID
+	ret.RollbackTime = OptDateTime{}
+	if e.RollbackTime != nil {
+		ret.RollbackTime.SetTo(*e.RollbackTime)
+	}
+	ret.RollbackReason = OptString{}
+	if e.RollbackReason != nil {
+		ret.RollbackReason.SetTo(*e.RollbackReason)
+	}
+	ret.Expiration = e.Expiration
 	return &ret
 }
 
-func NewApprovalAccessLists(es []*ent.Access) []ApprovalAccessList {
+func NewApprovalAccessReads(es []*ent.Access) []ApprovalAccessRead {
 	if len(es) == 0 {
 		return nil
 	}
-	r := make([]ApprovalAccessList, len(es))
+	r := make([]ApprovalAccessRead, len(es))
 	for i, e := range es {
-		r[i] = NewApprovalAccessList(e).Elem()
+		r[i] = NewApprovalAccessRead(e).Elem()
 	}
 	return r
 }
 
-func (a *ApprovalAccessList) Elem() ApprovalAccessList {
+func (a *ApprovalAccessRead) Elem() ApprovalAccessRead {
 	if a == nil {
-		return ApprovalAccessList{}
+		return ApprovalAccessRead{}
 	}
 	return *a
 }
@@ -381,6 +417,7 @@ func NewMissionCreate(e *ent.Mission) *MissionCreate {
 	ret.ID = e.ID
 	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
+	ret.Duration = e.Duration
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
@@ -412,6 +449,7 @@ func NewMissionList(e *ent.Mission) *MissionList {
 	ret.ID = e.ID
 	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
+	ret.Duration = e.Duration
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
@@ -443,6 +481,7 @@ func NewMissionRead(e *ent.Mission) *MissionRead {
 	ret.ID = e.ID
 	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
+	ret.Duration = e.Duration
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
@@ -474,6 +513,7 @@ func NewMissionUpdate(e *ent.Mission) *MissionUpdate {
 	ret.ID = e.ID
 	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
+	ret.Duration = e.Duration
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret
@@ -505,6 +545,9 @@ func NewMissionRequestsList(e *ent.Request) *MissionRequestsList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
+	ret.Timestamp = e.Timestamp
+	ret.CancelledTime = NewOptDateTime(e.CancelledTime)
+	ret.Cancelled = e.Cancelled
 	return &ret
 }
 
@@ -565,6 +608,9 @@ func NewRequestCreate(e *ent.Request) *RequestCreate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
+	ret.Timestamp = e.Timestamp
+	ret.CancelledTime = NewOptDateTime(e.CancelledTime)
+	ret.Cancelled = e.Cancelled
 	return &ret
 }
 
@@ -594,6 +640,9 @@ func NewRequestList(e *ent.Request) *RequestList {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
+	ret.Timestamp = e.Timestamp
+	ret.CancelledTime = NewOptDateTime(e.CancelledTime)
+	ret.Cancelled = e.Cancelled
 	return &ret
 }
 
@@ -623,6 +672,9 @@ func NewRequestRead(e *ent.Request) *RequestRead {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
+	ret.Timestamp = e.Timestamp
+	ret.CancelledTime = NewOptDateTime(e.CancelledTime)
+	ret.Cancelled = e.Cancelled
 	return &ret
 }
 
@@ -652,6 +704,9 @@ func NewRequestUpdate(e *ent.Request) *RequestUpdate {
 	ret.ID = e.ID
 	ret.Reason = e.Reason
 	ret.Requester = e.Requester
+	ret.Timestamp = e.Timestamp
+	ret.CancelledTime = NewOptDateTime(e.CancelledTime)
+	ret.Cancelled = e.Cancelled
 	return &ret
 }
 
@@ -713,6 +768,7 @@ func NewRequestMissionRead(e *ent.Mission) *RequestMissionRead {
 	ret.ID = e.ID
 	ret.Name = e.Name
 	ret.Description = NewOptString(e.Description)
+	ret.Duration = e.Duration
 	ret.MinApprovers = e.MinApprovers
 	ret.PossibleApprovers = e.PossibleApprovers
 	return &ret

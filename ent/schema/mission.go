@@ -24,6 +24,7 @@ func (Mission) Fields() []ent.Field {
 		field.UUID("id", uuid.UUID{}).Default(uuid.New),
 		field.String("name").Unique().NotEmpty(),
 		field.String("description").Optional(),
+		field.Int("duration").Comment("duration in minutes").Positive(),
 		field.Int("min_approvers").Validate(func(n int) error {
 			if n < 1 {
 				return errors.New("minimum approvers must be bigger than 1")

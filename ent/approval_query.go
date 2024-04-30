@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -21,14 +20,13 @@ import (
 // ApprovalQuery is the builder for querying Approval entities.
 type ApprovalQuery struct {
 	config
-	ctx             *QueryContext
-	order           []approval.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.Approval
-	withRequest     *RequestQuery
-	withAccess      *AccessQuery
-	withFKs         bool
-	withNamedAccess map[string]*AccessQuery
+	ctx         *QueryContext
+	order       []approval.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Approval
+	withRequest *RequestQuery
+	withAccess  *AccessQuery
+	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,7 +99,7 @@ func (aq *ApprovalQuery) QueryAccess() *AccessQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(approval.Table, approval.FieldID, selector),
 			sqlgraph.To(access.Table, access.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, approval.AccessTable, approval.AccessPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, approval.AccessTable, approval.AccessColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -415,7 +413,7 @@ func (aq *ApprovalQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*App
 			aq.withAccess != nil,
 		}
 	)
-	if aq.withRequest != nil {
+	if aq.withRequest != nil || aq.withAccess != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -446,16 +444,8 @@ func (aq *ApprovalQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*App
 		}
 	}
 	if query := aq.withAccess; query != nil {
-		if err := aq.loadAccess(ctx, query, nodes,
-			func(n *Approval) { n.Edges.Access = []*Access{} },
-			func(n *Approval, e *Access) { n.Edges.Access = append(n.Edges.Access, e) }); err != nil {
-			return nil, err
-		}
-	}
-	for name, query := range aq.withNamedAccess {
-		if err := aq.loadAccess(ctx, query, nodes,
-			func(n *Approval) { n.appendNamedAccess(name) },
-			func(n *Approval, e *Access) { n.appendNamedAccess(name, e) }); err != nil {
+		if err := aq.loadAccess(ctx, query, nodes, nil,
+			func(n *Approval, e *Access) { n.Edges.Access = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -495,62 +485,33 @@ func (aq *ApprovalQuery) loadRequest(ctx context.Context, query *RequestQuery, n
 	return nil
 }
 func (aq *ApprovalQuery) loadAccess(ctx context.Context, query *AccessQuery, nodes []*Approval, init func(*Approval), assign func(*Approval, *Access)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*Approval)
-	nids := make(map[uuid.UUID]map[*Approval]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Approval)
+	for i := range nodes {
+		if nodes[i].access_approvals == nil {
+			continue
 		}
+		fk := *nodes[i].access_approvals
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(approval.AccessTable)
-		s.Join(joinT).On(s.C(access.FieldID), joinT.C(approval.AccessPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(approval.AccessPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(approval.AccessPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(uuid.UUID)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Approval]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Access](ctx, query, qr, query.inters)
+	query.Where(access.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "access" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "access_approvals" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
@@ -635,20 +596,6 @@ func (aq *ApprovalQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
-}
-
-// WithNamedAccess tells the query-builder to eager-load the nodes that are connected to the "access"
-// edge with the given name. The optional arguments are used to configure the query builder of the edge.
-func (aq *ApprovalQuery) WithNamedAccess(name string, opts ...func(*AccessQuery)) *ApprovalQuery {
-	query := (&AccessClient{config: aq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	if aq.withNamedAccess == nil {
-		aq.withNamedAccess = make(map[string]*AccessQuery)
-	}
-	aq.withNamedAccess[name] = query
-	return aq
 }
 
 // ApprovalGroupBy is the group-by builder for Approval entities.

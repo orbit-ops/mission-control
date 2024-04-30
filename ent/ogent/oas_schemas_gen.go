@@ -180,6 +180,78 @@ func (s *AccessApprovalsList) SetRevokedTime(val OptDateTime) {
 	s.RevokedTime = val
 }
 
+// Ref: #/components/schemas/Access_RequestRead
+type AccessRequestRead struct {
+	ID            uuid.UUID   `json:"id"`
+	Reason        string      `json:"reason"`
+	Requester     string      `json:"requester"`
+	Timestamp     time.Time   `json:"timestamp"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     bool        `json:"cancelled"`
+}
+
+// GetID returns the value of ID.
+func (s *AccessRequestRead) GetID() uuid.UUID {
+	return s.ID
+}
+
+// GetReason returns the value of Reason.
+func (s *AccessRequestRead) GetReason() string {
+	return s.Reason
+}
+
+// GetRequester returns the value of Requester.
+func (s *AccessRequestRead) GetRequester() string {
+	return s.Requester
+}
+
+// GetTimestamp returns the value of Timestamp.
+func (s *AccessRequestRead) GetTimestamp() time.Time {
+	return s.Timestamp
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *AccessRequestRead) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *AccessRequestRead) GetCancelled() bool {
+	return s.Cancelled
+}
+
+// SetID sets the value of ID.
+func (s *AccessRequestRead) SetID(val uuid.UUID) {
+	s.ID = val
+}
+
+// SetReason sets the value of Reason.
+func (s *AccessRequestRead) SetReason(val string) {
+	s.Reason = val
+}
+
+// SetRequester sets the value of Requester.
+func (s *AccessRequestRead) SetRequester(val string) {
+	s.Requester = val
+}
+
+// SetTimestamp sets the value of Timestamp.
+func (s *AccessRequestRead) SetTimestamp(val time.Time) {
+	s.Timestamp = val
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *AccessRequestRead) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *AccessRequestRead) SetCancelled(val bool) {
+	s.Cancelled = val
+}
+
+func (*AccessRequestRead) readAccessRequestRes() {}
+
 type ApiKeyAuth struct {
 	APIKey string
 }
@@ -276,97 +348,77 @@ func (s *ApiKeyRead) SetName(val string) {
 
 func (*ApiKeyRead) readApiKeyRes() {}
 
-// Ref: #/components/schemas/Approval_AccessList
-type ApprovalAccessList struct {
+// Ref: #/components/schemas/Approval_AccessRead
+type ApprovalAccessRead struct {
 	ID             uuid.UUID   `json:"id"`
 	StartTime      time.Time   `json:"start_time"`
-	Approved       bool        `json:"approved"`
 	RolledBack     bool        `json:"rolled_back"`
 	RollbackTime   OptDateTime `json:"rollback_time"`
 	RollbackReason OptString   `json:"rollback_reason"`
-	EndTime        time.Time   `json:"end_time"`
-	RequestID      uuid.UUID   `json:"request_id"`
+	Expiration     time.Time   `json:"expiration"`
 }
 
 // GetID returns the value of ID.
-func (s *ApprovalAccessList) GetID() uuid.UUID {
+func (s *ApprovalAccessRead) GetID() uuid.UUID {
 	return s.ID
 }
 
 // GetStartTime returns the value of StartTime.
-func (s *ApprovalAccessList) GetStartTime() time.Time {
+func (s *ApprovalAccessRead) GetStartTime() time.Time {
 	return s.StartTime
 }
 
-// GetApproved returns the value of Approved.
-func (s *ApprovalAccessList) GetApproved() bool {
-	return s.Approved
-}
-
 // GetRolledBack returns the value of RolledBack.
-func (s *ApprovalAccessList) GetRolledBack() bool {
+func (s *ApprovalAccessRead) GetRolledBack() bool {
 	return s.RolledBack
 }
 
 // GetRollbackTime returns the value of RollbackTime.
-func (s *ApprovalAccessList) GetRollbackTime() OptDateTime {
+func (s *ApprovalAccessRead) GetRollbackTime() OptDateTime {
 	return s.RollbackTime
 }
 
 // GetRollbackReason returns the value of RollbackReason.
-func (s *ApprovalAccessList) GetRollbackReason() OptString {
+func (s *ApprovalAccessRead) GetRollbackReason() OptString {
 	return s.RollbackReason
 }
 
-// GetEndTime returns the value of EndTime.
-func (s *ApprovalAccessList) GetEndTime() time.Time {
-	return s.EndTime
-}
-
-// GetRequestID returns the value of RequestID.
-func (s *ApprovalAccessList) GetRequestID() uuid.UUID {
-	return s.RequestID
+// GetExpiration returns the value of Expiration.
+func (s *ApprovalAccessRead) GetExpiration() time.Time {
+	return s.Expiration
 }
 
 // SetID sets the value of ID.
-func (s *ApprovalAccessList) SetID(val uuid.UUID) {
+func (s *ApprovalAccessRead) SetID(val uuid.UUID) {
 	s.ID = val
 }
 
 // SetStartTime sets the value of StartTime.
-func (s *ApprovalAccessList) SetStartTime(val time.Time) {
+func (s *ApprovalAccessRead) SetStartTime(val time.Time) {
 	s.StartTime = val
 }
 
-// SetApproved sets the value of Approved.
-func (s *ApprovalAccessList) SetApproved(val bool) {
-	s.Approved = val
-}
-
 // SetRolledBack sets the value of RolledBack.
-func (s *ApprovalAccessList) SetRolledBack(val bool) {
+func (s *ApprovalAccessRead) SetRolledBack(val bool) {
 	s.RolledBack = val
 }
 
 // SetRollbackTime sets the value of RollbackTime.
-func (s *ApprovalAccessList) SetRollbackTime(val OptDateTime) {
+func (s *ApprovalAccessRead) SetRollbackTime(val OptDateTime) {
 	s.RollbackTime = val
 }
 
 // SetRollbackReason sets the value of RollbackReason.
-func (s *ApprovalAccessList) SetRollbackReason(val OptString) {
+func (s *ApprovalAccessRead) SetRollbackReason(val OptString) {
 	s.RollbackReason = val
 }
 
-// SetEndTime sets the value of EndTime.
-func (s *ApprovalAccessList) SetEndTime(val time.Time) {
-	s.EndTime = val
+// SetExpiration sets the value of Expiration.
+func (s *ApprovalAccessRead) SetExpiration(val time.Time) {
+	s.Expiration = val
 }
 
-// SetRequestID sets the value of RequestID.
-func (s *ApprovalAccessList) SetRequestID(val uuid.UUID) {
-	s.RequestID = val
-}
+func (*ApprovalAccessRead) readApprovalAccessRes() {}
 
 // Ref: #/components/schemas/ApprovalCreate
 type ApprovalCreate struct {
@@ -922,7 +974,7 @@ type CreateApprovalReq struct {
 	Revoked      bool        `json:"revoked"`
 	RevokedTime  OptDateTime `json:"revoked_time"`
 	Request      uuid.UUID   `json:"request"`
-	Access       []uuid.UUID `json:"access"`
+	Access       OptUUID     `json:"access"`
 }
 
 // GetPerson returns the value of Person.
@@ -956,7 +1008,7 @@ func (s *CreateApprovalReq) GetRequest() uuid.UUID {
 }
 
 // GetAccess returns the value of Access.
-func (s *CreateApprovalReq) GetAccess() []uuid.UUID {
+func (s *CreateApprovalReq) GetAccess() OptUUID {
 	return s.Access
 }
 
@@ -991,13 +1043,14 @@ func (s *CreateApprovalReq) SetRequest(val uuid.UUID) {
 }
 
 // SetAccess sets the value of Access.
-func (s *CreateApprovalReq) SetAccess(val []uuid.UUID) {
+func (s *CreateApprovalReq) SetAccess(val OptUUID) {
 	s.Access = val
 }
 
 type CreateMissionReq struct {
 	Name              string      `json:"name"`
 	Description       OptString   `json:"description"`
+	Duration          int         `json:"duration"`
 	MinApprovers      int         `json:"min_approvers"`
 	PossibleApprovers []string    `json:"possible_approvers"`
 	Rockets           []uuid.UUID `json:"rockets"`
@@ -1012,6 +1065,11 @@ func (s *CreateMissionReq) GetName() string {
 // GetDescription returns the value of Description.
 func (s *CreateMissionReq) GetDescription() OptString {
 	return s.Description
+}
+
+// GetDuration returns the value of Duration.
+func (s *CreateMissionReq) GetDuration() int {
+	return s.Duration
 }
 
 // GetMinApprovers returns the value of MinApprovers.
@@ -1044,6 +1102,11 @@ func (s *CreateMissionReq) SetDescription(val OptString) {
 	s.Description = val
 }
 
+// SetDuration sets the value of Duration.
+func (s *CreateMissionReq) SetDuration(val int) {
+	s.Duration = val
+}
+
 // SetMinApprovers sets the value of MinApprovers.
 func (s *CreateMissionReq) SetMinApprovers(val int) {
 	s.MinApprovers = val
@@ -1065,10 +1128,13 @@ func (s *CreateMissionReq) SetRequests(val []uuid.UUID) {
 }
 
 type CreateRequestReq struct {
-	Reason    string      `json:"reason"`
-	Requester string      `json:"requester"`
-	Approvals []uuid.UUID `json:"approvals"`
-	Mission   uuid.UUID   `json:"mission"`
+	Reason        string      `json:"reason"`
+	Requester     string      `json:"requester"`
+	Timestamp     time.Time   `json:"timestamp"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     bool        `json:"cancelled"`
+	Approvals     []uuid.UUID `json:"approvals"`
+	Mission       uuid.UUID   `json:"mission"`
 }
 
 // GetReason returns the value of Reason.
@@ -1079,6 +1145,21 @@ func (s *CreateRequestReq) GetReason() string {
 // GetRequester returns the value of Requester.
 func (s *CreateRequestReq) GetRequester() string {
 	return s.Requester
+}
+
+// GetTimestamp returns the value of Timestamp.
+func (s *CreateRequestReq) GetTimestamp() time.Time {
+	return s.Timestamp
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *CreateRequestReq) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *CreateRequestReq) GetCancelled() bool {
+	return s.Cancelled
 }
 
 // GetApprovals returns the value of Approvals.
@@ -1099,6 +1180,21 @@ func (s *CreateRequestReq) SetReason(val string) {
 // SetRequester sets the value of Requester.
 func (s *CreateRequestReq) SetRequester(val string) {
 	s.Requester = val
+}
+
+// SetTimestamp sets the value of Timestamp.
+func (s *CreateRequestReq) SetTimestamp(val time.Time) {
+	s.Timestamp = val
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *CreateRequestReq) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *CreateRequestReq) SetCancelled(val bool) {
+	s.Cancelled = val
 }
 
 // SetApprovals sets the value of Approvals.
@@ -1206,10 +1302,6 @@ type ListApiKeyOKApplicationJSON []ApiKeyList
 
 func (*ListApiKeyOKApplicationJSON) listApiKeyRes() {}
 
-type ListApprovalAccessOKApplicationJSON []ApprovalAccessList
-
-func (*ListApprovalAccessOKApplicationJSON) listApprovalAccessRes() {}
-
 type ListApprovalOKApplicationJSON []ApprovalList
 
 func (*ListApprovalOKApplicationJSON) listApprovalRes() {}
@@ -1247,6 +1339,7 @@ type MissionCreate struct {
 	ID                uuid.UUID `json:"id"`
 	Name              string    `json:"name"`
 	Description       OptString `json:"description"`
+	Duration          int       `json:"duration"`
 	MinApprovers      int       `json:"min_approvers"`
 	PossibleApprovers []string  `json:"possible_approvers"`
 }
@@ -1264,6 +1357,11 @@ func (s *MissionCreate) GetName() string {
 // GetDescription returns the value of Description.
 func (s *MissionCreate) GetDescription() OptString {
 	return s.Description
+}
+
+// GetDuration returns the value of Duration.
+func (s *MissionCreate) GetDuration() int {
+	return s.Duration
 }
 
 // GetMinApprovers returns the value of MinApprovers.
@@ -1291,6 +1389,11 @@ func (s *MissionCreate) SetDescription(val OptString) {
 	s.Description = val
 }
 
+// SetDuration sets the value of Duration.
+func (s *MissionCreate) SetDuration(val int) {
+	s.Duration = val
+}
+
 // SetMinApprovers sets the value of MinApprovers.
 func (s *MissionCreate) SetMinApprovers(val int) {
 	s.MinApprovers = val
@@ -1308,6 +1411,7 @@ type MissionList struct {
 	ID                uuid.UUID `json:"id"`
 	Name              string    `json:"name"`
 	Description       OptString `json:"description"`
+	Duration          int       `json:"duration"`
 	MinApprovers      int       `json:"min_approvers"`
 	PossibleApprovers []string  `json:"possible_approvers"`
 }
@@ -1325,6 +1429,11 @@ func (s *MissionList) GetName() string {
 // GetDescription returns the value of Description.
 func (s *MissionList) GetDescription() OptString {
 	return s.Description
+}
+
+// GetDuration returns the value of Duration.
+func (s *MissionList) GetDuration() int {
+	return s.Duration
 }
 
 // GetMinApprovers returns the value of MinApprovers.
@@ -1352,6 +1461,11 @@ func (s *MissionList) SetDescription(val OptString) {
 	s.Description = val
 }
 
+// SetDuration sets the value of Duration.
+func (s *MissionList) SetDuration(val int) {
+	s.Duration = val
+}
+
 // SetMinApprovers sets the value of MinApprovers.
 func (s *MissionList) SetMinApprovers(val int) {
 	s.MinApprovers = val
@@ -1367,6 +1481,7 @@ type MissionRead struct {
 	ID                uuid.UUID `json:"id"`
 	Name              string    `json:"name"`
 	Description       OptString `json:"description"`
+	Duration          int       `json:"duration"`
 	MinApprovers      int       `json:"min_approvers"`
 	PossibleApprovers []string  `json:"possible_approvers"`
 }
@@ -1384,6 +1499,11 @@ func (s *MissionRead) GetName() string {
 // GetDescription returns the value of Description.
 func (s *MissionRead) GetDescription() OptString {
 	return s.Description
+}
+
+// GetDuration returns the value of Duration.
+func (s *MissionRead) GetDuration() int {
+	return s.Duration
 }
 
 // GetMinApprovers returns the value of MinApprovers.
@@ -1411,6 +1531,11 @@ func (s *MissionRead) SetDescription(val OptString) {
 	s.Description = val
 }
 
+// SetDuration sets the value of Duration.
+func (s *MissionRead) SetDuration(val int) {
+	s.Duration = val
+}
+
 // SetMinApprovers sets the value of MinApprovers.
 func (s *MissionRead) SetMinApprovers(val int) {
 	s.MinApprovers = val
@@ -1425,9 +1550,12 @@ func (*MissionRead) readMissionRes() {}
 
 // Ref: #/components/schemas/Mission_RequestsList
 type MissionRequestsList struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
+	ID            uuid.UUID   `json:"id"`
+	Reason        string      `json:"reason"`
+	Requester     string      `json:"requester"`
+	Timestamp     time.Time   `json:"timestamp"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     bool        `json:"cancelled"`
 }
 
 // GetID returns the value of ID.
@@ -1445,6 +1573,21 @@ func (s *MissionRequestsList) GetRequester() string {
 	return s.Requester
 }
 
+// GetTimestamp returns the value of Timestamp.
+func (s *MissionRequestsList) GetTimestamp() time.Time {
+	return s.Timestamp
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *MissionRequestsList) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *MissionRequestsList) GetCancelled() bool {
+	return s.Cancelled
+}
+
 // SetID sets the value of ID.
 func (s *MissionRequestsList) SetID(val uuid.UUID) {
 	s.ID = val
@@ -1458,6 +1601,21 @@ func (s *MissionRequestsList) SetReason(val string) {
 // SetRequester sets the value of Requester.
 func (s *MissionRequestsList) SetRequester(val string) {
 	s.Requester = val
+}
+
+// SetTimestamp sets the value of Timestamp.
+func (s *MissionRequestsList) SetTimestamp(val time.Time) {
+	s.Timestamp = val
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *MissionRequestsList) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *MissionRequestsList) SetCancelled(val bool) {
+	s.Cancelled = val
 }
 
 // Ref: #/components/schemas/Mission_RocketsList
@@ -1535,6 +1693,7 @@ type MissionUpdate struct {
 	ID                uuid.UUID `json:"id"`
 	Name              string    `json:"name"`
 	Description       OptString `json:"description"`
+	Duration          int       `json:"duration"`
 	MinApprovers      int       `json:"min_approvers"`
 	PossibleApprovers []string  `json:"possible_approvers"`
 }
@@ -1552,6 +1711,11 @@ func (s *MissionUpdate) GetName() string {
 // GetDescription returns the value of Description.
 func (s *MissionUpdate) GetDescription() OptString {
 	return s.Description
+}
+
+// GetDuration returns the value of Duration.
+func (s *MissionUpdate) GetDuration() int {
+	return s.Duration
 }
 
 // GetMinApprovers returns the value of MinApprovers.
@@ -1577,6 +1741,11 @@ func (s *MissionUpdate) SetName(val string) {
 // SetDescription sets the value of Description.
 func (s *MissionUpdate) SetDescription(val OptString) {
 	s.Description = val
+}
+
+// SetDuration sets the value of Duration.
+func (s *MissionUpdate) SetDuration(val int) {
+	s.Duration = val
 }
 
 // SetMinApprovers sets the value of MinApprovers.
@@ -1916,7 +2085,6 @@ func (*R400) deleteRocketRes()           {}
 func (*R400) listAccessAccessTokensRes() {}
 func (*R400) listAccessApprovalsRes()    {}
 func (*R400) listApiKeyRes()             {}
-func (*R400) listApprovalAccessRes()     {}
 func (*R400) listApprovalRes()           {}
 func (*R400) listAuditRes()              {}
 func (*R400) listMissionRequestsRes()    {}
@@ -1925,7 +2093,9 @@ func (*R400) listMissionRocketsRes()     {}
 func (*R400) listRequestApprovalsRes()   {}
 func (*R400) listRequestRes()            {}
 func (*R400) listRocketRes()             {}
+func (*R400) readAccessRequestRes()      {}
 func (*R400) readApiKeyRes()             {}
+func (*R400) readApprovalAccessRes()     {}
 func (*R400) readApprovalRes()           {}
 func (*R400) readAuditRes()              {}
 func (*R400) readMissionRes()            {}
@@ -1981,7 +2151,6 @@ func (*R404) deleteRocketRes()           {}
 func (*R404) listAccessAccessTokensRes() {}
 func (*R404) listAccessApprovalsRes()    {}
 func (*R404) listApiKeyRes()             {}
-func (*R404) listApprovalAccessRes()     {}
 func (*R404) listApprovalRes()           {}
 func (*R404) listAuditRes()              {}
 func (*R404) listMissionRequestsRes()    {}
@@ -1990,7 +2159,9 @@ func (*R404) listMissionRocketsRes()     {}
 func (*R404) listRequestApprovalsRes()   {}
 func (*R404) listRequestRes()            {}
 func (*R404) listRocketRes()             {}
+func (*R404) readAccessRequestRes()      {}
 func (*R404) readApiKeyRes()             {}
+func (*R404) readApprovalAccessRes()     {}
 func (*R404) readApprovalRes()           {}
 func (*R404) readAuditRes()              {}
 func (*R404) readMissionRes()            {}
@@ -2051,7 +2222,6 @@ func (*R409) deleteRocketRes()           {}
 func (*R409) listAccessAccessTokensRes() {}
 func (*R409) listAccessApprovalsRes()    {}
 func (*R409) listApiKeyRes()             {}
-func (*R409) listApprovalAccessRes()     {}
 func (*R409) listApprovalRes()           {}
 func (*R409) listAuditRes()              {}
 func (*R409) listMissionRequestsRes()    {}
@@ -2060,7 +2230,9 @@ func (*R409) listMissionRocketsRes()     {}
 func (*R409) listRequestApprovalsRes()   {}
 func (*R409) listRequestRes()            {}
 func (*R409) listRocketRes()             {}
+func (*R409) readAccessRequestRes()      {}
 func (*R409) readApiKeyRes()             {}
+func (*R409) readApprovalAccessRes()     {}
 func (*R409) readApprovalRes()           {}
 func (*R409) readAuditRes()              {}
 func (*R409) readMissionRes()            {}
@@ -2121,7 +2293,6 @@ func (*R500) deleteRocketRes()           {}
 func (*R500) listAccessAccessTokensRes() {}
 func (*R500) listAccessApprovalsRes()    {}
 func (*R500) listApiKeyRes()             {}
-func (*R500) listApprovalAccessRes()     {}
 func (*R500) listApprovalRes()           {}
 func (*R500) listAuditRes()              {}
 func (*R500) listMissionRequestsRes()    {}
@@ -2130,7 +2301,9 @@ func (*R500) listMissionRocketsRes()     {}
 func (*R500) listRequestApprovalsRes()   {}
 func (*R500) listRequestRes()            {}
 func (*R500) listRocketRes()             {}
+func (*R500) readAccessRequestRes()      {}
 func (*R500) readApiKeyRes()             {}
+func (*R500) readApprovalAccessRes()     {}
 func (*R500) readApprovalRes()           {}
 func (*R500) readAuditRes()              {}
 func (*R500) readMissionRes()            {}
@@ -2214,9 +2387,12 @@ func (s *RequestApprovalsList) SetRevokedTime(val OptDateTime) {
 
 // Ref: #/components/schemas/RequestCreate
 type RequestCreate struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
+	ID            uuid.UUID   `json:"id"`
+	Reason        string      `json:"reason"`
+	Requester     string      `json:"requester"`
+	Timestamp     time.Time   `json:"timestamp"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     bool        `json:"cancelled"`
 }
 
 // GetID returns the value of ID.
@@ -2234,6 +2410,21 @@ func (s *RequestCreate) GetRequester() string {
 	return s.Requester
 }
 
+// GetTimestamp returns the value of Timestamp.
+func (s *RequestCreate) GetTimestamp() time.Time {
+	return s.Timestamp
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *RequestCreate) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *RequestCreate) GetCancelled() bool {
+	return s.Cancelled
+}
+
 // SetID sets the value of ID.
 func (s *RequestCreate) SetID(val uuid.UUID) {
 	s.ID = val
@@ -2249,13 +2440,31 @@ func (s *RequestCreate) SetRequester(val string) {
 	s.Requester = val
 }
 
+// SetTimestamp sets the value of Timestamp.
+func (s *RequestCreate) SetTimestamp(val time.Time) {
+	s.Timestamp = val
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *RequestCreate) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *RequestCreate) SetCancelled(val bool) {
+	s.Cancelled = val
+}
+
 func (*RequestCreate) createRequestRes() {}
 
 // Ref: #/components/schemas/RequestList
 type RequestList struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
+	ID            uuid.UUID   `json:"id"`
+	Reason        string      `json:"reason"`
+	Requester     string      `json:"requester"`
+	Timestamp     time.Time   `json:"timestamp"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     bool        `json:"cancelled"`
 }
 
 // GetID returns the value of ID.
@@ -2273,6 +2482,21 @@ func (s *RequestList) GetRequester() string {
 	return s.Requester
 }
 
+// GetTimestamp returns the value of Timestamp.
+func (s *RequestList) GetTimestamp() time.Time {
+	return s.Timestamp
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *RequestList) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *RequestList) GetCancelled() bool {
+	return s.Cancelled
+}
+
 // SetID sets the value of ID.
 func (s *RequestList) SetID(val uuid.UUID) {
 	s.ID = val
@@ -2288,11 +2512,27 @@ func (s *RequestList) SetRequester(val string) {
 	s.Requester = val
 }
 
+// SetTimestamp sets the value of Timestamp.
+func (s *RequestList) SetTimestamp(val time.Time) {
+	s.Timestamp = val
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *RequestList) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *RequestList) SetCancelled(val bool) {
+	s.Cancelled = val
+}
+
 // Ref: #/components/schemas/Request_MissionRead
 type RequestMissionRead struct {
 	ID                uuid.UUID `json:"id"`
 	Name              string    `json:"name"`
 	Description       OptString `json:"description"`
+	Duration          int       `json:"duration"`
 	MinApprovers      int       `json:"min_approvers"`
 	PossibleApprovers []string  `json:"possible_approvers"`
 }
@@ -2310,6 +2550,11 @@ func (s *RequestMissionRead) GetName() string {
 // GetDescription returns the value of Description.
 func (s *RequestMissionRead) GetDescription() OptString {
 	return s.Description
+}
+
+// GetDuration returns the value of Duration.
+func (s *RequestMissionRead) GetDuration() int {
+	return s.Duration
 }
 
 // GetMinApprovers returns the value of MinApprovers.
@@ -2337,6 +2582,11 @@ func (s *RequestMissionRead) SetDescription(val OptString) {
 	s.Description = val
 }
 
+// SetDuration sets the value of Duration.
+func (s *RequestMissionRead) SetDuration(val int) {
+	s.Duration = val
+}
+
 // SetMinApprovers sets the value of MinApprovers.
 func (s *RequestMissionRead) SetMinApprovers(val int) {
 	s.MinApprovers = val
@@ -2351,9 +2601,12 @@ func (*RequestMissionRead) readRequestMissionRes() {}
 
 // Ref: #/components/schemas/RequestRead
 type RequestRead struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
+	ID            uuid.UUID   `json:"id"`
+	Reason        string      `json:"reason"`
+	Requester     string      `json:"requester"`
+	Timestamp     time.Time   `json:"timestamp"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     bool        `json:"cancelled"`
 }
 
 // GetID returns the value of ID.
@@ -2371,6 +2624,21 @@ func (s *RequestRead) GetRequester() string {
 	return s.Requester
 }
 
+// GetTimestamp returns the value of Timestamp.
+func (s *RequestRead) GetTimestamp() time.Time {
+	return s.Timestamp
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *RequestRead) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *RequestRead) GetCancelled() bool {
+	return s.Cancelled
+}
+
 // SetID sets the value of ID.
 func (s *RequestRead) SetID(val uuid.UUID) {
 	s.ID = val
@@ -2386,13 +2654,31 @@ func (s *RequestRead) SetRequester(val string) {
 	s.Requester = val
 }
 
+// SetTimestamp sets the value of Timestamp.
+func (s *RequestRead) SetTimestamp(val time.Time) {
+	s.Timestamp = val
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *RequestRead) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *RequestRead) SetCancelled(val bool) {
+	s.Cancelled = val
+}
+
 func (*RequestRead) readRequestRes() {}
 
 // Ref: #/components/schemas/RequestUpdate
 type RequestUpdate struct {
-	ID        uuid.UUID `json:"id"`
-	Reason    string    `json:"reason"`
-	Requester string    `json:"requester"`
+	ID            uuid.UUID   `json:"id"`
+	Reason        string      `json:"reason"`
+	Requester     string      `json:"requester"`
+	Timestamp     time.Time   `json:"timestamp"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     bool        `json:"cancelled"`
 }
 
 // GetID returns the value of ID.
@@ -2410,6 +2696,21 @@ func (s *RequestUpdate) GetRequester() string {
 	return s.Requester
 }
 
+// GetTimestamp returns the value of Timestamp.
+func (s *RequestUpdate) GetTimestamp() time.Time {
+	return s.Timestamp
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *RequestUpdate) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *RequestUpdate) GetCancelled() bool {
+	return s.Cancelled
+}
+
 // SetID sets the value of ID.
 func (s *RequestUpdate) SetID(val uuid.UUID) {
 	s.ID = val
@@ -2423,6 +2724,21 @@ func (s *RequestUpdate) SetReason(val string) {
 // SetRequester sets the value of Requester.
 func (s *RequestUpdate) SetRequester(val string) {
 	s.Requester = val
+}
+
+// SetTimestamp sets the value of Timestamp.
+func (s *RequestUpdate) SetTimestamp(val time.Time) {
+	s.Timestamp = val
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *RequestUpdate) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *RequestUpdate) SetCancelled(val bool) {
+	s.Cancelled = val
 }
 
 func (*RequestUpdate) updateRequestRes() {}
@@ -2717,7 +3033,7 @@ type UpdateApprovalReq struct {
 	Revoked     OptBool     `json:"revoked"`
 	RevokedTime OptDateTime `json:"revoked_time"`
 	Request     OptUUID     `json:"request"`
-	Access      []uuid.UUID `json:"access"`
+	Access      OptUUID     `json:"access"`
 }
 
 // GetRevoked returns the value of Revoked.
@@ -2736,7 +3052,7 @@ func (s *UpdateApprovalReq) GetRequest() OptUUID {
 }
 
 // GetAccess returns the value of Access.
-func (s *UpdateApprovalReq) GetAccess() []uuid.UUID {
+func (s *UpdateApprovalReq) GetAccess() OptUUID {
 	return s.Access
 }
 
@@ -2756,13 +3072,14 @@ func (s *UpdateApprovalReq) SetRequest(val OptUUID) {
 }
 
 // SetAccess sets the value of Access.
-func (s *UpdateApprovalReq) SetAccess(val []uuid.UUID) {
+func (s *UpdateApprovalReq) SetAccess(val OptUUID) {
 	s.Access = val
 }
 
 type UpdateMissionReq struct {
 	Name              OptString   `json:"name"`
 	Description       OptString   `json:"description"`
+	Duration          OptInt      `json:"duration"`
 	MinApprovers      OptInt      `json:"min_approvers"`
 	PossibleApprovers []string    `json:"possible_approvers"`
 	Rockets           []uuid.UUID `json:"rockets"`
@@ -2777,6 +3094,11 @@ func (s *UpdateMissionReq) GetName() OptString {
 // GetDescription returns the value of Description.
 func (s *UpdateMissionReq) GetDescription() OptString {
 	return s.Description
+}
+
+// GetDuration returns the value of Duration.
+func (s *UpdateMissionReq) GetDuration() OptInt {
+	return s.Duration
 }
 
 // GetMinApprovers returns the value of MinApprovers.
@@ -2809,6 +3131,11 @@ func (s *UpdateMissionReq) SetDescription(val OptString) {
 	s.Description = val
 }
 
+// SetDuration sets the value of Duration.
+func (s *UpdateMissionReq) SetDuration(val OptInt) {
+	s.Duration = val
+}
+
 // SetMinApprovers sets the value of MinApprovers.
 func (s *UpdateMissionReq) SetMinApprovers(val OptInt) {
 	s.MinApprovers = val
@@ -2830,8 +3157,20 @@ func (s *UpdateMissionReq) SetRequests(val []uuid.UUID) {
 }
 
 type UpdateRequestReq struct {
-	Approvals []uuid.UUID `json:"approvals"`
-	Mission   OptUUID     `json:"mission"`
+	CancelledTime OptDateTime `json:"cancelled_time"`
+	Cancelled     OptBool     `json:"cancelled"`
+	Approvals     []uuid.UUID `json:"approvals"`
+	Mission       OptUUID     `json:"mission"`
+}
+
+// GetCancelledTime returns the value of CancelledTime.
+func (s *UpdateRequestReq) GetCancelledTime() OptDateTime {
+	return s.CancelledTime
+}
+
+// GetCancelled returns the value of Cancelled.
+func (s *UpdateRequestReq) GetCancelled() OptBool {
+	return s.Cancelled
 }
 
 // GetApprovals returns the value of Approvals.
@@ -2842,6 +3181,16 @@ func (s *UpdateRequestReq) GetApprovals() []uuid.UUID {
 // GetMission returns the value of Mission.
 func (s *UpdateRequestReq) GetMission() OptUUID {
 	return s.Mission
+}
+
+// SetCancelledTime sets the value of CancelledTime.
+func (s *UpdateRequestReq) SetCancelledTime(val OptDateTime) {
+	s.CancelledTime = val
+}
+
+// SetCancelled sets the value of Cancelled.
+func (s *UpdateRequestReq) SetCancelled(val OptBool) {
+	s.Cancelled = val
 }
 
 // SetApprovals sets the value of Approvals.

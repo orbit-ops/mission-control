@@ -42,16 +42,33 @@ func main() {
 		log.Fatalf("creating ogent extension: %v", err)
 	}
 
-	err = entc.Generate("./schema", &gen.Config{
-		Features: []gen.Feature{
-			gen.FeatureNamedEdges,
-			gen.FeatureUpsert,
-			gen.FeatureIntercept,
-			gen.FeaturePrivacy,
+	if err := entc.Generate(
+		"./schema",
+		&gen.Config{
+			Features: []gen.Feature{
+				gen.FeatureNamedEdges,
+				gen.FeatureUpsert,
+				gen.FeatureIntercept,
+			},
 		},
-	}, entc.Extensions(ogent, authzExt, oas))
-	if err != nil {
-		log.Fatalf("running ent codegen: %v", err)
+		entc.Extensions(ogent, authzExt, oas),
+		entc.BuildTags("skiphooks"),
+	); err != nil {
+		log.Fatalf("running initial ent codegen: %v", err)
+	}
+
+	if err = entc.Generate(
+		"./schema",
+		&gen.Config{
+			Features: []gen.Feature{
+				gen.FeatureNamedEdges,
+				gen.FeatureUpsert,
+				gen.FeatureIntercept,
+			},
+		},
+		entc.Extensions(ogent, authzExt, oas),
+	); err != nil {
+		log.Fatalf("running final ent codegen: %v", err)
 	}
 }
 

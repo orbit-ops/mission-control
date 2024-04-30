@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -22,6 +23,12 @@ type Request struct {
 	Reason string `json:"reason,omitempty"`
 	// Requester holds the value of the "requester" field.
 	Requester string `json:"requester,omitempty"`
+	// Timestamp holds the value of the "timestamp" field.
+	Timestamp time.Time `json:"timestamp,omitempty"`
+	// CancelledTime holds the value of the "cancelled_time" field.
+	CancelledTime time.Time `json:"cancelled_time,omitempty"`
+	// Cancelled holds the value of the "cancelled" field.
+	Cancelled bool `json:"cancelled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RequestQuery when eager-loading is set.
 	Edges           RequestEdges `json:"edges"`
@@ -68,8 +75,12 @@ func (*Request) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case request.FieldCancelled:
+			values[i] = new(sql.NullBool)
 		case request.FieldReason, request.FieldRequester:
 			values[i] = new(sql.NullString)
+		case request.FieldTimestamp, request.FieldCancelledTime:
+			values[i] = new(sql.NullTime)
 		case request.FieldID:
 			values[i] = new(uuid.UUID)
 		case request.ForeignKeys[0]: // request_mission
@@ -106,6 +117,24 @@ func (r *Request) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field requester", values[i])
 			} else if value.Valid {
 				r.Requester = value.String
+			}
+		case request.FieldTimestamp:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field timestamp", values[i])
+			} else if value.Valid {
+				r.Timestamp = value.Time
+			}
+		case request.FieldCancelledTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field cancelled_time", values[i])
+			} else if value.Valid {
+				r.CancelledTime = value.Time
+			}
+		case request.FieldCancelled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field cancelled", values[i])
+			} else if value.Valid {
+				r.Cancelled = value.Bool
 			}
 		case request.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -165,6 +194,15 @@ func (r *Request) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("requester=")
 	builder.WriteString(r.Requester)
+	builder.WriteString(", ")
+	builder.WriteString("timestamp=")
+	builder.WriteString(r.Timestamp.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("cancelled_time=")
+	builder.WriteString(r.CancelledTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("cancelled=")
+	builder.WriteString(fmt.Sprintf("%v", r.Cancelled))
 	builder.WriteByte(')')
 	return builder.String()
 }

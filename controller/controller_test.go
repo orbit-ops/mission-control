@@ -4,11 +4,13 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/orbit-ops/launchpad-core/config"
 	"github.com/orbit-ops/launchpad-core/ent"
+	_ "github.com/orbit-ops/launchpad-core/ent/runtime"
 	"github.com/orbit-ops/launchpad-core/providers"
 	"github.com/orbit-ops/launchpad-core/providers/local"
 	"github.com/orbit-ops/launchpad-core/utils"
@@ -57,5 +59,23 @@ func newTestController(t *testing.T) *testAccessController {
 		Access:  ac,
 		Context: ctx,
 		t:       t,
+	}
+}
+
+func (ctrl *testAccessController) assert(condition bool, msg string) {
+	if !condition {
+		ctrl.t.Fatal(msg)
+	}
+}
+
+func (ctrl *testAccessController) ok(err error, msg ...string) {
+	if err != nil {
+		ctrl.t.Fatalf("%s: %v", strings.Join(msg, ": "), err)
+	}
+}
+
+func (ctrl *testAccessController) equals(exp, act interface{}) {
+	if exp != act {
+		ctrl.t.Fatal("not equal")
 	}
 }

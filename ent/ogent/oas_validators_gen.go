@@ -199,14 +199,6 @@ func (s ListApiKeyOKApplicationJSON) Validate() error {
 	return nil
 }
 
-func (s ListApprovalAccessOKApplicationJSON) Validate() error {
-	alias := ([]ApprovalAccessList)(s)
-	if alias == nil {
-		return errors.New("nil is invalid value")
-	}
-	return nil
-}
-
 func (s ListApprovalOKApplicationJSON) Validate() error {
 	alias := ([]ApprovalList)(s)
 	if alias == nil {
